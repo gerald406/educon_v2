@@ -46,6 +46,8 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Administrador',
                 'password' => Hash::make('gcauna@admin.com'),
+                'user_type' => 'administrator', // <-- AÑADE O MODIFICA ESTA LÍNEA
+                'email_verified_at' => now(), // Verificamos al admin
             ]
         );
 
@@ -54,6 +56,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             CatalogSeeder::class,
             AcademicStructureSeeder::class, // <-- AÑADE ESTA LÍNEA
+            PeopleSeeder::class,
         ]);
     }
     

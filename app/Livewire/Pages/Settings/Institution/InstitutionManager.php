@@ -7,6 +7,7 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads; // Para subir el logo
+use Illuminate\Support\Facades\Storage;
 
 #[Layout('layouts.app')]
 class InstitutionManager extends Component
@@ -98,7 +99,8 @@ class InstitutionManager extends Component
             if ($this->logoUpload) {
                 // Borra el logo anterior si existe
                 if ($this->institution->logo_url) {
-                    \Storage::disk('public')->delete($this->institution->logo_url);
+                    // \Storage::disk('public')->delete($this->institution->logo_url);
+                    Storage::disk('public')->delete($this->institution->logo_url);
                 }
                 // Guarda el nuevo logo en 'storage/app/public/logos'
                 $path = $this->logoUpload->store('logos', 'public');
