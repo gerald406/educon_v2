@@ -7,6 +7,7 @@ use App\Livewire\Pages\Settings\AcademicYears\AcademicYearManager;
 use App\Livewire\Pages\Settings\Shifts\ShiftManager;
 use App\Livewire\Pages\Settings\EvaluationTypes\EvaluationTypeManager;
 use App\Livewire\Pages\Settings\SystemSettings\SystemSettingsManager;
+use App\Livewire\Pages\Settings\Institution\InstitutionManager;
 
 use App\Livewire\Pages\Academic\Careers\CareerManager;
 use App\Livewire\Pages\Academic\StudyPlans\StudyPlanManager;
@@ -44,6 +45,8 @@ Route::prefix('settings')->middleware(['auth', 'verified'])->name('settings.')->
     Route::get('evaluation-types', EvaluationTypeManager::class)->name('evaluation-types');
     //Rutas para la Gestión de Configuraciones del Sistema
     Route::get('system-settings', SystemSettingsManager::class)->name('system-settings');
+    //Rutas para la Gestión de la Institución
+    Route::get('institution', InstitutionManager::class)->name('institution');
 });
 
 // [NUEVO GRUPO] Grupo de Rutas para Gestión Académica

@@ -37,6 +37,13 @@
             </button>
             
             <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
+                <a href="{{ route('settings.institution') }}" class="block px-3 py-2 rounded-md text-sm font-medium
+                        {{ request()->routeIs('settings.institution') 
+                            ? 'text-white' 
+                            : 'text-gray-400 hover:text-white' }}">
+                    Datos de la Institución
+                </a>
+
                 <a href="{{ route('settings.classrooms') }}" class="block px-3 py-2 rounded-md text-sm font-medium
                         {{ request()->routeIs('settings.classrooms') 
                             ? 'text-white' 
