@@ -7,6 +7,7 @@ use App\Livewire\Pages\Academic\Careers\CareerManager;
 use App\Livewire\Pages\Academic\StudyPlans\StudyPlanManager;
 use App\Livewire\Pages\Academic\Modules\ModuleManager;
 use App\Livewire\Pages\Academic\DidacticUnits\DidacticUnitManager;
+use App\Livewire\Pages\Academic\Prerequisites\PrerequisiteManager;
 
 Route::get('/', function () {
     return view('welcome');
@@ -41,4 +42,6 @@ Route::prefix('academic')->middleware(['auth', 'verified'])->name('academic.')->
     Route::get('modules', ModuleManager::class)->name('modules');
     //Rutas para el Manejo de Unidades Didácticas
     Route::get('didactic-units', DidacticUnitManager::class)->name('didactic-units');
+    //Rutas para el Manejo de Prerrequisitos
+    Route::get('prerequisites', PrerequisiteManager::class)->name('prerequisites');
 });

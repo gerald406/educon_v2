@@ -98,6 +98,12 @@
                             : 'text-gray-400 hover:text-white' }}">
                     Unidades Didácticas (Cursos)
                 </a>
+                <a href="{{ route('academic.prerequisites') }}" class="block px-3 py-2 rounded-md text-sm font-medium
+                        {{ request()->routeIs('academic.prerequisites') 
+                            ? 'text-white' 
+                            : 'text-gray-400 hover:text-white' }}">
+                    Gestión de Prerrequisitos
+                </a>
             </div>
         </div>
     </nav>
