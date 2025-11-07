@@ -50,9 +50,10 @@ class DatabaseSeeder extends Seeder
         );
 
 
-        // 4. Llamar al Seeder de Catálogos
+        // 4. Llamar a los Seeders
         $this->call([
             CatalogSeeder::class,
+            AcademicStructureSeeder::class, // <-- AÑADE ESTA LÍNEA
         ]);
     }
     
