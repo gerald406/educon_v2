@@ -80,7 +80,13 @@
                                 : 'text-gray-400 hover:text-white' }}">
                     Programas de Estudio
                 </a>
-                </div>
+                <a href="{{ route('academic.study-plans') }}" class="block px-3 py-2 rounded-md text-sm font-medium
+                        {{ request()->routeIs('academic.study-plans') 
+                            ? 'text-white' 
+                            : 'text-gray-400 hover:text-white' }}">
+                    Planes de Estudio
+                </a>
+            </div>
         </div>
     </nav>
 </div>
