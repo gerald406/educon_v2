@@ -6,6 +6,7 @@ use App\Livewire\Pages\Settings\PaymentConcepts\PaymentConceptManager;
 use App\Livewire\Pages\Academic\Careers\CareerManager;
 use App\Livewire\Pages\Academic\StudyPlans\StudyPlanManager;
 use App\Livewire\Pages\Academic\Modules\ModuleManager;
+use App\Livewire\Pages\Academic\DidacticUnits\DidacticUnitManager;
 
 Route::get('/', function () {
     return view('welcome');
@@ -38,4 +39,6 @@ Route::prefix('academic')->middleware(['auth', 'verified'])->name('academic.')->
     Route::get('study-plans', StudyPlanManager::class)->name('study-plans');
     //Rutas para el Manejo de Módulos
     Route::get('modules', ModuleManager::class)->name('modules');
+    //Rutas para el Manejo de Unidades Didácticas
+    Route::get('didactic-units', DidacticUnitManager::class)->name('didactic-units');
 });

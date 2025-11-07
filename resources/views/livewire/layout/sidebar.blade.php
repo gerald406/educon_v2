@@ -92,6 +92,12 @@
                             : 'text-gray-400 hover:text-white' }}">
                     Módulos Formativos
                 </a>
+                <a href="{{ route('academic.didactic-units') }}" class="block px-3 py-2 rounded-md text-sm font-medium
+                        {{ request()->routeIs('academic.didactic-units') 
+                            ? 'text-white' 
+                            : 'text-gray-400 hover:text-white' }}">
+                    Unidades Didácticas (Cursos)
+                </a>
             </div>
         </div>
     </nav>
