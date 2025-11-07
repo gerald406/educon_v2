@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Pages\Settings\Classrooms\ClassroomManager;
+use App\Livewire\Pages\Settings\PaymentConcepts\PaymentConceptManager;
 
 Route::get('/', function () {
     return view('welcome');
@@ -20,5 +21,8 @@ Route::middleware([
 
 // Grupo de Rutas para Configuración
 Route::prefix('settings')->middleware(['auth', 'verified'])->name('settings.')->group(function () {
+    // Rutas para la Gestión de Aulas y labs
     Route::get('classrooms', ClassroomManager::class)->name('classrooms');
+    //Rutas para la Gestión de Conceptos de Pago
+    Route::get('payment-concepts', PaymentConceptManager::class)->name('payment-concepts');
 });

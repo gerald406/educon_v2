@@ -37,12 +37,18 @@
             </button>
             
             <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
-                <a href="{{ route('settings.classrooms') }}"
-                   class="block px-3 py-2 rounded-md text-sm font-medium
-                          {{ request()->routeIs('settings.classrooms') 
-                             ? 'text-white' 
-                             : 'text-gray-400 hover:text-white' }}">
+                <a href="{{ route('settings.classrooms') }}" class="block px-3 py-2 rounded-md text-sm font-medium
+                        {{ request()->routeIs('settings.classrooms') 
+                            ? 'text-white' 
+                            : 'text-gray-400 hover:text-white' }}">
                     Aulas y Laboratorios
+                </a>
+
+                <a href="{{ route('settings.payment-concepts') }}" class="block px-3 py-2 rounded-md text-sm font-medium
+                        {{ request()->routeIs('settings.payment-concepts') 
+                            ? 'text-white' 
+                            : 'text-gray-400 hover:text-white' }}">
+                    Conceptos de Pago (TUPA)
                 </a>
             </div>
         </div>
