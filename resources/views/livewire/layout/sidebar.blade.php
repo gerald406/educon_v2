@@ -65,6 +65,13 @@
                     Gestión de Turnos
                 </a>
 
+                <a href="{{ route('settings.evaluation-types') }}" class="block px-3 py-2 rounded-md text-sm font-medium
+                        {{ request()->routeIs('settings.evaluation-types') 
+                            ? 'text-white' 
+                            : 'text-gray-400 hover:text-white' }}">
+                    Tipos de Evaluación
+                </a>
+
             </div>
         </div>
 

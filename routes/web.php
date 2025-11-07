@@ -5,6 +5,7 @@ use App\Livewire\Pages\Settings\Classrooms\ClassroomManager;
 use App\Livewire\Pages\Settings\PaymentConcepts\PaymentConceptManager;
 use App\Livewire\Pages\Settings\AcademicYears\AcademicYearManager;
 use App\Livewire\Pages\Settings\Shifts\ShiftManager;
+use App\Livewire\Pages\Settings\EvaluationTypes\EvaluationTypeManager;
 
 use App\Livewire\Pages\Academic\Careers\CareerManager;
 use App\Livewire\Pages\Academic\StudyPlans\StudyPlanManager;
@@ -38,6 +39,8 @@ Route::prefix('settings')->middleware(['auth', 'verified'])->name('settings.')->
     Route::get('academic-years', AcademicYearManager::class)->name('academic-years');
     //Rutas para la Gestión de Turnos
     Route::get('shifts', ShiftManager::class)->name('shifts');
+    //Rutas para la Gestión de Tipos de Evaluación
+    Route::get('evaluation-types', EvaluationTypeManager::class)->name('evaluation-types');
 });
 
 // [NUEVO GRUPO] Grupo de Rutas para Gestión Académica
