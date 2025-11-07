@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Livewire\Pages\Settings\Classrooms\ClassroomManager;
 use App\Livewire\Pages\Settings\PaymentConcepts\PaymentConceptManager;
 use App\Livewire\Pages\Settings\AcademicYears\AcademicYearManager;
+use App\Livewire\Pages\Settings\Shifts\ShiftManager;
 
 use App\Livewire\Pages\Academic\Careers\CareerManager;
 use App\Livewire\Pages\Academic\StudyPlans\StudyPlanManager;
@@ -35,6 +36,8 @@ Route::prefix('settings')->middleware(['auth', 'verified'])->name('settings.')->
     Route::get('payment-concepts', PaymentConceptManager::class)->name('payment-concepts');
     //Rutas para la Gestión de Años Académicos
     Route::get('academic-years', AcademicYearManager::class)->name('academic-years');
+    //Rutas para la Gestión de Turnos
+    Route::get('shifts', ShiftManager::class)->name('shifts');
 });
 
 // [NUEVO GRUPO] Grupo de Rutas para Gestión Académica

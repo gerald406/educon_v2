@@ -58,6 +58,13 @@
                     Años Académicos
                 </a>
 
+                <a href="{{ route('settings.shifts') }}" class="block px-3 py-2 rounded-md text-sm font-medium
+                        {{ request()->routeIs('settings.shifts') 
+                            ? 'text-white' 
+                            : 'text-gray-400 hover:text-white' }}">
+                    Gestión de Turnos
+                </a>
+
             </div>
         </div>
 
