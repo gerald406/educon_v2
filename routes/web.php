@@ -3,11 +3,14 @@
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Pages\Settings\Classrooms\ClassroomManager;
 use App\Livewire\Pages\Settings\PaymentConcepts\PaymentConceptManager;
+use App\Livewire\Pages\Settings\AcademicYears\AcademicYearManager;
+
 use App\Livewire\Pages\Academic\Careers\CareerManager;
 use App\Livewire\Pages\Academic\StudyPlans\StudyPlanManager;
 use App\Livewire\Pages\Academic\Modules\ModuleManager;
 use App\Livewire\Pages\Academic\DidacticUnits\DidacticUnitManager;
 use App\Livewire\Pages\Academic\Prerequisites\PrerequisiteManager;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -30,6 +33,8 @@ Route::prefix('settings')->middleware(['auth', 'verified'])->name('settings.')->
     Route::get('classrooms', ClassroomManager::class)->name('classrooms');
     //Rutas para la Gestión de Conceptos de Pago
     Route::get('payment-concepts', PaymentConceptManager::class)->name('payment-concepts');
+    //Rutas para la Gestión de Años Académicos
+    Route::get('academic-years', AcademicYearManager::class)->name('academic-years');
 });
 
 // [NUEVO GRUPO] Grupo de Rutas para Gestión Académica

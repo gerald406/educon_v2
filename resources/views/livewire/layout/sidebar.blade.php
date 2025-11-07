@@ -50,14 +50,22 @@
                             : 'text-gray-400 hover:text-white' }}">
                     Conceptos de Pago (TUPA)
                 </a>
+
+                <a href="{{ route('settings.academic-years') }}" class="block px-3 py-2 rounded-md text-sm font-medium
+                        {{ request()->routeIs('settings.academic-years') 
+                            ? 'text-white' 
+                            : 'text-gray-400 hover:text-white' }}">
+                    Años Académicos
+                </a>
+
             </div>
         </div>
 
-        <div class="pt-4 pb-2">
+        {{-- <div class="pt-4 pb-2">
             <span class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 Módulos
             </span>
-        </div>
+        </div> --}}
 
         <div x-data="{ open: {{ request()->routeIs('academic.*') ? 'true' : 'false' }} }">
             <button @click="open = !open"
