@@ -216,10 +216,10 @@ class TeacherManager extends Component
         if ($this->search) {
             $query->where(function($q) {
                 $q->where('name', 'like', '%' . $this->search . '%')
-                  ->orWhere('email', 'like', '%' . $this->search . '%')
-                  ->orWhereHas('teacher', function ($subQuery) {
-                      $subQuery->where('code', 'like', '%' . $this->search . '%');
-                  });
+                    ->orWhere('email', 'like', '%' . $this->search . '%')
+                    ->orWhereHas('teacher', function ($subQuery) {
+                    $subQuery->where('code', 'like', '%' . $this->search . '%');
+                });
             });
         }
         

@@ -157,11 +157,19 @@
             
             <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
                 <a href="{{ route('people.teachers') }}"
-                   class="block px-3 py-2 rounded-md text-sm font-medium
+                class="block px-3 py-2 rounded-md text-sm font-medium
                         {{ request()->routeIs('people.teachers') 
                             ? 'text-white' 
                             : 'text-gray-400 hover:text-white' }}">
                     Gestión de Docentes
+                </a>
+
+                <a href="{{ route('people.students') }}"
+                class="block px-3 py-2 rounded-md text-sm font-medium
+                        {{ request()->routeIs('people.students') 
+                            ? 'text-white' 
+                            : 'text-gray-400 hover:text-white' }}">
+                    Gestión de Estudiantes
                 </a>
             </div>
         </div>
