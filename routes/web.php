@@ -15,6 +15,8 @@ use App\Livewire\Pages\Academic\Modules\ModuleManager;
 use App\Livewire\Pages\Academic\DidacticUnits\DidacticUnitManager;
 use App\Livewire\Pages\Academic\Prerequisites\PrerequisiteManager;
 
+use App\Livewire\Pages\People\Teachers\TeacherManager;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -61,4 +63,11 @@ Route::prefix('academic')->middleware(['auth', 'verified'])->name('academic.')->
     Route::get('didactic-units', DidacticUnitManager::class)->name('didactic-units');
     //Rutas para el Manejo de Prerrequisitos
     Route::get('prerequisites', PrerequisiteManager::class)->name('prerequisites');
+});
+
+
+// [NUEVO GRUPO] Grupo de Rutas para Gestión de Personas
+Route::prefix('people')->middleware(['auth', 'verified'])->name('people.')->group(function () {
+    Route::get('teachers', TeacherManager::class)->name('teachers');
+    // ... aquí irán estudiantes, etc.
 });

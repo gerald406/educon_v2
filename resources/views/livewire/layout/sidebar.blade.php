@@ -141,5 +141,29 @@
                 </a>
             </div>
         </div>
+
+        <div x-data="{ open: {{ request()->routeIs('people.*') ? 'true' : 'false' }} }">
+            <button @click="open = !open"
+                    class="w-full flex justify-between items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                           {{ request()->routeIs('people.*') 
+                              ? 'bg-gray-900 text-white' 
+                              : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                <span class="flex items-center">
+                    <svg class="h-6 w-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.003l-1.422-1.422M15 11.25a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    Gestión de Personas
+                </span>
+                <svg :class="{'rotate-180': open, 'rotate-0': !open}" class="h-5 w-5 transform transition-transform duration-150" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+            </button>
+            
+            <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
+                <a href="{{ route('people.teachers') }}"
+                   class="block px-3 py-2 rounded-md text-sm font-medium
+                        {{ request()->routeIs('people.teachers') 
+                            ? 'text-white' 
+                            : 'text-gray-400 hover:text-white' }}">
+                    Gestión de Docentes
+                </a>
+            </div>
+        </div>
     </nav>
 </div>
