@@ -86,6 +86,12 @@
                             : 'text-gray-400 hover:text-white' }}">
                     Planes de Estudio
                 </a>
+                <a href="{{ route('academic.modules') }}" class="block px-3 py-2 rounded-md text-sm font-medium
+                        {{ request()->routeIs('academic.modules') 
+                            ? 'text-white' 
+                            : 'text-gray-400 hover:text-white' }}">
+                    Módulos Formativos
+                </a>
             </div>
         </div>
     </nav>

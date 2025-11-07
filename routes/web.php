@@ -5,6 +5,7 @@ use App\Livewire\Pages\Settings\Classrooms\ClassroomManager;
 use App\Livewire\Pages\Settings\PaymentConcepts\PaymentConceptManager;
 use App\Livewire\Pages\Academic\Careers\CareerManager;
 use App\Livewire\Pages\Academic\StudyPlans\StudyPlanManager;
+use App\Livewire\Pages\Academic\Modules\ModuleManager;
 
 Route::get('/', function () {
     return view('welcome');
@@ -35,4 +36,6 @@ Route::prefix('academic')->middleware(['auth', 'verified'])->name('academic.')->
     Route::get('careers', CareerManager::class)->name('careers');
     //Rutas para el Manejo de Planes de Estudio
     Route::get('study-plans', StudyPlanManager::class)->name('study-plans');
+    //Rutas para el Manejo de Módulos
+    Route::get('modules', ModuleManager::class)->name('modules');
 });
