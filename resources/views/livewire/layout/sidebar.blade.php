@@ -202,6 +202,13 @@
                             : 'text-gray-400 hover:text-white' }}">
                     Carga Académica (Secciones)
                 </a>
+
+                <a href="{{ route('academic-process.schedules') }}" class="block px-3 py-2 rounded-md text-sm font-medium
+                        {{ request()->routeIs('academic-process.schedules') 
+                            ? 'text-white' 
+                            : 'text-gray-400 hover:text-white' }}">
+                    Gestión de Horarios
+                </a>
             </div>
         </div>
     </nav>

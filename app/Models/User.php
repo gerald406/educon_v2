@@ -8,13 +8,14 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
+// (Nos aseguramos de que HasTeams NO esté aquí)
 use Laravel\Sanctum\HasApiTokens;
+// [NUEVO] Importamos las relaciones
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable
 {
     use HasApiTokens;
-
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory;
     use HasProfilePhoto;
     use Notifiable;
@@ -22,19 +23,16 @@ class User extends Authenticatable
 
     /**
      * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
      */
     protected $fillable = [
         'name',
         'email',
         'password',
+        'user_type', // Añadido en Fase 26
     ];
 
     /**
      * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
      */
     protected $hidden = [
         'password',
@@ -44,32 +42,23 @@ class User extends Authenticatable
     ];
 
     /**
+     * The attributes that should be cast.
+     */
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+
+    /**
      * The accessors to append to the model's array form.
-     *
-     * @var array<int, string>
      */
     protected $appends = [
         'profile_photo_url',
     ];
 
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
-
-
-    /**
      * Obtiene el perfil de docente asociado al usuario.
      */
-    public function teacher()
+    public function teacher(): HasOne
     {
         return $this->hasOne(Teacher::class);
     }
@@ -77,7 +66,7 @@ class User extends Authenticatable
     /**
      * Obtiene el perfil de estudiante asociado al usuario.
      */
-    public function student()
+    public function student(): HasOne
     {
         return $this->hasOne(Student::class);
     }

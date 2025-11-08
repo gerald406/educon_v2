@@ -5,6 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+// [NUEVO] Importar tipos de relación
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+// [NUEVO] Importar los modelos relacionados
+use App\Models\Teacher;
+use App\Models\DidacticUnit;
+use App\Models\AcademicPeriod;
+use App\Models\Shift;
+use App\Models\Schedule;
 
 class TeacherAssignment extends Model
 {
@@ -24,7 +34,7 @@ class TeacherAssignment extends Model
     /**
      * La asignación pertenece a un docente.
      */
-    public function teacher()
+    public function teacher(): BelongsTo // <-- Tipo de retorno añadido
     {
         return $this->belongsTo(Teacher::class);
     }
@@ -32,7 +42,7 @@ class TeacherAssignment extends Model
     /**
      * La asignación pertenece a una unidad didáctica (curso).
      */
-    public function didacticUnit()
+    public function didacticUnit(): BelongsTo // <-- Tipo de retorno añadido
     {
         return $this->belongsTo(DidacticUnit::class);
     }
@@ -40,7 +50,7 @@ class TeacherAssignment extends Model
     /**
      * La asignación pertenece a un periodo académico.
      */
-    public function academicPeriod()
+    public function academicPeriod(): BelongsTo // <-- Tipo de retorno añadido
     {
         return $this->belongsTo(AcademicPeriod::class);
     }
@@ -48,7 +58,7 @@ class TeacherAssignment extends Model
     /**
      * La asignación pertenece a un turno.
      */
-    public function shift()
+    public function shift(): BelongsTo // <-- Tipo de retorno añadido
     {
         return $this->belongsTo(Shift::class);
     }
@@ -56,7 +66,7 @@ class TeacherAssignment extends Model
     /**
      * Una asignación (sección) tiene un horario (o varios).
      */
-    public function schedules()
+    public function schedules(): HasMany // <-- Tipo de retorno añadido
     {
         return $this->hasMany(Schedule::class);
     }

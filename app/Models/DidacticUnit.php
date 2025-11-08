@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -9,6 +10,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class DidacticUnit extends Model
 {
     use HasFactory, SoftDeletes;
+
+    protected $appends = ['name_with_semester'];
 
     protected $fillable = [
         'module_id',
@@ -58,6 +61,17 @@ class DidacticUnit extends Model
             'prerequisites',
             'prerequisite_unit_id',
             'didactic_unit_id'
+        );
+    }
+
+    /**
+     * [NUEVO] Accessor para el nombre con semestre.
+     * Esto crea el atributo virtual 'name_with_semester'
+     */
+    protected function nameWithSemester(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => "(Sem {$this->semester}) - {$this->name}",
         );
     }
 }
