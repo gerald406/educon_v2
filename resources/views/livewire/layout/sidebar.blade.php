@@ -195,6 +195,13 @@
                                 : 'text-gray-400 hover:text-white' }}">
                     Periodos Académicos
                 </a>
+
+                <a href="{{ route('academic-process.teacher-assignments') }}" class="block px-3 py-2 rounded-md text-sm font-medium
+                        {{ request()->routeIs('academic-process.teacher-assignments') 
+                            ? 'text-white' 
+                            : 'text-gray-400 hover:text-white' }}">
+                    Carga Académica (Secciones)
+                </a>
             </div>
         </div>
     </nav>

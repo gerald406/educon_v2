@@ -19,6 +19,7 @@ use App\Livewire\Pages\People\Teachers\TeacherManager;
 use App\Livewire\Pages\People\Students\StudentManager;
 
 use App\Livewire\Pages\AcademicProcess\AcademicPeriods\AcademicPeriodManager;
+use App\Livewire\Pages\AcademicProcess\TeacherAssignments\TeacherAssignmentManager;
 
 
 Route::get('/', function () {
@@ -78,6 +79,8 @@ Route::prefix('people')->middleware(['auth', 'verified'])->name('people.')->grou
 
 // [NUEVO GRUPO] Grupo de Rutas para Procesos Académicos
 Route::prefix('academic-process')->middleware(['auth', 'verified'])->name('academic-process.')->group(function () {
+    //Rutas para la Gestión de Períodos Académicos
     Route::get('academic-periods', AcademicPeriodManager::class)->name('academic-periods');
-    // ... aquí irán carga académica, horarios, etc.
+    //Rutas para la Gestión de Asignaciones de Docentes
+    Route::get('teacher-assignments', TeacherAssignmentManager::class)->name('teacher-assignments');
 });
