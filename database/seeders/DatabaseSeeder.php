@@ -57,6 +57,7 @@ class DatabaseSeeder extends Seeder
             CatalogSeeder::class,
             AcademicStructureSeeder::class, // <-- AÑADE ESTA LÍNEA
             PeopleSeeder::class,
+            AcademicProcessSeeder::class,
         ]);
     }
     

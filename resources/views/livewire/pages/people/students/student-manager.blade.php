@@ -87,8 +87,7 @@
                 </div>
                 <div class="col-span-1">
                     <x-label for="user.password" value="Contraseña" />
-                    <x-input id="user.password" type="password" class="mt-1 block w-full" wire:model.blur="user.password" 
-                             placeholder="{{ $editingUser ? 'Dejar en blanco para no cambiar' : '' }}" />
+                    <x-input id="user.password" type="password" class="mt-1 block w-full" wire:model.blur="user.password" placeholder="{{ $editingUser ? 'Dejar en blanco para no cambiar' : '' }}" />
                     <x-input-error for="user.password" class="mt-2" />
                 </div>
             </div>
