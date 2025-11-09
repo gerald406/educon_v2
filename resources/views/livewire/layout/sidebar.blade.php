@@ -265,5 +265,29 @@
             </div>
         </div>
 
+        <div x-data="{ open: {{ request()->routeIs('certification.*') ? 'true' : 'false' }} }">
+            <button @click="open = !open"
+                    class="w-full flex justify-between items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                           {{ request()->routeIs('certification.*') 
+                              ? 'bg-gray-900 text-white' 
+                              : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                <span class="flex items-center">
+                    <svg class="h-6 w-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5z" /></svg>
+                    Egreso y Certificación
+                </span>
+                <svg :class="{'rotate-180': open, 'rotate-0': !open}" class="h-5 w-5 transform transition-transform duration-150" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+            </button>
+            
+            <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
+                <a href="{{ route('certification.certificates') }}"
+                   class="block px-3 py-2 rounded-md text-sm font-medium
+                          {{ request()->routeIs('certification.certificates') 
+                             ? 'text-white' 
+                             : 'text-gray-400 hover:text-white' }}">
+                    Emisión de Certificados
+                </a>
+            </div>
+        </div>
+
     </nav>
 </div>

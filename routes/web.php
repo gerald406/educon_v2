@@ -29,6 +29,8 @@ use App\Livewire\Pages\Treasury\PaymentManager;
 
 use App\Livewire\Pages\Enrollment\EnrollmentProcess;
 
+use App\Livewire\Pages\Certification\CertificateManager;
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -111,4 +113,10 @@ Route::prefix('treasury')->middleware(['auth', 'verified'])->name('treasury.')->
 // [NUEVO GRUPO] Grupo de Rutas para Matrícula (Estudiantes)
 Route::prefix('enrollment')->middleware(['auth', 'verified'])->name('enrollment.')->group(function () {
     Route::get('process', EnrollmentProcess::class)->name('process');
+});
+
+// [NUEVO GRUPO] Grupo de Rutas para Egreso y Certificación
+Route::prefix('certification')->middleware(['auth', 'verified'])->name('certification.')->group(function () {
+    Route::get('certificates', CertificateManager::class)->name('certificates');
+    // ... aquí irán pasantías, titulación, etc.
 });
