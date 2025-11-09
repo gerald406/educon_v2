@@ -226,12 +226,17 @@
             </button>
             
             <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
-                <a href="{{ route('evaluation.grades') }}"
-                    class="block px-3 py-2 rounded-md text-sm font-medium
+                <a href="{{ route('evaluation.grades') }}" class="block px-3 py-2 rounded-md text-sm font-medium
                             {{ request()->routeIs('evaluation.grades') 
                                 ? 'text-white' 
                                 : 'text-gray-400 hover:text-white' }}">
                     Registro de Notas
+                </a>
+                <a href="{{ route('evaluation.attendances') }}" class="block px-3 py-2 rounded-md text-sm font-medium
+                        {{ request()->routeIs('evaluation.attendances') 
+                            ? 'text-white' 
+                            : 'text-gray-400 hover:text-white' }}">
+                    Registro de Asistencia
                 </a>
             </div>
         </div>

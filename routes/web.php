@@ -23,6 +23,7 @@ use App\Livewire\Pages\AcademicProcess\TeacherAssignments\TeacherAssignmentManag
 use App\Livewire\Pages\AcademicProcess\Schedules\ScheduleManager;
 
 use App\Livewire\Pages\Evaluation\Grades\GradeManager;
+use App\Livewire\Pages\Evaluation\Attendances\AttendanceManager;
 
 
 Route::get('/', function () {
@@ -93,6 +94,8 @@ Route::prefix('academic-process')->middleware(['auth', 'verified'])->name('acade
 
 // [NUEVO GRUPO] Grupo de Rutas para Evaluación
 Route::prefix('evaluation')->middleware(['auth', 'verified'])->name('evaluation.')->group(function () {
+    //Rutas para la Gestión de Calificaciones
     Route::get('grades', GradeManager::class)->name('grades');
-    // ... aquí irán asistencias, etc.
+    //Rutas para la Gestión de Asistencias
+    Route::get('attendances', AttendanceManager::class)->name('attendances');
 });
