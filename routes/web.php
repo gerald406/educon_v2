@@ -22,6 +22,8 @@ use App\Livewire\Pages\AcademicProcess\AcademicPeriods\AcademicPeriodManager;
 use App\Livewire\Pages\AcademicProcess\TeacherAssignments\TeacherAssignmentManager;
 use App\Livewire\Pages\AcademicProcess\Schedules\ScheduleManager;
 
+use App\Livewire\Pages\Evaluation\Grades\GradeManager;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -86,4 +88,11 @@ Route::prefix('academic-process')->middleware(['auth', 'verified'])->name('acade
     Route::get('teacher-assignments', TeacherAssignmentManager::class)->name('teacher-assignments');
     //Rutas para la Gestión de Horarios
     Route::get('schedules', ScheduleManager::class)->name('schedules');
+});
+
+
+// [NUEVO GRUPO] Grupo de Rutas para Evaluación
+Route::prefix('evaluation')->middleware(['auth', 'verified'])->name('evaluation.')->group(function () {
+    Route::get('grades', GradeManager::class)->name('grades');
+    // ... aquí irán asistencias, etc.
 });

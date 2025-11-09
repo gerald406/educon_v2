@@ -25,17 +25,21 @@ class EnrollmentSeeder extends Seeder
             return;
         }
 
-        // 2. Obtener las Secciones (Carga Académica) de ese periodo
-        $assignments = TeacherAssignment::where('academic_period_id', $activePeriod->id)->get();
+        // 2. Obtener las Secciones (Carga Académica) de SEMESTRE 1
+        $assignments = TeacherAssignment::where('academic_period_id', $activePeriod->id)
+            ->whereHas('didacticUnit', function ($query) {
+                $query->where('semester', 1); // <-- FORZAR A SÓLO CURSOS DE SEMESTRE 1
+            })
+            ->get();
+            
         if ($assignments->isEmpty()) {
-            $this->command->warn('No hay carga académica (secciones) en el periodo activo. Omitiendo seeder de matrícula.');
+            $this->command->warn('No hay carga académica (secciones) de Semestre 1 en el periodo activo. Omitiendo seeder de matrícula.');
             return;
         }
 
         // 3. Obtener Estudiantes (ej. los primeros 20)
         $students = Student::take(20)->get();
 
-        // Usar una transacción para actualizar los contadores
         DB::transaction(function () use ($activePeriod, $students, $assignments) {
             foreach ($students as $student) {
                 // 4. Crear la Matrícula (Enrollment)
@@ -45,35 +49,32 @@ class EnrollmentSeeder extends Seeder
                         'academic_period_id' => $activePeriod->id,
                     ],
                     [
-                        'semester_enrolled' => $student->current_semester,
+                        'semester_enrolled' => 1, // <-- FORZARLOS A SEMESTRE 1
                         'enrollment_type' => 'continuing',
                         'payment_status' => 'paid',
                         'status' => 'active',
                     ]
                 );
 
-                // 5. Inscribir al estudiante en los cursos (Registrations)
+                // 5. Inscribir al estudiante en TODOS los cursos de Semestre 1
                 foreach ($assignments as $assignment) {
-                    // Solo inscribir si el curso es del semestre del estudiante
-                    if ($assignment->didacticUnit->semester == $student->current_semester) {
-                        Registration::firstOrCreate(
-                            [
-                                'enrollment_id' => $enrollment->id,
-                                'teacher_assignment_id' => $assignment->id,
-                            ],
-                            [
-                                'registration_type' => 'mandatory',
-                                'status' => 'enrolled',
-                            ]
-                        );
-                        
-                        // Actualizar el contador de matriculados en la sección
-                        $assignment->increment('current_enrolled');
-                    }
+                    Registration::firstOrCreate(
+                        [
+                            'enrollment_id' => $enrollment->id,
+                            'teacher_assignment_id' => $assignment->id,
+                        ],
+                        [
+                            'registration_type' => 'mandatory',
+                            'status' => 'enrolled',
+                        ]
+                    );
+                    
+                    // Actualizar el contador de matriculados en la sección
+                    $assignment->increment('current_enrolled');
                 }
             }
         });
 
-        $this->command->info('Matrículas e inscripciones de ejemplo creadas exitosamente.');
+        $this->command->info('Matrículas e inscripciones (Semestre 1) creadas exitosamente.');
     }
 }

@@ -211,5 +211,29 @@
                 </a>
             </div>
         </div>
+
+        <div x-data="{ open: {{ request()->routeIs('evaluation.*') ? 'true' : 'false' }} }">
+            <button @click="open = !open"
+                    class="w-full flex justify-between items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                            {{ request()->routeIs('evaluation.*') 
+                                ? 'bg-gray-900 text-white' 
+                                : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                <span class="flex items-center">
+                    <svg class="h-6 w-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z" /><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" /></svg>
+                    Evaluación y Notas
+                </span>
+                <svg :class="{'rotate-180': open, 'rotate-0': !open}" class="h-5 w-5 transform transition-transform duration-150" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+            </button>
+            
+            <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
+                <a href="{{ route('evaluation.grades') }}"
+                    class="block px-3 py-2 rounded-md text-sm font-medium
+                            {{ request()->routeIs('evaluation.grades') 
+                                ? 'text-white' 
+                                : 'text-gray-400 hover:text-white' }}">
+                    Registro de Notas
+                </a>
+            </div>
+        </div>
     </nav>
 </div>
