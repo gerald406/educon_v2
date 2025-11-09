@@ -25,6 +25,7 @@ use App\Livewire\Pages\AcademicProcess\Schedules\ScheduleManager;
 use App\Livewire\Pages\Evaluation\Grades\GradeManager;
 use App\Livewire\Pages\Evaluation\Attendances\AttendanceManager;
 
+use App\Livewire\Pages\Treasury\PaymentManager;
 
 Route::get('/', function () {
     return view('welcome');
@@ -98,4 +99,9 @@ Route::prefix('evaluation')->middleware(['auth', 'verified'])->name('evaluation.
     Route::get('grades', GradeManager::class)->name('grades');
     //Rutas para la Gestión de Asistencias
     Route::get('attendances', AttendanceManager::class)->name('attendances');
+});
+
+// [NUEVO GRUPO] Grupo de Rutas para Tesorería
+Route::prefix('treasury')->middleware(['auth', 'verified'])->name('treasury.')->group(function () {
+    Route::get('payments', PaymentManager::class)->name('payments');
 });

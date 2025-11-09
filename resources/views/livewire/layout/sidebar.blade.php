@@ -240,5 +240,30 @@
                 </a>
             </div>
         </div>
+
+        <div x-data="{ open: {{ request()->routeIs('treasury.*') ? 'true' : 'false' }} }">
+            <button @click="open = !open"
+                    class="w-full flex justify-between items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                            {{ request()->routeIs('treasury.*') 
+                            ? 'bg-gray-900 text-white' 
+                            : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                <span class="flex items-center">
+                    <svg class="h-6 w-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h6m3-3.75l-3 3m0 0l-3-3m3 3V1.5m6 5.25h6m-6 2.25h6m3-3.75l-3 3m0 0l-3-3m3 3V1.5" /></svg>
+                    Tesorería (Caja)
+                </span>
+                <svg :class="{'rotate-180': open, 'rotate-0': !open}" class="h-5 w-5 transform transition-transform duration-150" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+            </button>
+            
+            <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
+                <a href="{{ route('treasury.payments') }}"
+                    class="block px-3 py-2 rounded-md text-sm font-medium
+                        {{ request()->routeIs('treasury.payments') 
+                            ? 'text-white' 
+                            : 'text-gray-400 hover:text-white' }}">
+                    Gestión de Pagos
+                </a>
+            </div>
+        </div>
+
     </nav>
 </div>

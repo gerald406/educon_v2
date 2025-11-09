@@ -4,8 +4,10 @@ namespace Database\Seeders;
 
 use App\Models\AcademicPeriod;
 use App\Models\Enrollment;
+use App\Models\PaymentConcept; // <-- [NUEVO] Importar
 use App\Models\Registration;
 use App\Models\Student;
+use App\Models\StudentPayment; // <-- [NUEVO] Importar
 use App\Models\TeacherAssignment;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -40,7 +42,15 @@ class EnrollmentSeeder extends Seeder
         // 3. Obtener Estudiantes (ej. los primeros 20)
         $students = Student::take(20)->get();
 
-        DB::transaction(function () use ($activePeriod, $students, $assignments) {
+        // [NUEVO] Obtener el concepto de pago "Matrícula Regular"
+        $matriculaConcept = PaymentConcept::where('code', 'MAT-REG')->first();
+        if (!$matriculaConcept) {
+            $this->command->error('No se encontró el Concepto de Pago "MAT-REG".');
+            return;
+        }
+
+
+        DB::transaction(function () use ($activePeriod, $students, $assignments, $matriculaConcept) { // <-- [CAMBIO] Añadir $matriculaConcept
             foreach ($students as $student) {
                 // 4. Crear la Matrícula (Enrollment)
                 $enrollment = Enrollment::firstOrCreate(
@@ -51,12 +61,30 @@ class EnrollmentSeeder extends Seeder
                     [
                         'semester_enrolled' => 1, // <-- FORZARLOS A SEMESTRE 1
                         'enrollment_type' => 'continuing',
-                        'payment_status' => 'paid',
+                        'payment_status' => 'pending', // <-- [CAMBIO] La matrícula está PENDIENTE de pago
                         'status' => 'active',
                     ]
                 );
 
-                // 5. Inscribir al estudiante en TODOS los cursos de Semestre 1
+                // --- [NUEVO BLOQUE AÑADIDO] ---
+                // 5. Crear la Deuda de Matrícula en StudentPayments
+                StudentPayment::firstOrCreate(
+                    [
+                        'student_id' => $student->id,
+                        'payment_concept_id' => $matriculaConcept->id,
+                        'academic_period_id' => $activePeriod->id,
+                    ],
+                    [
+                        'original_amount' => $matriculaConcept->amount,
+                        'final_amount' => $matriculaConcept->amount,
+                        'due_date' => $activePeriod->enrollment_end_date, // Vence el último día de matrícula
+                        'status' => 'pending', // <-- La deuda está PENDIENTE
+                    ]
+                );
+                // --- [FIN DEL NUEVO BLOQUE] ---
+
+
+                // 6. Inscribir al estudiante en TODOS los cursos de Semestre 1
                 foreach ($assignments as $assignment) {
                     Registration::firstOrCreate(
                         [
@@ -75,6 +103,6 @@ class EnrollmentSeeder extends Seeder
             }
         });
 
-        $this->command->info('Matrículas e inscripciones (Semestre 1) creadas exitosamente.');
+        $this->command->info('Matrículas, deudas e inscripciones (Semestre 1) creadas exitosamente.'); // <-- [CAMBIO] Mensaje actualizado
     }
 }
