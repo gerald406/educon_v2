@@ -27,6 +27,8 @@ use App\Livewire\Pages\Evaluation\Attendances\AttendanceManager;
 
 use App\Livewire\Pages\Treasury\PaymentManager;
 
+use App\Livewire\Pages\Enrollment\EnrollmentProcess;
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -104,4 +106,9 @@ Route::prefix('evaluation')->middleware(['auth', 'verified'])->name('evaluation.
 // [NUEVO GRUPO] Grupo de Rutas para Tesorería
 Route::prefix('treasury')->middleware(['auth', 'verified'])->name('treasury.')->group(function () {
     Route::get('payments', PaymentManager::class)->name('payments');
+});
+
+// [NUEVO GRUPO] Grupo de Rutas para Matrícula (Estudiantes)
+Route::prefix('enrollment')->middleware(['auth', 'verified'])->name('enrollment.')->group(function () {
+    Route::get('process', EnrollmentProcess::class)->name('process');
 });

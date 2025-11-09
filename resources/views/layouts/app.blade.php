@@ -21,34 +21,40 @@
 
         <div x-data="{ sidebarOpen: false }" class="min-h-screen bg-gray-100">
             
-            <div class="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
-                <livewire:layout.sidebar />
-            </div>
-
-            <div x-show="sidebarOpen" 
-                 class="fixed inset-0 flex z-40 md:hidden" 
-                 x-transition:enter="transition-opacity ease-linear duration-300"
-                 x-transition:enter-start="opacity-0"
-                 x-transition:enter-end="opacity-100"
-                 x-transition:leave="transition-opacity ease-linear duration-300"
-                 x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0"
-                 @click.away="sidebarOpen = false">
-                
-                <div @click="sidebarOpen = false" class="fixed inset-0 bg-gray-600 bg-opacity-75" aria-hidden="true"></div>
-                
-                <div class="relative flex-1 flex flex-col max-w-xs w-full"
-                     x-transition:enter="transition ease-in-out duration-300 transform"
-                     x-transition:enter-start="-translate-x-full"
-                     x-transition:enter-end="translate-x-0"
-                     x-transition:leave="transition ease-in-out duration-300 transform"
-                     x-transition:leave-start="translate-x-0"
-                     x-transition:leave-end="-translate-x-full">
+            @auth
+            @if(Auth::user()->user_type === 'administrator')
+                <div class="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
                     <livewire:layout.sidebar />
                 </div>
-            </div>
 
-            <div class="flex flex-col flex-1 md:pl-64">
+                <div x-show="sidebarOpen" 
+                     class="fixed inset-0 flex z-40 md:hidden" 
+                     x-transition:enter="transition-opacity ease-linear duration-300"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     x-transition:leave="transition-opacity ease-linear duration-300"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0"
+                     @click.away="sidebarOpen = false">
+                    
+                    <div @click="sidebarOpen = false" class="fixed inset-0 bg-gray-600 bg-opacity-75" aria-hidden="true"></div>
+                    
+                    <div class="relative flex-1 flex flex-col max-w-xs w-full"
+                         x-transition:enter="transition ease-in-out duration-300 transform"
+                         x-transition:enter-start="-translate-x-full"
+                         x-transition:enter-end="translate-x-0"
+                         x-transition:leave="transition ease-in-out duration-300 transform"
+                         x-transition:leave-start="translate-x-0"
+                         x-transition:leave-end="-translate-x-full">
+                        <livewire:layout.sidebar />
+                    </div>
+                </div>
+            @endif
+            @endauth
+            <div @class([
+                    'flex flex-col flex-1',
+                    'md:pl-64' => Auth::check() && Auth::user()->user_type === 'administrator'
+                 ])>
                 
                 @livewire('navigation-menu')
 

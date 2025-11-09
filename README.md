@@ -1,59 +1,116 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# EduCON Laravel 12 - Sistema Integral de Gestión Académica
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## 🎯 Descripción del Proyecto
 
-## About Laravel
+Este proyecto es un **Sistema Integral de Gestión Académica (EduCON)** desarrollado con **Laravel 12**, orientado a Institutos de Educación Superior Tecnológica en Perú, alineado con la normativa del **MINEDU** y basado en procesos administrativos reales.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+El objetivo es construir una plataforma modular, escalable y mantenible que permita gestionar procesos académicos clave como matrícula, carga académica, notas, certificados, títulos, trámites y control de usuarios con perfiles y permisos.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 👷‍♂️ Enfoque de Desarrollo
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+El desarrollo seguirá un enfoque **progresivo y modular**, aplicando **buenas prácticas profesionales**:
 
-## Learning Laravel
+* Arquitectura modular y limpia
+* Nomenclatura RESTful
+* Uso de **Form Requests**, **Policies**, **Seeders**, **Middlewares**, **Livewire (cuando sea conveniente)**
+* Migraciones bien pensadas con estructura lógica y escalable
+* Control de acceso basado en roles reales: Director General, Director Académico, Coordinador Académico, Docente, Alumno
+* Documentación clara para que cualquier desarrollador pueda continuar el proyecto
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## 🧩 Módulos Planificados
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+| Módulo                              | Subprocesos / Funciones principales                                                                            |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Matrícula**                       | Apertura de semestre, pre-matrícula, convalidaciones, ratificación, reserva, reincorporación, cierre académico |
+| **Carga Académica**                 | Plan de cursos, asignación de carga docente                                                                    |
+| **Notas**                           | Fórmula de evaluación, registro de notas, digitalización de actas                                              |
+| **Docentes**                        | Programación académica, registro de CV                                                                         |
+| **Constancias y Certificados**      | Orden de mérito, situación académica, récord académico, certificaciones                                        |
+| **Títulos**                         | Gestión de expedientes y emisión de títulos                                                                    |
+| **Trámites y Servicios Académicos** | Solicitudes y seguimiento de trámites                                                                          |
+| **Reportes**                        | Filtros por programa, semestre, estado de matrícula, estado académico, etc.                                    |
+| **Seguridad**                       | Usuarios, roles, permisos, logs de actividad                                                                   |
 
-## Laravel Sponsors
+### 📌 Módulos y Submenús del Sistema
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+#### 🏛️ 1. MÓDULO DE GESTIÓN INSTITUCIONAL
 
-### Premium Partners
+```
+├── Configuración Institucional
+│   ├── Datos de la Institución
+│   ├── Configuración General
+│   └── Parámetros del Sistema
+│
+├── Gestión de Carreras Profesionales
+│   ├── Registro de Carreras
+│   ├── Planes de Estudio
+│   ├── Módulos Formativos
+│   └── Unidades Didácticas
+│
+├── Períodos Académicos
+│   ├── Años Académicos
+│   ├── Semestres/Períodos
+│   └── Calendario Académico
+│
+└── Recursos e Infraestructura
+    ├── Aulas y Laboratorios
+    ├── Asignación de Espacios
+    └── Mantenimiento de Recursos
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+#### 👥 2. MÓDULO DE GESTIÓN DE USUARIOS
 
-## Contributing
+```
+├── Administración de Usuarios
+│   ├── Registro de Usuarios
+│   ├── Perfiles y Roles
+│   ├── Permisos de Acceso
+│   └── Reseteo de Contraseñas
+│
+├── Gestión de Docentes
+│   ├── Registro de Docentes
+│   ├── Información Académica
+│   ├── Contratos y Estado
+│   └── Carga Horaria
+│
+└── Gestión de Estudiantes
+    ├── Registro de Estudiantes
+    ├── Información Personal
+    ├── Estado Académico
+    └── Historial Académico
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+#### 📝 3. MÓDULO DE ADMISIÓN
 
-## Code of Conduct
+```
+├── Proceso de Admisión
+│   ├── Registro de Postulantes
+│   ├── Evaluación de Postulantes
+│   ├── Resultados de Admisión
+│   └── Orden de Mérito
+│
+└── Matrícula de Ingresantes
+    ├── Conversión a Estudiante
+    └── Asignación de Código
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+... (continuar con el resto de módulos como en la lista proporcionada) ...
 
-## Security Vulnerabilities
+## 📂 Flujo de Trabajo Definido
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+1. **Mapa macro del sistema**: estructura de carpetas, módulos y nombres de entidades en Laravel 12 (SIN código al inicio).
+2. **Diseño de base de datos**: definición de tablas, nombres en inglés y plural, relaciones Eloquent con llaves primarias y foráneas.
+3. **Inicio del desarrollo por módulos** comenzando por **Módulo Matrícula** (solo cuando se indique explícitamente "INICIAR MÓDULO MATRÍCULA").
+4. Cada módulo se trabajará en el siguiente orden:
 
-## License
+   * Diseño de entidades
+   * Migraciones y modelos Eloquent
+   * Seeders básicos
+   * Controladores y rutas estructuradas
+   * Validaciones y flujo de formularios
+   * Sugerencias de interfaz para vistas futuras (sin implementar aún)
+   * Explicación pedagógica tipo mentor
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 🎓 Estilo de Documentación
+
+> La guía y documentación interna del proyecto se realizará bajo un estilo **didáctico para desarrolladores intermedios**, con enfoque en **buenas prácticas reales de Laravel en entornos académicos institucionales del Perú**.
