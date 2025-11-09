@@ -30,6 +30,7 @@ use App\Livewire\Pages\Treasury\PaymentManager;
 use App\Livewire\Pages\Enrollment\EnrollmentProcess;
 
 use App\Livewire\Pages\Certification\CertificateManager;
+use App\Livewire\Pages\Certification\InternshipManager;
 
 Route::get('/', function () {
     return view('welcome');
@@ -118,5 +119,5 @@ Route::prefix('enrollment')->middleware(['auth', 'verified'])->name('enrollment.
 // [NUEVO GRUPO] Grupo de Rutas para Egreso y Certificación
 Route::prefix('certification')->middleware(['auth', 'verified'])->name('certification.')->group(function () {
     Route::get('certificates', CertificateManager::class)->name('certificates');
-    // ... aquí irán pasantías, titulación, etc.
+    Route::get('internships', InternshipManager::class)->name('internships');
 });

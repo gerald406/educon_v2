@@ -280,11 +280,19 @@
             
             <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
                 <a href="{{ route('certification.certificates') }}"
-                   class="block px-3 py-2 rounded-md text-sm font-medium
-                          {{ request()->routeIs('certification.certificates') 
-                             ? 'text-white' 
-                             : 'text-gray-400 hover:text-white' }}">
+                class="block px-3 py-2 rounded-md text-sm font-medium
+                        {{ request()->routeIs('certification.certificates') 
+                            ? 'text-white' 
+                            : 'text-gray-400 hover:text-white' }}">
                     Emisión de Certificados
+                </a>
+
+                <a href="{{ route('certification.internships') }}"
+                class="block px-3 py-2 rounded-md text-sm font-medium
+                        {{ request()->routeIs('certification.internships') 
+                            ? 'text-white' 
+                            : 'text-gray-400 hover:text-white' }}">
+                    Gestión de Pasantías
                 </a>
             </div>
         </div>
