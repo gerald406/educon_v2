@@ -292,7 +292,14 @@
                         {{ request()->routeIs('certification.internships') 
                             ? 'text-white' 
                             : 'text-gray-400 hover:text-white' }}">
-                    Gestión de Pasantías
+                    Gestión de EFST
+                </a>
+                <a href="{{ route('certification.graduation-processes') }}"
+                class="block px-3 py-2 rounded-md text-sm font-medium
+                        {{ request()->routeIs('certification.graduation-processes') 
+                            ? 'text-white' 
+                            : 'text-gray-400 hover:text-white' }}">
+                    Procesos de Titulación
                 </a>
             </div>
         </div>

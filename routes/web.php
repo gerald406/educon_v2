@@ -31,6 +31,7 @@ use App\Livewire\Pages\Enrollment\EnrollmentProcess;
 
 use App\Livewire\Pages\Certification\CertificateManager;
 use App\Livewire\Pages\Certification\InternshipManager;
+use App\Livewire\Pages\Certification\GraduationProcessManager;
 
 Route::get('/', function () {
     return view('welcome');
@@ -118,6 +119,10 @@ Route::prefix('enrollment')->middleware(['auth', 'verified'])->name('enrollment.
 
 // [NUEVO GRUPO] Grupo de Rutas para Egreso y Certificación
 Route::prefix('certification')->middleware(['auth', 'verified'])->name('certification.')->group(function () {
+    // Rutas para la Emisión de Certificados
     Route::get('certificates', CertificateManager::class)->name('certificates');
+    // Rutas para la Gestión de Practicas profesionales
     Route::get('internships', InternshipManager::class)->name('internships');
+    // Rutas para la Gestión de Procesos de Graduación
+    Route::get('graduation-processes', GraduationProcessManager::class)->name('graduation-processes');
 });
