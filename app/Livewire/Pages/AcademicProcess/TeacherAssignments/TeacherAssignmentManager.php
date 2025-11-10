@@ -3,10 +3,11 @@
 namespace App\Livewire\Pages\AcademicProcess\TeacherAssignments;
 
 use App\Models\AcademicPeriod;
-use App\Models\DidacticUnit;
+use App\Models\DidacticUnit; // <-- [NUEVO] Importar modelo
 use App\Models\Shift;
-use App\Models\Teacher;
+use App\Models\Teacher; // <-- [NUEVO] Importar modelo
 use App\Models\TeacherAssignment;
+use App\Services\TeacherWorkloadService; // <-- [NUEVO] Importar el servicio
 use Illuminate\Database\QueryException;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -32,11 +33,22 @@ class TeacherAssignmentManager extends Component
     public $isModalOpen = false;
     public $search = '';
 
-    // --- DATOS DEL CONTEXTO (usando arrays) ---
+    // --- DATOS DEL CONTEXTO ---
     public ?AcademicPeriod $activePeriod = null;
     public $teachers = [];
     public $didacticUnits = [];
     public $shifts = [];
+
+    // --- [NUEVO] Propiedad para el servicio ---
+    protected TeacherWorkloadService $workloadService;
+
+    /**
+     * [NUEVO] Inyectar el servicio en el constructor.
+     */
+    public function __construct()
+    {
+        $this->workloadService = new TeacherWorkloadService();
+    }
 
     /**
      * Hook 'mount': Carga el periodo activo y los dropdowns.
@@ -69,19 +81,16 @@ class TeacherAssignmentManager extends Component
             }
         }
 
-        // --- CÓDIGO CORREGIDO ---
         // Cargar unidades didácticas
         $unitsList = DidacticUnit::where('status', 'active')
             ->orderBy('semester')
             ->orderBy('name')
-            ->get(); // Obtenemos la colección
+            ->get();
 
         $this->didacticUnits = [];
         foreach ($unitsList as $unit) {
-            // Usamos el accessor 'name_with_semester' que ya funciona
-            $this->didacticUnits[$unit->id] = $unit->name_with_semester;
+            $this->didacticUnits[$unit->id] = $unit->name_with_semester; // Usamos el accessor
         }
-        // --- FIN DEL CÓDIGO CORREGIDO ---
 
         // Cargar turnos
         $this->shifts = Shift::where('status', 'active')
@@ -106,14 +115,13 @@ class TeacherAssignmentManager extends Component
 
         // Regla adicional para evitar duplicados
         if ($this->activePeriod) {
-            // Regla: Único para la combinación de periodo, unidad, sección y turno.
-            // (He simplificado la regla de tu código porque 'teacher_id' no debería
-            // ser parte de la unicidad de una sección, pero sí 'shift_id')
             $uniqueRule = Rule::unique('teacher_assignments')
-                ->where('academic_period_id', $this->activePeriod->id)
-                ->where('didactic_unit_id', $this->didactic_unit_id)
-                ->where('section', $this->section)
-                ->where('shift_id', $this->shift_id);
+                ->where(function ($query) {
+                    return $query->where('academic_period_id', $this->activePeriod->id)
+                                 ->where('didactic_unit_id', $this->didactic_unit_id)
+                                 ->where('section', $this->section)
+                                 ->where('shift_id', $this->shift_id);
+                });
 
             if ($this->editingAssignment) {
                 $uniqueRule->ignore($this->editingAssignment->id);
@@ -135,7 +143,7 @@ class TeacherAssignmentManager extends Component
             'didactic_unit_id.required' => 'Debe seleccionar una unidad didáctica.',
             'shift_id.required' => 'Debe seleccionar un turno.',
             'section.required' => 'La sección es requerida.',
-            'section.unique' => 'Ya existe una sección con esta unidad y turno en el periodo actual.',
+            'section.unique' => 'Ya existe una asignación para esta unidad, sección y turno en el periodo actual.',
             'max_capacity.required' => 'La capacidad máxima es requerida.',
             'max_capacity.min' => 'La capacidad debe ser al menos 1.',
         ];
@@ -172,12 +180,14 @@ class TeacherAssignmentManager extends Component
         $this->reset(['teacher_id', 'didactic_unit_id', 'shift_id', 'section', 'max_capacity', 'status', 'editingAssignment']);
         $this->resetValidation();
         
-        // Resetear la sección a un valor por defecto
         $this->section = 'A';
         $this->max_capacity = 30;
         $this->status = 'active';
     }
 
+    /**
+     * [MÉTODO SAVE MODIFICADO]
+     */
     public function save()
     {
         if (!$this->activePeriod) {
@@ -190,8 +200,39 @@ class TeacherAssignmentManager extends Component
         }
 
         try {
+            // 1. Validar los datos del formulario (como lo tenías)
             $validatedData = $this->validate();
             
+            // --- [NUEVA LÓGICA DE VALIDACIÓN DE CARGA HORARIA] ---
+            $teacher = Teacher::find($validatedData['teacher_id']);
+            $unit = DidacticUnit::find($validatedData['didactic_unit_id']);
+
+            if (!$teacher || !$unit) {
+                $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'El docente o la unidad didáctica no se encontraron.']);
+                return;
+            }
+
+            // Llamamos al servicio para verificar
+            if ($this->workloadService->wouldExceedMaxHours($teacher, $this->activePeriod, $unit, $this->editingAssignment)) {
+                
+                // Si excede, calculamos las horas actuales para mostrar un mensaje claro
+                $currentHours = $this->workloadService->calculateWeeklyHours($teacher, $this->activePeriod);
+                
+                $this->dispatch('swal', [
+                    'icon' => 'error',
+                    'title' => 'Carga Horaria Excedida',
+                    'text' => "No se puede asignar. El docente ya tiene {$currentHours} horas. Añadir este curso ({$unit->weekly_hours}h) excedería el límite de 26 horas.",
+                    'toast' => false,
+                    'position' => 'center',
+                    'timer' => null,
+                    'showConfirmButton' => true,
+                ]);
+                return; // Detener el guardado
+            }
+            // --- [FIN DE LA NUEVA LÓGICA] ---
+
+            
+            // 2. Continuar con la lógica de guardado (como lo tenías)
             $validatedData['academic_period_id'] = $this->activePeriod->id;
             
             if (!$this->editingAssignment) {
@@ -234,14 +275,13 @@ class TeacherAssignmentManager extends Component
     }
 
     #[On('deleteAssignment')]
-    public function deleteAssignment($data)
+    public function deleteAssignment(int $id)
     {
         try {
-            $id = is_array($data) ? $data['id'] : $data;
+            // $id = is_array($data) ? $data['id'] : $data;
             
             $assignment = TeacherAssignment::findOrFail($id);
             
-            // Verificar si tiene estudiantes matriculados
             if ($assignment->current_enrolled > 0) {
                 $this->dispatch('swal', [
                     'icon' => 'error',
@@ -251,9 +291,8 @@ class TeacherAssignmentManager extends Component
                 return;
             }
             
-            // Advertencia de horarios (opcional, ya que 'on cascade' los borrará)
             if ($assignment->schedules()->exists()) {
-                // Borramos los horarios manualmente
+                 // Borramos los horarios primero
                 $assignment->schedules()->delete();
             }
             
@@ -310,7 +349,7 @@ class TeacherAssignmentManager extends Component
             }
             
             $assignments = $query->orderBy('created_at', 'desc')
-                                 ->paginate(10);
+                                ->paginate(10);
         }
 
         return view('livewire.pages.academic-process.teacher-assignments.teacher-assignment-manager', [

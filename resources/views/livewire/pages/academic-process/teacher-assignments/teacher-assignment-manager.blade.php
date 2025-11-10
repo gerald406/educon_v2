@@ -32,6 +32,7 @@
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-medium">Unidad Didáctica (Curso)</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium">Horas Sem.</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium">Docente</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium">Turno</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium">Sección</th>
@@ -43,6 +44,7 @@
                                     @forelse ($assignments as $assignment)
                                         <tr>
                                             <td class="px-6 py-4">{{ $assignment->didacticUnit->name ?? 'N/A' }}</td>
+                                            <td class="px-6 py-4">{{ $assignment->didacticUnit->weekly_hours ?? 'N/A' }}</td>
                                             <td class="px-6 py-4">{{ $assignment->teacher->user->name ?? 'N/A' }}</td>
                                             <td class="px-6 py-4">{{ $assignment->shift->name ?? 'N/A' }}</td>
                                             <td class="px-6 py-4">{{ $assignment->section }}</td>
