@@ -7,32 +7,39 @@ use Livewire\Component;
 
 class DashboardManager extends Component
 {
+    // Propiedad para almacenar qué dashboard debemos mostrar
+    public $viewToRender = '';
+
     /**
-     * Renderiza el dashboard correspondiente basado en el rol.
-     * [CÓDIGO CORREGIDO]
+     * Hook 'mount': Decide qué vista se debe renderizar.
      */
-    public function render()
+    public function mount()
     {
         $user = Auth::user();
 
         if ($user->hasRole('Administrador')) {
-            // Carga la *vista* del AdminDashboard
-            return view('livewire.dashboard.admin-dashboard');
+            $this->viewToRender = 'dashboard.admin-dashboard';
         
         } elseif ($user->hasAnyRole(['Docente', 'Coordinador'])) {
-            // Carga la *vista* del TeacherDashboard
-            return view('livewire.dashboard.teacher-dashboard');
+            $this->viewToRender = 'dashboard.teacher-dashboard';
 
         } elseif ($user->hasRole('Estudiante')) {
-            // Carga la *vista* del StudentDashboard
-            return view('livewire.dashboard.student-dashboard');
+            $this->viewToRender = 'dashboard.student-dashboard';
         
-        } elseif ($user->hasRole('Secretario Academico') || $user->hasRole('Tesoreria')) {
-            // Cargamos la vista de Admin para otros roles de gestión
-            return view('livewire.dashboard.admin-dashboard');
+        } elseif ($user->hasAnyRole(['Secretario Academico', 'Tesoreria'])) {
+            $this->viewToRender = 'dashboard.admin-dashboard';
+        
+        } else {
+            // Fallback por si un usuario no tiene rol
+            $this->viewToRender = 'dashboard.admin-dashboard';
         }
+    }
 
-        // Un dashboard por defecto si no tiene rol
-        return view('livewire.dashboard.admin-dashboard');
+    /**
+     * Renderiza la vista 'dashboard-manager' que actuará como un router.
+     */
+    public function render()
+    {
+        return view('livewire.dashboard.dashboard-manager');
     }
 }

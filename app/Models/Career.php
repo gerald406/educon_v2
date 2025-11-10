@@ -35,4 +35,13 @@ class Career extends Model
     {
         return $this->hasMany(StudyPlan::class);
     }
+    
+    /**
+     * [NUEVA FUNCIÓN AÑADIDA]
+     * Una carrera tiene muchos estudiantes.
+     */
+    public function students()
+    {
+        return $this->hasMany(Student::class);
+    }
 }
