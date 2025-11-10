@@ -38,6 +38,8 @@ use App\Livewire\Pages\Certification\GraduationProcessManager;
 
 use App\Livewire\Pages\Services\Library\LibraryResourceManager;
 
+use App\Livewire\Pages\Reports\ReportManager;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -150,4 +152,9 @@ Route::prefix('teacher')->middleware(['auth', 'verified', 'role:Docente|Coordina
 // [MODIFICADO] Añadido middleware de permiso
 Route::prefix('services')->middleware(['auth', 'verified', 'permission:gestionar-biblioteca'])->name('services.')->group(function () {
     Route::get('library-resources', LibraryResourceManager::class)->name('library-resources');
+});
+
+// [NUEVO GRUPO] Grupo de Rutas para Reportes (Solo Admin)
+Route::prefix('reports')->middleware(['auth', 'verified', 'role:Administrador'])->name('reports.')->group(function () {
+    Route::get('/', ReportManager::class)->name('index');
 });

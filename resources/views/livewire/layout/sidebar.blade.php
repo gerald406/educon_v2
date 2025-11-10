@@ -6,9 +6,7 @@
         <span class="ms-3 text-xl font-semibold">educon</span>
     </div>
 
-    <nav class="space-y-2">
-        
-        <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')"
+    <nav class="space-y-1"> <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')"
             class="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
                    {{ request()->routeIs('dashboard') 
                       ? 'bg-gray-900 text-white' 
@@ -23,8 +21,29 @@
             </span>
         </div>
 
+        @role('Administrador')
+            <div class="mb-1" x-data="{ open: {{ request()->routeIs('reports.*') ? 'true' : 'false' }} }">
+                <button @click="open = !open"
+                        class="w-full flex justify-between items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                               {{ request()->routeIs('reports.*') 
+                                  ? 'bg-gray-900 text-white' 
+                                  : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                    <span class="flex items-center">
+                        <svg class="h-6 w-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z" /><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" /></svg>
+                        Reportes
+                    </span>
+                    <svg :class="{'rotate-180': open, 'rotate-0': !open}" class="h-5 w-5 transform transition-transform duration-150" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+                <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
+                    <a href="{{ route('reports.index') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('reports.index') ? 'text-white' : 'text-gray-400 hover:text-white' }}">
+                        Reportes Generales
+                    </a>
+                </div>
+            </div>
+        @endrole
+
         @canany(['gestionar-estructura-academica', 'gestionar-prerrequisitos'])
-            <div class="mb-2" x-data="{ open: {{ request()->routeIs('academic.*') ? 'true' : 'false' }} }">
+            <div class="mb-1" x-data="{ open: {{ request()->routeIs('academic.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open"
                         class="w-full flex justify-between items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
                                {{ request()->routeIs('academic.*') 
@@ -51,7 +70,7 @@
         @endcanany
 
         @canany(['gestionar-docentes', 'gestionar-estudiantes'])
-            <div class="mb-2" x-data="{ open: {{ request()->routeIs('people.*') ? 'true' : 'false' }} }">
+            <div class="mb-1" x-data="{ open: {{ request()->routeIs('people.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open"
                         class="w-full flex justify-between items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
                                {{ request()->routeIs('people.*') 
@@ -75,7 +94,7 @@
         @endcanany
 
         @canany(['gestionar-periodos', 'gestionar-carga-academica', 'gestionar-horarios', 'aprobar-silabos'])
-            <div class="mb-2" x-data="{ open: {{ request()->routeIs('academic-process.*') ? 'true' : 'false' }} }">
+            <div class="mb-1" x-data="{ open: {{ request()->routeIs('academic-process.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open"
                         class="w-full flex justify-between items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
                                {{ request()->routeIs('academic-process.*') 
@@ -89,43 +108,23 @@
                 </button>
                 <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
                     @can('gestionar-periodos')
-                        <a href="{{ route('academic-process.academic-periods') }}" class="block px-3 py-2 ..."> Periodos Académicos </a>
+                        <a href="{{ route('academic-process.academic-periods') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('academic-process.academic-periods') ? 'text-white' : 'text-gray-400 hover:text-white' }}"> Periodos Académicos </a>
                     @endcan
                     @can('gestionar-carga-academica')
-                        <a href="{{ route('academic-process.teacher-assignments') }}" class="block px-3 py-2 ..."> Carga Académica (Secciones) </a>
+                        <a href="{{ route('academic-process.teacher-assignments') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('academic-process.teacher-assignments') ? 'text-white' : 'text-gray-400 hover:text-white' }}"> Carga Académica (Secciones) </a>
                     @endcan
                     @can('gestionar-horarios')
-                        <a href="{{ route('academic-process.schedules') }}" class="block px-3 py-2 ..."> Gestión de Horarios </a>
+                        <a href="{{ route('academic-process.schedules') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('academic-process.schedules') ? 'text-white' : 'text-gray-400 hover:text-white' }}"> Gestión de Horarios </a>
                     @endcan
                     @can('aprobar-silabos')
-                        <a href="{{ route('academic-process.syllabus-approval') }}" class="block px-3 py-2 ..."> Aprobación de Sílabos </a>
+                        <a href="{{ route('academic-process.syllabus-approval') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('academic-process.syllabus-approval') ? 'text-white' : 'text-gray-400 hover:text-white' }}"> Aprobación de Sílabos </a>
                     @endcan
                 </div>
             </div>
         @endcanany
 
-        @role('Docente|Coordinador')
-            <div class="mb-2" x-data="{ open: {{ request()->routeIs('evaluation.*') ? 'true' : 'false' }} }">
-                <button @click="open = !open"
-                        class="w-full flex justify-between items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
-                               {{ request()->routeIs('evaluation.*') 
-                                  ? 'bg-gray-900 text-white' 
-                                  : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                    <span class="flex items-center">
-                        <svg class="h-6 w-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z" /><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" /></svg>
-                        Evaluación y Notas
-                    </span>
-                    <svg :class="{'rotate-180': open, 'rotate-0': !open}" class="h-5 w-5 transform transition-transform duration-150" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
-                </button>
-                <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
-                    <a href="{{ route('evaluation.grades') }}" class="block px-3 py-2 ..."> Registro de Notas </a>
-                    <a href="{{ route('evaluation.attendances') }}" class="block px-3 py-2 ..."> Registro de Asistencia </a>
-                </div>
-            </div>
-        @endrole
-
         @can('registrar-pagos')
-            <div class="mb-2" x-data="{ open: {{ request()->routeIs('treasury.*') ? 'true' : 'false' }} }">
+            <div class="mb-1" x-data="{ open: {{ request()->routeIs('treasury.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open"
                         class="w-full flex justify-between items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
                                {{ request()->routeIs('treasury.*') 
@@ -138,13 +137,13 @@
                     <svg :class="{'rotate-180': open, 'rotate-0': !open}" class="h-5 w-5 transform transition-transform duration-150" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                 </button>
                 <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
-                    <a href="{{ route('treasury.payments') }}" class="block px-3 py-2 ..."> Gestión de Pagos </a>
+                    <a href="{{ route('treasury.payments') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('treasury.payments') ? 'text-white' : 'text-gray-400 hover:text-white' }}"> Gestión de Pagos </a>
                 </div>
             </div>
         @endcan
         
         @can('gestionar-certificacion')
-            <div class="mb-2" x-data="{ open: {{ request()->routeIs('certification.*') ? 'true' : 'false' }} }">
+            <div class="mb-1" x-data="{ open: {{ request()->routeIs('certification.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open"
                         class="w-full flex justify-between items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
                                {{ request()->routeIs('certification.*') 
@@ -165,7 +164,7 @@
         @endcan
         
         @can('gestionar-biblioteca')
-             <div class="mb-2" x-data="{ open: {{ request()->routeIs('services.*') ? 'true' : 'false' }} }">
+             <div class="mb-1" x-data="{ open: {{ request()->routeIs('services.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open"
                         class="w-full flex justify-between items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
                                {{ request()->routeIs('services.*') 
@@ -184,7 +183,7 @@
         @endcan
 
         @can('gestionar-configuracion')
-            <div class="mb-2" x-data="{ open: {{ request()->routeIs('settings.*') ? 'true' : 'false' }} }">
+            <div class="mb-1" x-data="{ open: {{ request()->routeIs('settings.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open"
                         class="w-full flex justify-between items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
                                {{ request()->routeIs('settings.*') 
