@@ -17,6 +17,7 @@ class Syllabus extends Model
         'evaluation_criteria',
         'bibliography',
         'status',
+        'observation_notes',
         'approval_date',
         'approved_by_user_id',
         'file_url', // <-- El campo clave para el PDF

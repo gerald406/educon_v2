@@ -61,6 +61,16 @@
                                                     <span class="text-sm text-gray-500">Aprobado</span>
                                                 @endif
                                             </td>
+                                            @if($status == 'observed' && $syllabus->observation_notes)
+                                            <tr class="bg-red-50">
+                                                <td class="px-6 py-3 text-right text-sm font-semibold text-red-700">
+                                                    Observación:
+                                                </td>
+                                                <td colspan="4" class="px-6 py-3 text-sm text-red-700">
+                                                    {{ $syllabus->observation_notes }}
+                                                </td>
+                                            </tr>
+                                        @endif
                                         </tr>
                                     @empty
                                         <tr>

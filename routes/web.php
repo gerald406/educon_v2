@@ -21,6 +21,7 @@ use App\Livewire\Pages\People\Students\StudentManager;
 use App\Livewire\Pages\AcademicProcess\AcademicPeriods\AcademicPeriodManager;
 use App\Livewire\Pages\AcademicProcess\TeacherAssignments\TeacherAssignmentManager;
 use App\Livewire\Pages\AcademicProcess\Schedules\ScheduleManager;
+use App\Livewire\Pages\AcademicProcess\SyllabusApproval;
 
 use App\Livewire\Pages\Evaluation\Grades\GradeManager;
 use App\Livewire\Pages\Evaluation\Attendances\AttendanceManager;
@@ -98,6 +99,8 @@ Route::prefix('academic-process')->middleware(['auth', 'verified'])->name('acade
     Route::get('teacher-assignments', TeacherAssignmentManager::class)->name('teacher-assignments');
     //Rutas para la Gestión de Horarios
     Route::get('schedules', ScheduleManager::class)->name('schedules');
+    //Rutas para la Aprobación de Sílabos
+    Route::get('syllabus-approval', SyllabusApproval::class)->name('syllabus-approval');
 });
 
 

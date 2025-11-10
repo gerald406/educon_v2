@@ -209,6 +209,12 @@
                             : 'text-gray-400 hover:text-white' }}">
                     Gestión de Horarios
                 </a>
+                <a href="{{ route('academic-process.syllabus-approval') }}" class="block px-3 py-2 rounded-md text-sm font-medium
+                        {{ request()->routeIs('academic-process.syllabus-approval') 
+                            ? 'text-white' 
+                            : 'text-gray-400 hover:text-white' }}">
+                    Aprobación de Sílabos
+                </a>
             </div>
         </div>
 
