@@ -39,6 +39,9 @@
                         <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                             {{ __('Dashboard') }}
                         </x-nav-link>
+                        <x-nav-link href="{{ route('teacher.my-syllabi') }}" :active="request()->routeIs('teacher.my-syllabi')">
+                            {{ __('Mis Sílabos') }}
+                        </x-nav-link>
                         <x-nav-link href="{{ route('evaluation.grades') }}" :active="request()->routeIs('evaluation.grades')">
                             {{ __('Registro de Notas') }}
                         </x-nav-link>
@@ -137,6 +140,9 @@
             @elseif(Auth::user()->user_type === 'teacher')
                 <x-responsive-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                     {{ __('Dashboard') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link href="{{ route('teacher.my-syllabi') }}" :active="request()->routeIs('teacher.my-syllabi')">
+                    {{ __('Mis Sílabos') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link href="{{ route('evaluation.grades') }}" :active="request()->routeIs('evaluation.grades')">
                     {{ __('Registro de Notas') }}

@@ -33,6 +33,8 @@ use App\Livewire\Pages\Certification\CertificateManager;
 use App\Livewire\Pages\Certification\InternshipManager;
 use App\Livewire\Pages\Certification\GraduationProcessManager;
 
+use App\Livewire\Pages\Teacher\MySyllabi;
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -125,4 +127,10 @@ Route::prefix('certification')->middleware(['auth', 'verified'])->name('certific
     Route::get('internships', InternshipManager::class)->name('internships');
     // Rutas para la Gestión de Procesos de Graduación
     Route::get('graduation-processes', GraduationProcessManager::class)->name('graduation-processes');
+});
+
+
+// [NUEVO GRUPO] Grupo de Rutas para Docentes
+Route::prefix('teacher')->middleware(['auth', 'verified'])->name('teacher.')->group(function () {
+    Route::get('my-syllabi', MySyllabi::class)->name('my-syllabi');
 });

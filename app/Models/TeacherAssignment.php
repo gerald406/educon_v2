@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+use Illuminate\Database\Eloquent\Relations\HasOne; // <-- [NUEVO] Importar HasOne
+use App\Models\Syllabus; // <-- [NUEVO] Importar Syllabus
+
 // [NUEVO] Importar los modelos relacionados
 use App\Models\Teacher;
 use App\Models\DidacticUnit;
@@ -69,5 +72,14 @@ class TeacherAssignment extends Model
     public function schedules(): HasMany // <-- Tipo de retorno añadido
     {
         return $this->hasMany(Schedule::class);
+    }
+
+    /**
+     * [NUEVA FUNCIÓN]
+     * Una asignación (sección) tiene un (y solo un) sílabo.
+     */
+    public function syllabus(): HasOne
+    {
+        return $this->hasOne(Syllabus::class);
     }
 }
