@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+
+// Importaciones de todos los componentes
 use App\Livewire\Pages\Settings\Classrooms\ClassroomManager;
 use App\Livewire\Pages\Settings\PaymentConcepts\PaymentConceptManager;
 use App\Livewire\Pages\Settings\AcademicYears\AcademicYearManager;
@@ -25,23 +27,36 @@ use App\Livewire\Pages\AcademicProcess\SyllabusApproval;
 
 use App\Livewire\Pages\Evaluation\Grades\GradeManager;
 use App\Livewire\Pages\Evaluation\Attendances\AttendanceManager;
-
-use App\Livewire\Pages\Treasury\PaymentManager;
+use App\Livewire\Pages\Teacher\MySyllabi;
 
 use App\Livewire\Pages\Enrollment\EnrollmentProcess;
+use App\Livewire\Pages\Treasury\PaymentManager;
 
 use App\Livewire\Pages\Certification\CertificateManager;
 use App\Livewire\Pages\Certification\InternshipManager;
 use App\Livewire\Pages\Certification\GraduationProcessManager;
 
-use App\Livewire\Pages\Teacher\MySyllabi;
-
 use App\Livewire\Pages\Services\Library\LibraryResourceManager;
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Aquí es donde puedes registrar las rutas web para tu aplicación. Estas
+| rutas son cargadas por el RouteServiceProvider y todas ellas
+| serán asignadas al grupo de middleware "web".
+|
+*/
+
+// Ruta de bienvenida (Pública)
 Route::get('/', function () {
     return view('welcome');
 });
 
+// Rutas de Jetstream (Dashboard y Profile)
+// Estas rutas están disponibles para CUALQUIER usuario autenticado.
+// El componente del Dashboard se encargará de mostrar el contenido correcto.
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
@@ -50,97 +65,89 @@ Route::middleware([
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
+    
+    // Añadimos la ruta de perfil que faltaba en tu archivo
+    Route::get('/user/profile', function () {
+        return view('profile.show');
+    })->name('profile.show');
 });
 
 
+// --- [INICIO DE RUTAS PROTEGIDAS POR PERMISOS] ---
+
 // Grupo de Rutas para Configuración
-Route::prefix('settings')->middleware(['auth', 'verified'])->name('settings.')->group(function () {
-    // Rutas para la Gestión de Aulas y labs
+// [MODIFICADO] Añadido middleware de permiso
+Route::prefix('settings')->middleware(['auth', 'verified', 'permission:gestionar-configuracion'])->name('settings.')->group(function () {
     Route::get('classrooms', ClassroomManager::class)->name('classrooms');
-    //Rutas para la Gestión de Conceptos de Pago
     Route::get('payment-concepts', PaymentConceptManager::class)->name('payment-concepts');
-    //Rutas para la Gestión de Años Académicos
     Route::get('academic-years', AcademicYearManager::class)->name('academic-years');
-    //Rutas para la Gestión de Turnos
     Route::get('shifts', ShiftManager::class)->name('shifts');
-    //Rutas para la Gestión de Tipos de Evaluación
     Route::get('evaluation-types', EvaluationTypeManager::class)->name('evaluation-types');
-    //Rutas para la Gestión de Configuraciones del Sistema
     Route::get('system-settings', SystemSettingsManager::class)->name('system-settings');
-    //Rutas para la Gestión de la Institución
     Route::get('institution', InstitutionManager::class)->name('institution');
 });
 
-// [NUEVO GRUPO] Grupo de Rutas para Gestión Académica
-Route::prefix('academic')->middleware(['auth', 'verified'])->name('academic.')->group(function () {
-    //rutas para el Manejo de Carreras
+// Grupo de Rutas para Gestión Académica
+// [MODIFICADO] Añadido middleware de permiso
+Route::prefix('academic')->middleware(['auth', 'verified', 'permission:gestionar-estructura-academica'])->name('academic.')->group(function () {
     Route::get('careers', CareerManager::class)->name('careers');
-    //Rutas para el Manejo de Planes de Estudio
     Route::get('study-plans', StudyPlanManager::class)->name('study-plans');
-    //Rutas para el Manejo de Módulos
     Route::get('modules', ModuleManager::class)->name('modules');
-    //Rutas para el Manejo de Unidades Didácticas
     Route::get('didactic-units', DidacticUnitManager::class)->name('didactic-units');
-    //Rutas para el Manejo de Prerrequisitos
     Route::get('prerequisites', PrerequisiteManager::class)->name('prerequisites');
 });
 
-
-// [NUEVO GRUPO] Grupo de Rutas para Gestión de Personas
+// Grupo de Rutas para Gestión de Personas
+// [MODIFICADO] Añadidos middlewares de permisos específicos a cada ruta
 Route::prefix('people')->middleware(['auth', 'verified'])->name('people.')->group(function () {
-    Route::get('teachers', TeacherManager::class)->name('teachers');
-    Route::get('students', StudentManager::class)->name('students');
+    Route::get('teachers', TeacherManager::class)->middleware('permission:gestionar-docentes')->name('teachers');
+    Route::get('students', StudentManager::class)->middleware('permission:gestionar-estudiantes')->name('students');
 });
 
-
-// [NUEVO GRUPO] Grupo de Rutas para Procesos Académicos
+// Grupo de Rutas para Procesos Académicos
+// [MODIFICADO] Añadidos middlewares de permisos específicos a cada ruta
 Route::prefix('academic-process')->middleware(['auth', 'verified'])->name('academic-process.')->group(function () {
-    //Rutas para la Gestión de Períodos Académicos
-    Route::get('academic-periods', AcademicPeriodManager::class)->name('academic-periods');
-    //Rutas para la Gestión de Asignaciones de Docentes
-    Route::get('teacher-assignments', TeacherAssignmentManager::class)->name('teacher-assignments');
-    //Rutas para la Gestión de Horarios
-    Route::get('schedules', ScheduleManager::class)->name('schedules');
-    //Rutas para la Aprobación de Sílabos
-    Route::get('syllabus-approval', SyllabusApproval::class)->name('syllabus-approval');
+    Route::get('academic-periods', AcademicPeriodManager::class)->middleware('permission:gestionar-periodos')->name('academic-periods');
+    Route::get('teacher-assignments', TeacherAssignmentManager::class)->middleware('permission:gestionar-carga-academica')->name('teacher-assignments');
+    Route::get('schedules', ScheduleManager::class)->middleware('permission:gestionar-horarios')->name('schedules');
+    Route::get('syllabus-approval', SyllabusApproval::class)->middleware('permission:aprobar-silabos')->name('syllabus-approval');
 });
 
-
-// [NUEVO GRUPO] Grupo de Rutas para Evaluación
-Route::prefix('evaluation')->middleware(['auth', 'verified'])->name('evaluation.')->group(function () {
-    //Rutas para la Gestión de Calificaciones
+// Grupo de Rutas para Evaluación (Docentes y roles superiores)
+// [MODIFICADO] Añadido middleware de rol
+Route::prefix('evaluation')->middleware(['auth', 'verified', 'role:Docente|Coordinador|Administrador'])->name('evaluation.')->group(function () {
     Route::get('grades', GradeManager::class)->name('grades');
-    //Rutas para la Gestión de Asistencias
     Route::get('attendances', AttendanceManager::class)->name('attendances');
 });
 
-// [NUEVO GRUPO] Grupo de Rutas para Tesorería
-Route::prefix('treasury')->middleware(['auth', 'verified'])->name('treasury.')->group(function () {
+// Grupo de Rutas para Tesorería
+// [MODIFICADO] Añadido middleware de permiso
+Route::prefix('treasury')->middleware(['auth', 'verified', 'permission:registrar-pagos'])->name('treasury.')->group(function () {
     Route::get('payments', PaymentManager::class)->name('payments');
 });
 
-// [NUEVO GRUPO] Grupo de Rutas para Matrícula (Estudiantes)
-Route::prefix('enrollment')->middleware(['auth', 'verified'])->name('enrollment.')->group(function () {
+// Grupo de Rutas para Matrícula (Estudiantes y Admin)
+// [MODIFICADO] Añadido middleware de rol
+Route::prefix('enrollment')->middleware(['auth', 'verified', 'role:Estudiante|Administrador'])->name('enrollment.')->group(function () {
     Route::get('process', EnrollmentProcess::class)->name('process');
 });
 
-// [NUEVO GRUPO] Grupo de Rutas para Egreso y Certificación
-Route::prefix('certification')->middleware(['auth', 'verified'])->name('certification.')->group(function () {
-    // Rutas para la Emisión de Certificados
+// Grupo de Rutas para Egreso y Certificación
+// [MODIFICADO] Añadido middleware de permiso
+Route::prefix('certification')->middleware(['auth', 'verified', 'permission:gestionar-certificacion'])->name('certification.')->group(function () {
     Route::get('certificates', CertificateManager::class)->name('certificates');
-    // Rutas para la Gestión de Practicas profesionales
     Route::get('internships', InternshipManager::class)->name('internships');
-    // Rutas para la Gestión de Procesos de Graduación
     Route::get('graduation-processes', GraduationProcessManager::class)->name('graduation-processes');
 });
 
-
-// [NUEVO GRUPO] Grupo de Rutas para Docentes
-Route::prefix('teacher')->middleware(['auth', 'verified'])->name('teacher.')->group(function () {
+// Grupo de Rutas para Docentes (Sílabos)
+// [MODIFICADO] Añadido middleware de rol
+Route::prefix('teacher')->middleware(['auth', 'verified', 'role:Docente|Coordinador|Administrador'])->name('teacher.')->group(function () {
     Route::get('my-syllabi', MySyllabi::class)->name('my-syllabi');
 });
 
-// [NUEVO GRUPO] Grupo de Rutas para Servicios
-Route::prefix('services')->middleware(['auth', 'verified'])->name('services.')->group(function () {
+// Grupo de Rutas para Servicios
+// [MODIFICADO] Añadido middleware de permiso
+Route::prefix('services')->middleware(['auth', 'verified', 'permission:gestionar-biblioteca'])->name('services.')->group(function () {
     Route::get('library-resources', LibraryResourceManager::class)->name('library-resources');
 });

@@ -11,8 +11,18 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
-        //
+    ->withMiddleware(function (Middleware $middleware) {
+        
+        // [AÑADE ESTE BLOQUE COMPLETO]
+        // Aquí registramos los "alias" para 'role' y 'permission'
+        $middleware->alias([
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+        ]);
+        // [FIN DEL BLOQUE NUEVO]
+
+        // (Es posible que Jetstream haya añadido otras cosas aquí. Déjalas)
+        
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

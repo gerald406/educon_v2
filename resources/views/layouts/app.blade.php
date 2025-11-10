@@ -5,13 +5,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ config('app.name', 'Educon') }}</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+        
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         @livewireStyles
@@ -22,7 +22,8 @@
         <div x-data="{ sidebarOpen: false }" class="min-h-screen bg-gray-100">
             
             @auth
-            @if(Auth::user()->user_type === 'administrator')
+            @if(Auth::user()->hasAnyRole(['Administrador', 'Secretario Academico', 'Coordinador', 'Tesoreria']))
+                
                 <div class="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
                     <livewire:layout.sidebar />
                 </div>
@@ -51,9 +52,10 @@
                 </div>
             @endif
             @endauth
+
             <div @class([
                     'flex flex-col flex-1',
-                    'md:pl-64' => Auth::check() && Auth::user()->user_type === 'administrator'
+                    'md:pl-64' => Auth::check() && Auth::user()->hasAnyRole(['Administrador', 'Secretario Academico', 'Coordinador', 'Tesoreria'])
                  ])>
                 
                 @livewire('navigation-menu')
@@ -73,7 +75,6 @@
         </div>
 
         @stack('modals')
-
         @livewireScripts
 
         <script>
