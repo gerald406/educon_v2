@@ -310,5 +310,29 @@
             </div>
         </div>
 
+        <div x-data="{ open: {{ request()->routeIs('services.*') ? 'true' : 'false' }} }">
+            <button @click="open = !open"
+                    class="w-full flex justify-between items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                           {{ request()->routeIs('services.*') 
+                              ? 'bg-gray-900 text-white' 
+                              : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                <span class="flex items-center">
+                    <svg class="h-6 w-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18c-2.305 0-4.408.867-6 2.292m0-14.25v14.25" /></svg>
+                    Servicios
+                </span>
+                <svg :class="{'rotate-180': open, 'rotate-0': !open}" class="h-5 w-5 transform transition-transform duration-150" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+            </button>
+            
+            <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
+                <a href="{{ route('services.library-resources') }}"
+                   class="block px-3 py-2 rounded-md text-sm font-medium
+                          {{ request()->routeIs('services.library-resources') 
+                             ? 'text-white' 
+                             : 'text-gray-400 hover:text-white' }}">
+                    Catálogo de Biblioteca
+                </a>
+            </div>
+        </div>
+
     </nav>
 </div>

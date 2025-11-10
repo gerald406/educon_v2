@@ -36,6 +36,8 @@ use App\Livewire\Pages\Certification\GraduationProcessManager;
 
 use App\Livewire\Pages\Teacher\MySyllabi;
 
+use App\Livewire\Pages\Services\Library\LibraryResourceManager;
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -136,4 +138,9 @@ Route::prefix('certification')->middleware(['auth', 'verified'])->name('certific
 // [NUEVO GRUPO] Grupo de Rutas para Docentes
 Route::prefix('teacher')->middleware(['auth', 'verified'])->name('teacher.')->group(function () {
     Route::get('my-syllabi', MySyllabi::class)->name('my-syllabi');
+});
+
+// [NUEVO GRUPO] Grupo de Rutas para Servicios
+Route::prefix('services')->middleware(['auth', 'verified'])->name('services.')->group(function () {
+    Route::get('library-resources', LibraryResourceManager::class)->name('library-resources');
 });
