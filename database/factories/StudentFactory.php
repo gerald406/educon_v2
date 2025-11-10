@@ -5,28 +5,25 @@ namespace Database\Factories;
 use App\Models\Career;
 use App\Models\StudyPlan;
 use App\Models\User;
+use App\Models\Student; // <-- [NUEVO] Importar Student
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Student>
- */
 class StudentFactory extends Factory
 {
     /**
-     * Define the model's default state.
+     * The name of the factory's corresponding model.
      *
-     * @return array<string, mixed>
+     * @var string
      */
+    protected $model = Student::class; // <-- [NUEVO] Especificar el modelo
+
     public function definition(): array
     {
-        // Busca nuestra carrera "APSTI"
         $career = Career::where('code', 'APSTI')->first();
-        // Busca el plan "APSTI-2021"
         $studyPlan = StudyPlan::where('code', 'APSTI-2021')->first();
 
         return [
-            // Crea un nuevo Usuario con el tipo 'student'
-            'user_id' => User::factory()->create(['user_type' => 'student']),
+            'user_id' => User::factory(), // <-- [MODIFICADO]
             
             'applicant_id' => null,
             'career_id' => $career->id,
@@ -36,5 +33,15 @@ class StudentFactory extends Factory
             'academic_status' => 'regular',
             'admission_date' => $this->faker->dateTimeBetween('-3 years', 'now')->format('Y-m-d'),
         ];
+    }
+    
+    /**
+     * [NUEVO] Hook para asignar el rol después de crear el estudiante.
+     */
+    public function configure(): static
+    {
+        return $this->afterCreating(function (Student $student) {
+            $student->user->assignRole('Estudiante');
+        });
     }
 }

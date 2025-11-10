@@ -4,25 +4,24 @@ namespace Database\Factories;
 
 use App\Models\Institution;
 use App\Models\User;
+use App\Models\Teacher; // <-- [NUEVO] Importar Teacher
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Teacher>
- */
 class TeacherFactory extends Factory
 {
     /**
-     * Define the model's default state.
+     * The name of the factory's corresponding model.
      *
-     * @return array<string, mixed>
+     * @var string
      */
+    protected $model = Teacher::class; // <-- [NUEVO] Especificar el modelo
+
     public function definition(): array
     {
         return [
-            // Crea un nuevo Usuario con el tipo 'teacher' y obtiene su ID
-            'user_id' => User::factory()->create(['user_type' => 'teacher']),
+            // [MODIFICADO] Ya no creamos el user aquí, lo hacemos en el hook de abajo
+            'user_id' => User::factory(), 
             
-            // Asigna a la primera institución
             'institution_id' => Institution::first()->id,
             
             'code' => $this->faker->unique()->bothify('T-#####'),
@@ -32,5 +31,15 @@ class TeacherFactory extends Factory
             'hire_date' => $this->faker->date(),
             'status' => 'active',
         ];
+    }
+
+    /**
+     * [NUEVO] Hook para asignar el rol después de crear el docente.
+     */
+    public function configure(): static
+    {
+        return $this->afterCreating(function (Teacher $teacher) {
+            $teacher->user->assignRole('Docente');
+        });
     }
 }

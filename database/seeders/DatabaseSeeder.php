@@ -2,17 +2,14 @@
 
 namespace Database\Seeders;
 
-use App\Models\AcademicYear;
 use App\Models\Institution;
+use App\Models\AcademicYear;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     /**
      * Seed the application's database.
      */
@@ -39,27 +36,30 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Año Académico 2025', 'start_date' => '2025-01-01', 'end_date' => '2025-12-31', 'status' => 'active']
         );
 
-        // 3. Crear el usuario Administrador
-        // Modificamos el usuario que Jetstream crea por defecto
+        // 3. Llamar al Seeder de Roles y Permisos (DEBE EJECUTARSE ANTES DE CREAR USUARIOS)
+        $this->call([
+            RolesAndPermissionsSeeder::class, // <-- [NUEVO]
+        ]);
+
+        // 4. Crear el usuario Administrador
         $adminUser = User::firstOrCreate(
-            ['email' => 'gcauna@admin.com'],
+            ['email' => 'admin@educon.edu.pe'],
             [
                 'name' => 'Administrador',
-                'password' => Hash::make('gcauna@admin.com'),
-                'user_type' => 'administrator', // <-- AÑADE O MODIFICA ESTA LÍNEA
-                'email_verified_at' => now(), // Verificamos al admin
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
             ]
         );
+        // [NUEVO] Asignar el rol
+        $adminUser->assignRole('Administrador');
 
-
-        // 4. Llamar a los Seeders
+        // 5. Llamar al resto de Seeders
         $this->call([
             CatalogSeeder::class,
-            AcademicStructureSeeder::class, // <-- AÑADE ESTA LÍNEA
+            AcademicStructureSeeder::class,
             PeopleSeeder::class,
             AcademicProcessSeeder::class,
             EnrollmentSeeder::class,
         ]);
     }
-    
 }
