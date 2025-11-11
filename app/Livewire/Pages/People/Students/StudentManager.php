@@ -244,17 +244,21 @@ class StudentManager extends Component
     public function render()
     {
         $query = User::query()
-            // [CORREGIDO] Buscar por rol, no por user_type
+            // [CORREGIDO] 
+            // 1. Sigue buscando por rol 'Estudiante' (que tienen ambos)
             ->role('Estudiante') 
-            ->with(['student.career', 'student.studyPlan']);
+            // 2. PERO AHORA, nos aseguramos de que SÍ O SÍ
+            //    tenga una relación 'student' existente.
+            ->whereHas('student') 
+            ->with(['student.career', 'student.studyPlan']); // Carga ansiosa anidada
 
         if ($this->search) {
             $query->where(function($q) {
                 $q->where('name', 'like', '%' . $this->search . '%')
-                    ->orWhere('email', 'like', '%' . $this->search . '%')
-                    ->orWhereHas('student', function ($subQuery) {
-                    $subQuery->where('code', 'like', '%' . $this->search . '%');
-                });
+                  ->orWhere('email', 'like', '%' . $this->search . '%')
+                  ->orWhereHas('student', function ($subQuery) {
+                      $subQuery->where('code', 'like', '%' . $this->search . '%');
+                  });
             });
         }
         

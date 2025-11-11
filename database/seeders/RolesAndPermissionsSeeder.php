@@ -62,6 +62,9 @@ class RolesAndPermissionsSeeder extends Seeder
         // [NUEVO PERMISO]
         Permission::firstOrCreate(['name' => 'gestionar-actividades']); // Para docentes
 
+        // [NUEVO PERMISO]
+        Permission::firstOrCreate(['name' => 'entregar-actividades']); // Para estudiantes
+
 
         // --- CREACIÓN DE ROLES ---
 
@@ -69,6 +72,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $roleStudent = Role::firstOrCreate(['name' => 'Estudiante']);
         $roleStudent->givePermissionTo([
             'matricularse',
+            'entregar-actividades', // <-- [AÑADIR PERMISO]
         ]);
 
         // Rol Docente

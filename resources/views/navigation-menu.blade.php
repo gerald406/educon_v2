@@ -69,6 +69,9 @@
                         <x-nav-link href="{{ route('enrollment.process') }}" :active="request()->routeIs('enrollment.process')">
                             {{ __('Proceso de Matrícula') }}
                         </x-nav-link>
+                        <x-nav-link href="{{ route('student.my-activities') }}" :active="request()->routeIs('student.my-activities')">
+                            {{ __('Mis Actividades') }}
+                        </x-nav-link>
                     @endrole
 
                 </div>
@@ -169,6 +172,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link href="{{ route('enrollment.process') }}" :active="request()->routeIs('enrollment.process')">
                     {{ __('Proceso de Matrícula') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link href="{{ route('student.my-activities') }}" :active="request()->routeIs('student.my-activities')">
+                        {{ __('Mis Actividades') }}
                 </x-responsive-nav-link>
             @endrole
         </div>

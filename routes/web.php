@@ -45,6 +45,8 @@ use App\Livewire\Pages\Reports\ReportManager;
 
 use App\Livewire\Pages\Admission\ApplicantManager;
 
+use App\Livewire\Pages\Student\MyActivities;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -170,4 +172,10 @@ Route::prefix('reports')->middleware(['auth', 'verified', 'role:Administrador'])
 // [NUEVO GRUPO] Grupo de Rutas para Admisión
 Route::prefix('admission')->middleware(['auth', 'verified', 'permission:gestionar-admision'])->name('admission.')->group(function () {
     Route::get('applicants', ApplicantManager::class)->name('applicants');
+});
+
+
+// [NUEVO GRUPO] Grupo de Rutas para Estudiantes
+Route::prefix('student')->middleware(['auth', 'verified', 'role:Estudiante|Administrador'])->name('student.')->group(function () {
+    Route::get('my-activities', MyActivities::class)->middleware('permission:entregar-actividades')->name('my-activities');
 });
