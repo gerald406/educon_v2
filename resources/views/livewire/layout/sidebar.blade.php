@@ -156,9 +156,9 @@
                     <svg :class="{'rotate-180': open, 'rotate-0': !open}" class="h-5 w-5 transform transition-transform duration-150" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                 </button>
                 <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
-                    <a href="{{ route('certification.certificates') }}" class="block px-3 py-2 ..."> Emisión de Certificados </a>
-                    <a href="{{ route('certification.internships') }}" class="block px-3 py-2 ..."> Gestión de Pasantías </a>
-                    <a href="{{ route('certification.graduation-processes') }}" class="block px-3 py-2 ..."> Procesos de Titulación </a>
+                    <a href="{{ route('certification.certificates') }}" class="block px-3 py-2 rounded-md text-sm font-medium"> Emisión de Certificados </a>
+                    <a href="{{ route('certification.internships') }}" class="block px-3 py-2 rounded-md text-sm font-medium"> Gestión de Pasantías </a>
+                    <a href="{{ route('certification.graduation-processes') }}" class="block px-3 py-2 rounded-md text-sm font-medium"> Procesos de Titulación </a>
                 </div>
             </div>
         @endcan
@@ -177,7 +177,18 @@
                     <svg :class="{'rotate-180': open, 'rotate-0': !open}" class="h-5 w-5 transform transition-transform duration-150" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                 </button>
                 <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
-                    <a href="{{ route('services.library-resources') }}" class="block px-3 py-2 ..."> Catálogo de Biblioteca </a>
+                    <a href="{{ route('services.library-resources') }}" class="block px-3 py-2 rounded-md text-sm font-medium
+                            {{ request()->routeIs('services.library-resources') 
+                                ? 'text-white' 
+                                : 'text-gray-400 hover:text-white' }}"> 
+                        Catálogo de Biblioteca 
+                    </a>
+                    <a href="{{ route('services.library-loans') }}" class="block px-3 py-2 rounded-md text-sm font-medium
+                            {{ request()->routeIs('services.library-loans') 
+                                ? 'text-white' 
+                                : 'text-gray-400 hover:text-white' }}">
+                        Préstamos de Biblioteca
+                    </a>
                 </div>
             </div>
         @endcan
@@ -196,13 +207,13 @@
                     <svg :class="{'rotate-180': open, 'rotate-0': !open}" class="h-5 w-5 transform transition-transform duration-150" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                 </button>
                 <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
-                    <a href="{{ route('settings.institution') }}" class="block px-3 py-2 ..."> Datos de la Institución </a>
-                    <a href="{{ route('settings.academic-years') }}" class="block px-3 py-2 ..."> Años Académicos </a>
-                    <a href="{{ route('settings.classrooms') }}" class="block px-3 py-2 ..."> Aulas y Laboratorios </a>
-                    <a href="{{ route('settings.payment-concepts') }}" class="block px-3 py-2 ..."> Conceptos de Pago (TUPA) </a>
-                    <a href="{{ route('settings.shifts') }}" class="block px-3 py-2 ..."> Gestión de Turnos </a>
-                    <a href="{{ route('settings.evaluation-types') }}" class="block px-3 py-2 ..."> Tipos de Evaluación </a>
-                    <a href="{{ route('settings.system-settings') }}" class="block px-3 py-2 ..."> Opciones del Sistema </a>
+                    <a href="{{ route('settings.institution') }}" class="block px-3 py-2 rounded-md text-sm font-medium"> Datos de la Institución </a>
+                    <a href="{{ route('settings.academic-years') }}" class="block px-3 py-2 rounded-md text-sm font-medium"> Años Académicos </a>
+                    <a href="{{ route('settings.classrooms') }}" class="block px-3 py-2 rounded-md text-sm font-medium"> Aulas y Laboratorios </a>
+                    <a href="{{ route('settings.payment-concepts') }}" class="block px-3 py-2 rounded-md text-sm font-medium"> Conceptos de Pago (TUPA) </a>
+                    <a href="{{ route('settings.shifts') }}" class="block px-3 py-2 rounded-md text-sm font-medium"> Gestión de Turnos </a>
+                    <a href="{{ route('settings.evaluation-types') }}" class="block px-3 py-2 rounded-md text-sm font-medium"> Tipos de Evaluación </a>
+                    <a href="{{ route('settings.system-settings') }}" class="block px-3 py-2 rounded-md text-sm font-medium"> Opciones del Sistema </a>
                 </div>
             </div>
         @endcan

@@ -6,7 +6,7 @@ use App\Models\Career;
 use App\Models\Student;
 use App\Models\StudyPlan;
 use App\Models\User;
-use Illuminate\Database\QueryException as DatabaseQueryException;
+use Illuminate\Database\QueryException; // [CORREGIDO] Importación correcta
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -45,7 +45,7 @@ class StudentManager extends Component
     public Collection $careers;
     public Collection $availableStudyPlans;
     public $selectedCareerId = '';
-    public $selectedStudyPlanId = ''; // Este es el 'study_plan_id'
+    public $selectedStudyPlanId = '';
 
     /**
      * Hook 'mount': Carga los datos para los dropdowns.
@@ -90,7 +90,6 @@ class StudentManager extends Component
             'selectedCareerId' => 'required|exists:careers,id',
             'selectedStudyPlanId' => 'required|exists:study_plans,id',
             
-            // Reglas dinámicas
             'student.code' => [
                 'required', 'string', 'max:20',
                 Rule::unique('students', 'code')->ignore($this->editingStudent?->id)
@@ -118,19 +117,15 @@ class StudentManager extends Component
         $this->editingUser = $user;
         $this->editingStudent = $user->student;
 
-        // Cargar datos de User
         $this->user['name'] = $user->name;
         $this->user['email'] = $user->email;
         $this->user['password'] = '';
 
-        // Cargar datos de Student
-        
         $this->student = $user->student->only(
             'code', 'academic_status', 'current_semester'
         );
         $this->student['admission_date'] = $user->student->admission_date->format('Y-m-d');
         
-        // Cargar y seleccionar dropdowns dependientes
         $this->selectedCareerId = $user->student->career_id;
         $this->updateAvailableStudyPlans();
         $this->selectedStudyPlanId = $user->student->study_plan_id;
@@ -148,7 +143,6 @@ class StudentManager extends Component
     {
         $this->reset('user', 'student', 'editingUser', 'editingStudent');
         $this->resetValidation();
-        // Recargar y resetear dropdowns
         if ($this->careers->count() > 0) {
             $this->selectedCareerId = $this->careers->keys()->first();
             $this->updateAvailableStudyPlans();
@@ -166,7 +160,8 @@ class StudentManager extends Component
                 $userData = [
                     'name' => $data['user']['name'],
                     'email' => $data['user']['email'],
-                    'user_type' => 'student',
+                    // [CORREGIDO] Ya no usamos user_type
+                    // 'user_type' => 'student',
                 ];
                 if (!empty($data['user']['password'])) {
                     $userData['password'] = Hash::make($data['user']['password']);
@@ -177,12 +172,17 @@ class StudentManager extends Component
                 $user->fill($userData);
                 $user->save();
                 
+                // [NUEVO] Asignar el rol si es un usuario nuevo
+                if (!$this->editingUser) {
+                    $user->assignRole('Estudiante');
+                }
+                
                 // 3. Preparar datos del Estudiante
                 $studentData = $data['student'];
                 $studentData['user_id'] = $user->id;
                 $studentData['career_id'] = $this->selectedCareerId;
                 $studentData['study_plan_id'] = $this->selectedStudyPlanId;
-                // Valores por defecto al crear
+                
                 if (!$this->editingStudent) {
                     $studentData['accumulated_credits'] = 0;
                     $studentData['weighted_average'] = 0.00;
@@ -230,7 +230,7 @@ class StudentManager extends Component
                 'title' => '¡Eliminado!',
                 'text' => 'El estudiante ha sido eliminado.',
             ]);
-        } catch (DatabaseQueryException $e) {
+        } catch (QueryException $e) { // [CORREGIDO] Usar la importación correcta
             $this->dispatch('swal', [
                 'icon' => 'error',
                 'title' => 'Error al eliminar',
@@ -244,16 +244,17 @@ class StudentManager extends Component
     public function render()
     {
         $query = User::query()
-            ->where('user_type', 'student')
-            ->with(['student.career', 'student.studyPlan']); // Carga ansiosa anidada
+            // [CORREGIDO] Buscar por rol, no por user_type
+            ->role('Estudiante') 
+            ->with(['student.career', 'student.studyPlan']);
 
         if ($this->search) {
             $query->where(function($q) {
                 $q->where('name', 'like', '%' . $this->search . '%')
-                  ->orWhere('email', 'like', '%' . $this->search . '%')
-                  ->orWhereHas('student', function ($subQuery) {
-                      $subQuery->where('code', 'like', '%' . $this->search . '%');
-                  });
+                    ->orWhere('email', 'like', '%' . $this->search . '%')
+                    ->orWhereHas('student', function ($subQuery) {
+                    $subQuery->where('code', 'like', '%' . $this->search . '%');
+                });
             });
         }
         

@@ -37,6 +37,7 @@ use App\Livewire\Pages\Certification\InternshipManager;
 use App\Livewire\Pages\Certification\GraduationProcessManager;
 
 use App\Livewire\Pages\Services\Library\LibraryResourceManager;
+use App\Livewire\Pages\Services\Library\LibraryLoanManager;
 
 use App\Livewire\Pages\Reports\ReportManager;
 
@@ -152,6 +153,7 @@ Route::prefix('teacher')->middleware(['auth', 'verified', 'role:Docente|Coordina
 // [MODIFICADO] Añadido middleware de permiso
 Route::prefix('services')->middleware(['auth', 'verified', 'permission:gestionar-biblioteca'])->name('services.')->group(function () {
     Route::get('library-resources', LibraryResourceManager::class)->name('library-resources');
+    Route::get('library-loans', LibraryLoanManager::class)->name('library-loans');
 });
 
 // [NUEVO GRUPO] Grupo de Rutas para Reportes (Solo Admin)
