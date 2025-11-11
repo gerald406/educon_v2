@@ -38,6 +38,7 @@ use App\Livewire\Pages\Certification\GraduationProcessManager;
 
 use App\Livewire\Pages\Services\Library\LibraryResourceManager;
 use App\Livewire\Pages\Services\Library\LibraryLoanManager;
+use App\Livewire\Pages\Services\Tutoring\TutoringManager;
 
 use App\Livewire\Pages\Reports\ReportManager;
 
@@ -156,6 +157,7 @@ Route::prefix('teacher')->middleware(['auth', 'verified', 'role:Docente|Coordina
 Route::prefix('services')->middleware(['auth', 'verified', 'permission:gestionar-biblioteca'])->name('services.')->group(function () {
     Route::get('library-resources', LibraryResourceManager::class)->name('library-resources');
     Route::get('library-loans', LibraryLoanManager::class)->name('library-loans');
+    Route::get('tutorings', TutoringManager::class)->name('tutorings');
 });
 
 // [NUEVO GRUPO] Grupo de Rutas para Reportes (Solo Admin)

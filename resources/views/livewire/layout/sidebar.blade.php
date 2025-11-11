@@ -214,6 +214,12 @@
                                 : 'text-gray-400 hover:text-white' }}">
                         Préstamos de Biblioteca
                     </a>
+                    <a href="{{ route('services.tutorings') }}" class="block px-3 py-2 rounded-md text-sm font-medium
+                            {{ request()->routeIs('services.tutorings') 
+                                ? 'text-white' 
+                                : 'text-gray-400 hover:text-white' }}">
+                        Gestión de Tutorías
+                    </a>
                 </div>
             </div>
         @endcan
