@@ -12,6 +12,10 @@ use Livewire\Component;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage; // <-- [NUEVO] Importar Storage
 
+// [NUEVO] Importar la fachada de Excel y nuestra clase Export
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\TeacherWorkloadExport;
+
 #[Layout('layouts.app')]
 class ReportManager extends Component
 {
@@ -116,6 +120,21 @@ class ReportManager extends Component
         return response()->streamDownload(function () use ($pdf) {
             echo $pdf->stream();
         }, 'reporte-carga-horaria-' . $this->activePeriod->code . '.pdf');
+    }
+
+    /**
+     * [NUEVO MÉTODO]
+     * Genera y descarga el reporte en Excel.
+     */
+    public function generateWorkloadExcel()
+    {
+        if (!$this->activePeriod) return;
+
+        // Pasamos los datos ya calculados ($this->workloadData) a nuestra clase Export
+        return Excel::download(
+            new TeacherWorkloadExport($this->workloadData), 
+            'reporte-carga-horaria-' . $this->activePeriod->code . '.xlsx'
+        );
     }
 
     public function render()
