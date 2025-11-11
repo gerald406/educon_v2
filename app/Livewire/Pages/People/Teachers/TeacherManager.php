@@ -20,7 +20,6 @@ class TeacherManager extends Component
     use WithPagination;
 
     // --- PROPIEDADES DEL FORMULARIO (ANIDADAS) ---
-    // Usamos arrays para el binding de modelos relacionados
     public $user = [
         'name' => '',
         'email' => '',
@@ -75,11 +74,9 @@ class TeacherManager extends Component
 
         // Reglas dinámicas para email y password
         if ($this->editingUser) {
-            // Editando
             $rules['user.email'] = 'required|email|max:255|unique:users,email,' . $this->editingUser->id;
-            $rules['user.password'] = 'nullable|min:8'; // Opcional al editar
+            $rules['user.password'] = 'nullable|min:8';
         } else {
-            // Creando
             $rules['user.email'] = 'required|email|max:255|unique:users,email';
             $rules['user.password'] = 'required|min:8';
         }
@@ -98,11 +95,11 @@ class TeacherManager extends Component
     public function openEditModal(User $user)
     {
         $this->editingUser = $user;
-        $this->editingTeacher = $user->teacher; // Asume que la relación se llama 'teacher'
+        $this->editingTeacher = $user->teacher; 
 
         $this->user['name'] = $user->name;
         $this->user['email'] = $user->email;
-        $this->user['password'] = ''; // No mostramos la contraseña
+        $this->user['password'] = ''; 
 
         $this->teacher = $user->teacher->only(
             'code', 'academic_degree', 'specialty', 
@@ -124,18 +121,20 @@ class TeacherManager extends Component
         $this->resetValidation();
     }
 
+    /**
+     * [MÉTODO SAVE CORREGIDO]
+     */
     public function save()
     {
         $data = $this->validate();
 
         try {
-            // Usamos una transacción para asegurar la integridad de los datos
             DB::transaction(function () use ($data) {
                 // 1. Preparar datos del Usuario
                 $userData = [
                     'name' => $data['user']['name'],
                     'email' => $data['user']['email'],
-                    'user_type' => 'teacher',
+                    // [CORREGIDO] Eliminamos 'user_type'
                 ];
                 if (!empty($data['user']['password'])) {
                     $userData['password'] = Hash::make($data['user']['password']);
@@ -145,6 +144,13 @@ class TeacherManager extends Component
                 $user = $this->editingUser ?? new User();
                 $user->fill($userData);
                 $user->save();
+                
+                // [NUEVO] Asignar el rol de Docente
+                // (syncRoles se asegura de que solo tenga este rol,
+                // si quisiéramos que también sea Coordinador, lo haríamos en otro lado)
+                if (!$this->editingUser) {
+                     $user->assignRole('Docente');
+                }
                 
                 // 3. Preparar datos del Docente
                 $teacherData = $data['teacher'];
@@ -186,8 +192,6 @@ class TeacherManager extends Component
     #[On('deleteTeacher')]
     public function deleteTeacher(int $id)
     {
-        // Al eliminar el usuario, la BD (onDelete('cascade')) 
-        // debería eliminar el registro 'teacher' asociado.
         try {
             User::findOrFail($id)->delete();
             $this->dispatch('swal', [
@@ -205,21 +209,24 @@ class TeacherManager extends Component
         }
     }
 
-    // --- RENDER ---
+    /**
+     * [MÉTODO RENDER CORREGIDO]
+     */
     public function render()
     {
         $query = User::query()
-            ->where('user_type', 'teacher')
+            // [CORREGIDO] Buscamos por ROL, no por 'user_type'
+            ->role('Docente') 
             ->whereHas('teacher', fn($q) => $q->where('institution_id', $this->institution_id))
-            ->with('teacher'); // Carga ansiosa de la relación 'teacher'
+            ->with('teacher');
 
         if ($this->search) {
             $query->where(function($q) {
                 $q->where('name', 'like', '%' . $this->search . '%')
                     ->orWhere('email', 'like', '%' . $this->search . '%')
                     ->orWhereHas('teacher', function ($subQuery) {
-                    $subQuery->where('code', 'like', '%' . $this->search . '%');
-                });
+                        $subQuery->where('code', 'like', '%' . $this->search . '%');
+                    });
             });
         }
         

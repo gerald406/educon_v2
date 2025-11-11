@@ -55,6 +55,9 @@
                         <x-nav-link href="{{ route('evaluation.attendances') }}" :active="request()->routeIs('evaluation.attendances')">
                             {{ __('Registro de Asistencia') }}
                         </x-nav-link>
+                        <x-nav-link href="{{ route('teacher.activities') }}" :active="request()->routeIs('teacher.activities')">
+                            {{ __('Actividades') }}
+                        </x-nav-link>
 
                     @endrole
 
@@ -154,6 +157,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link href="{{ route('evaluation.attendances') }}" :active="request()->routeIs('evaluation.attendances')">
                     {{ __('Registro de Asistencia') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link href="{{ route('teacher.activities') }}" :active="request()->routeIs('teacher.activities')">
+                        {{ __('Actividades') }}
                 </x-responsive-nav-link>
             @endrole
 

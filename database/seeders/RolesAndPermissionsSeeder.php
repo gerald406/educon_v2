@@ -59,6 +59,9 @@ class RolesAndPermissionsSeeder extends Seeder
         // [NUEVO PERMISO]
         Permission::firstOrCreate(['name' => 'gestionar-admision']);
 
+        // [NUEVO PERMISO]
+        Permission::firstOrCreate(['name' => 'gestionar-actividades']); // Para docentes
+
 
         // --- CREACIÓN DE ROLES ---
 
@@ -74,6 +77,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'registrar-notas',
             'registrar-asistencia',
             'subir-silabo',
+            'gestionar-actividades', // <-- [AÑADIR PERMISO]
         ]);
 
         // Rol Coordinador (Docente con privilegios)
@@ -85,6 +89,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'gestionar-horarios',
             'aprobar-silabos',
             'gestionar-prerrequisitos',
+            'gestionar-actividades', // <-- [AÑADIR PERMISO]
         ]);
 
         // Rol Secretario Académico
