@@ -41,6 +41,8 @@ use App\Livewire\Pages\Services\Library\LibraryLoanManager;
 
 use App\Livewire\Pages\Reports\ReportManager;
 
+use App\Livewire\Pages\Admission\ApplicantManager;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -159,4 +161,9 @@ Route::prefix('services')->middleware(['auth', 'verified', 'permission:gestionar
 // [NUEVO GRUPO] Grupo de Rutas para Reportes (Solo Admin)
 Route::prefix('reports')->middleware(['auth', 'verified', 'role:Administrador'])->name('reports.')->group(function () {
     Route::get('/', ReportManager::class)->name('index');
+});
+
+// [NUEVO GRUPO] Grupo de Rutas para Admisión
+Route::prefix('admission')->middleware(['auth', 'verified', 'permission:gestionar-admision'])->name('admission.')->group(function () {
+    Route::get('applicants', ApplicantManager::class)->name('applicants');
 });

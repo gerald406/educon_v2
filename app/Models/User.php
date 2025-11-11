@@ -80,4 +80,11 @@ class User extends Authenticatable
     {
         return $this->hasOne(Student::class);
     }
+    /**
+     * Obtiene el perfil de postulante asociado al usuario.
+     */
+    public function applicant()
+    {
+        return $this->hasOne(Applicant::class);
+    }
 }

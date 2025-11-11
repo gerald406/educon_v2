@@ -42,6 +42,31 @@
             </div>
         @endrole
 
+        @can('gestionar-admision')
+            <div class="mb-1" x-data="{ open: {{ request()->routeIs('admission.*') ? 'true' : 'false' }} }">
+                <button @click="open = !open"
+                        class="w-full flex justify-between items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                               {{ request()->routeIs('admission.*') 
+                                  ? 'bg-gray-900 text-white' 
+                                  : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                    <span class="flex items-center">
+                        <svg class="h-6 w-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" /></svg>
+                        Admisión
+                    </span>
+                    <svg :class="{'rotate-180': open, 'rotate-0': !open}" class="h-5 w-5 transform transition-transform duration-150" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+                <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
+                    <a href="{{ route('admission.applicants') }}"
+                       class="block px-3 py-2 rounded-md text-sm font-medium
+                              {{ request()->routeIs('admission.applicants') 
+                                 ? 'text-white' 
+                                 : 'text-gray-400 hover:text-white' }}">
+                        Gestión de Postulantes
+                    </a>
+                </div>
+            </div>
+        @endcan
+
         @canany(['gestionar-estructura-academica', 'gestionar-prerrequisitos'])
             <div class="mb-1" x-data="{ open: {{ request()->routeIs('academic.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open"

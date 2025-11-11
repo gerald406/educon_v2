@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Applicant;
 use App\Models\Student;
 use App\Models\Teacher;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -19,5 +20,8 @@ class PeopleSeeder extends Seeder
         
         // Crear 50 Estudiantes de ejemplo
         Student::factory(50)->create();
+
+        // [NUEVO] Crear 15 Postulantes de ejemplo
+        Applicant::factory(15)->create();
     }
 }

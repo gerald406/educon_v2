@@ -56,6 +56,9 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'gestionar-biblioteca']);
         Permission::firstOrCreate(['name' => 'registrar-prestamos']);
 
+        // [NUEVO PERMISO]
+        Permission::firstOrCreate(['name' => 'gestionar-admision']);
+
 
         // --- CREACIÓN DE ROLES ---
 
@@ -91,6 +94,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'gestionar-periodos',
             'gestionar-carga-academica',
             'gestionar-certificacion',
+            'gestionar-admision',
         ]);
 
         // Rol Tesorería (Caja)
