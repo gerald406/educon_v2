@@ -1,4 +1,4 @@
-<div class="h-screen w-64 bg-gray-800 text-white p-4 overflow-y-auto">
+<div class="h-screen w-66 bg-gray-800 text-white p-3 overflow-y-auto">
     <div class="flex items-center mb-6">
         <a href="{{ route('dashboard') }}">
             <x-application-mark class="block h-10 w-auto" />
@@ -219,6 +219,31 @@
                                 ? 'text-white' 
                                 : 'text-gray-400 hover:text-white' }}">
                         Gestión de Tutorías
+                    </a>
+                </div>
+            </div>
+        @endcan
+
+        @can('gestionar-anuncios')
+            <div class="mb-1" x-data="{ open: {{ request()->routeIs('communication.*') ? 'true' : 'false' }} }">
+                <button @click="open = !open"
+                        class="w-full flex justify-between items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                            {{ request()->routeIs('communication.*') 
+                                ? 'bg-gray-900 text-white' 
+                                : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                    <span class="flex items-center">
+                        <svg class="h-6 w-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688 0-1.25.561-1.25 1.25s.562 1.25 1.25 1.25c.687 0 1.25-.563 1.25-1.25s-.563-1.25-1.25-1.25zm0 0c-.688 0-1.25.561-1.25 1.25s.562 1.25 1.25 1.25c.687 0 1.25-.563 1.25-1.25s-.563-1.25-1.25-1.25zm0 0h.01M10.34 15.84c.688 0 1.25.561 1.25 1.25s-.563 1.25-1.25 1.25c-.688 0-1.25-.563-1.25-1.25s.562-1.25 1.25-1.25z" /><path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84a1.25 1.25 0 100-2.5 1.25 1.25 0 000 2.5zM10.34 15.84l4.575-4.575M16.16 10.015L17.41 8.765m-5.3 5.3l-1.25 1.25m1.25-1.25l-1.25 1.25M17.41 8.765a2.5 2.5 0 10-3.536-3.536L12.625 6.5l-1.25-1.25-1.25 1.25-1.25-1.25-1.25 1.25-1.25-1.25-1.25 1.25-3.536 3.536a2.5 2.5 0 103.536 3.536l3.536-3.536 1.25 1.25 1.25-1.25 1.25 1.25 1.25-1.25 1.25 1.25 1.25-1.25 1.25 1.25 3.536-3.536a2.5 2.5 0 10-3.536-3.536L14.91 10.015z" /></svg>
+                        Comunicación
+                    </span>
+                    <svg :class="{'rotate-180': open, 'rotate-0': !open}" class="h-5 w-5 transform transition-transform duration-150" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+                <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
+                    <a href="{{ route('communication.announcements') }}"
+                    class="block px-3 py-2 rounded-md text-sm font-medium
+                            {{ request()->routeIs('communication.announcements') 
+                                ? 'text-white' 
+                                : 'text-gray-400 hover:text-white' }}">
+                        Gestionar Anuncios
                     </a>
                 </div>
             </div>

@@ -3,6 +3,7 @@
 namespace App\Livewire\Dashboard;
 
 use App\Models\AcademicPeriod;
+use App\Models\Announcement;
 use App\Models\Syllabus;
 use App\Models\TeacherAssignment;
 use Illuminate\Support\Collection;
@@ -15,6 +16,7 @@ class TeacherDashboard extends Component
     public $pendingSyllabiCount = 0;
     public $totalHours = 0;
     public ?AcademicPeriod $activePeriod = null;
+    public Collection $announcements; // <-- [NUEVO]
 
     public function mount()
     {
@@ -37,6 +39,21 @@ class TeacherDashboard extends Component
             // Calcular horas totales (usando la lógica corregida)
             $this->totalHours = $this->assignments->sum(fn($a) => $a->didacticUnit->weekly_hours ?? 0);
         }
+
+        // --- [NUEVA LÓGICA] ---
+        $this->announcements = Announcement::where('status', 'published')
+            ->where('publish_date', '<=', now())
+            ->where(function ($query) {
+                $query->whereNull('expiration_date')
+                      ->orWhere('expiration_date', '>', now());
+            })
+            ->where(function ($query) {
+                $query->where('target_audience', 'all')
+                      ->orWhere('target_audience', 'teachers');
+            })
+            ->orderBy('publish_date', 'desc')
+            ->take(5)
+            ->get();
     }
     
     public function render()

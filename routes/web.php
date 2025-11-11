@@ -47,6 +47,8 @@ use App\Livewire\Pages\Admission\ApplicantManager;
 
 use App\Livewire\Pages\Student\MyActivities;
 
+use App\Livewire\Pages\Communication\AnnouncementManager;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -178,4 +180,9 @@ Route::prefix('admission')->middleware(['auth', 'verified', 'permission:gestiona
 // [NUEVO GRUPO] Grupo de Rutas para Estudiantes
 Route::prefix('student')->middleware(['auth', 'verified', 'role:Estudiante|Administrador'])->name('student.')->group(function () {
     Route::get('my-activities', MyActivities::class)->middleware('permission:entregar-actividades')->name('my-activities');
+});
+
+// [NUEVO GRUPO] Grupo de Rutas para Comunicación
+Route::prefix('communication')->middleware(['auth', 'verified', 'permission:gestionar-anuncios'])->name('communication.')->group(function () {
+    Route::get('announcements', AnnouncementManager::class)->name('announcements');
 });

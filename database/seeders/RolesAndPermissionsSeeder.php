@@ -22,10 +22,10 @@ class RolesAndPermissionsSeeder extends Seeder
         
         // Módulo Configuración
         Permission::firstOrCreate(['name' => 'gestionar-institucion']);
-        Permission::firstOrCreate(['name' => 'gestionar-configuracion']); // Aulas, Años, Turnos, TUPA, etc.
+        Permission::firstOrCreate(['name' => 'gestionar-configuracion']);
 
         // Módulo Académico
-        Permission::firstOrCreate(['name' => 'gestionar-estructura-academica']); // Carreras, Planes, Módulos, Cursos
+        Permission::firstOrCreate(['name' => 'gestionar-estructura-academica']);
         Permission::firstOrCreate(['name' => 'gestionar-prerrequisitos']);
 
         // Módulo Personas
@@ -45,75 +45,80 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Módulo Matrícula (Estudiante)
         Permission::firstOrCreate(['name' => 'matricularse']);
+        Permission::firstOrCreate(['name' => 'entregar-actividades']); // Añadido Fase 82
 
         // Módulo Tesorería
         Permission::firstOrCreate(['name' => 'registrar-pagos']);
 
         // Módulo Certificación
-        Permission::firstOrCreate(['name' => 'gestionar-certificacion']); // Certificados, Pasantías, Titulación
+        Permission::firstOrCreate(['name' => 'gestionar-certificacion']);
 
         // Módulo Biblioteca
         Permission::firstOrCreate(['name' => 'gestionar-biblioteca']);
         Permission::firstOrCreate(['name' => 'registrar-prestamos']);
+        
+        // Módulo Admisión
+        Permission::firstOrCreate(['name' => 'gestionar-admision']); // Añadido Fase 73
 
-        // [NUEVO PERMISO]
-        Permission::firstOrCreate(['name' => 'gestionar-admision']);
-
-        // [NUEVO PERMISO]
-        Permission::firstOrCreate(['name' => 'gestionar-actividades']); // Para docentes
-
-        // [NUEVO PERMISO]
-        Permission::firstOrCreate(['name' => 'entregar-actividades']); // Para estudiantes
+        // Módulo Comunicación
+        Permission::firstOrCreate(['name' => 'gestionar-anuncios']); // Añadido Fase 85
 
 
-        // --- CREACIÓN DE ROLES ---
+        // --- CREACIÓN DE ROLES Y ASIGNACIÓN DE PERMISOS ---
 
         // Rol Estudiante
         $roleStudent = Role::firstOrCreate(['name' => 'Estudiante']);
-        $roleStudent->givePermissionTo([
+        $roleStudent->syncPermissions([ // syncPermissions es más seguro
             'matricularse',
-            'entregar-actividades', // <-- [AÑADIR PERMISO]
+            'entregar-actividades',
         ]);
 
         // Rol Docente
         $roleTeacher = Role::firstOrCreate(['name' => 'Docente']);
-        $roleTeacher->givePermissionTo([
+        $roleTeacher->syncPermissions([
             'registrar-notas',
             'registrar-asistencia',
             'subir-silabo',
-            'gestionar-actividades', // <-- [AÑADIR PERMISO]
+            'gestionar-actividades',
         ]);
 
         // Rol Coordinador (Docente con privilegios)
         $roleCoordinator = Role::firstOrCreate(['name' => 'Coordinador']);
-        $roleCoordinator->givePermissionTo([
+        $roleCoordinator->syncPermissions([
             'registrar-notas',
             'registrar-asistencia',
             'subir-silabo',
+            'gestionar-actividades',
             'gestionar-horarios',
             'aprobar-silabos',
             'gestionar-prerrequisitos',
-            'gestionar-actividades', // <-- [AÑADIR PERMISO]
         ]);
 
         // Rol Secretario Académico
         $roleSecretary = Role::firstOrCreate(['name' => 'Secretario Academico']);
-        $roleSecretary->givePermissionTo([
+        $roleSecretary->syncPermissions([
             'gestionar-estudiantes',
             'gestionar-periodos',
             'gestionar-carga-academica',
             'gestionar-certificacion',
             'gestionar-admision',
+            'gestionar-anuncios',
         ]);
 
         // Rol Tesorería (Caja)
         $roleTreasury = Role::firstOrCreate(['name' => 'Tesoreria']);
-        $roleTreasury->givePermissionTo([
+        $roleTreasury->syncPermissions([
             'registrar-pagos',
         ]);
 
-        // Rol Administrador (Acceso a todo)
+        // --- [LÓGICA CORREGIDA PARA ADMINISTRADOR] ---
+        // 1. Crear el rol
         $roleAdmin = Role::firstOrCreate(['name' => 'Administrador']);
-        $roleAdmin->givePermissionTo(Permission::all());
+        
+        // 2. Obtener TODOS los permisos que existen en la base de datos
+        $allPermissions = Permission::all();
+        
+        // 3. Sincronizar: Esto asigna todos los permisos al admin CADA VEZ que se ejecuta.
+        $roleAdmin->syncPermissions($allPermissions);
     }
 }
