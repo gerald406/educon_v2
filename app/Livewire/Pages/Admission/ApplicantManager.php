@@ -149,6 +149,108 @@ class ApplicantManager extends Component
         }
     }
 
+    /**
+     * Muestra la confirmación de SweetAlert antes de aprobar.
+     */
+    public function confirmApprove(int $userId)
+    {
+        // [TEXTO DE BOTÓN CORREGIDO]
+        $confirmText = 'Sí, ¡aprobar!';
+        
+        $applicant = Applicant::where('user_id', $userId)->first();
+        if (empty($applicant->exam_score) || $applicant->exam_score < 13) { // Asumimos 13 como nota mínima
+            $this->dispatch('swal:confirm', [
+                'id' => $userId,
+                'title' => '¿Aprobar Postulante?',
+                'text' => 'El postulante no tiene una nota de examen válida o está desaprobado. ¿Desea aprobarlo de todas formas?',
+                'icon' => 'warning',
+                'onConfirmed' => 'approveApplicant',
+                'confirmButtonText' => $confirmText // <-- [LÍNEA AÑADIDA]
+            ]);
+        } else {
+            $this->dispatch('swal:confirm', [
+                'id' => $userId,
+                'title' => '¿Aprobar Postulante?',
+                'text' => 'Esta acción creará un registro de estudiante para este usuario.',
+                'onConfirmed' => 'approveApplicant',
+                'confirmButtonText' => $confirmText // <-- [LÍNEA AÑADIDA]
+            ]);
+        }
+    }
+
+    /**
+     * Aprueba al postulante y crea el registro de Estudiante.
+     */
+    #[On('approveApplicant')]
+    public function approveApplicant(int $id) // Mantenemos el $id corregido de la fase anterior
+    {
+        $user = User::find($id);
+        $applicant = $user?->applicant;
+
+        if (!$user || !$applicant) {
+            $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'No se encontró al postulante.']);
+            return;
+        }
+
+        $existingStudent = Student::where('user_id', $user->id)->exists();
+        if ($existingStudent) {
+            $this->dispatch('swal', ['icon' => 'info', 'title' => 'Acción Requerida', 'text' => 'Este usuario ya tiene un registro de estudiante.']);
+            return;
+        }
+
+        try {
+            DB::transaction(function () use ($user, $applicant) {
+                
+                // --- [INICIO DE LA CORRECCIÓN] ---
+                // Lógica para generar el nuevo código de estudiante
+                $currentYear = date('Y');
+                
+                // 1. Buscar el último estudiante de este año
+                $lastStudent = Student::where('code', 'like', "E{$currentYear}-%")
+                                        ->orderBy('code', 'desc')
+                                        ->first();
+                
+                $nextNumber = 1;
+                if ($lastStudent) {
+                    // 2. Extraer el número (ej. E2025-00001 -> 1)
+                    $lastNumber = (int)substr($lastStudent->code, 6); // Obtiene el "00001" y lo convierte a 1
+                    $nextNumber = $lastNumber + 1;
+                }
+                
+                // 3. Formatear el nuevo código con 5 dígitos
+                $newStudentCode = 'E' . $currentYear . '-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+                // --- [FIN DE LA CORRECCIÓN] ---
+
+
+                // 2. Crear el Estudiante (AÑADIENDO EL NUEVO CÓDIGO)
+                Student::create([
+                    'user_id' => $user->id,
+                    'applicant_id' => $applicant->id,
+                    'career_id' => $applicant->career_id,
+                    'study_plan_id' => $applicant->study_plan_id,
+                    'code' => $newStudentCode, // <-- ¡CAMPO AÑADIDO!
+                    'current_semester' => 1,
+                    'academic_status' => 'regular',
+                    'admission_date' => now(),
+                    'accumulated_credits' => 0,    // (Aseguramos valores por defecto)
+                    'weighted_average' => 0.00,  // (Aseguramos valores por defecto)
+                ]);
+
+                // 3. Actualizar el estado del Postulante
+                $applicant->update(['application_status' => 'approved']);
+            });
+
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => '¡Éxito!',
+                'text' => 'El postulante ha sido aprobado y registrado como estudiante.',
+            ]);
+
+        } catch (\Exception $e) {
+            $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'No se pudo completar el proceso: ' . $e->getMessage()]);
+        }
+    }
+
     public function render()
     {
         $query = User::query()

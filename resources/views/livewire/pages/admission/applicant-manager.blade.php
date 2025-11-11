@@ -41,9 +41,15 @@
                                                 {{ $user->applicant->application_status }}
                                             </span>
                                         </td>
-                                        <td class="px-6 py-4 text-right">
-                                            <x-button wire:click="openEditModal({{ $user->id }})">Editar</x-button>
-                                            </td>
+                                        <td class="px-6 py-4 text-right space-x-1">
+                                            <x-button wire:click="confirmApprove({{ $user->id }})" class="bg-green-600 hover:bg-green-700">
+                                                Aprobar
+                                            </x-button>
+                                            
+                                            <x-secondary-button wire:click="openEditModal({{ $user->id }})">
+                                                Editar
+                                            </x-secondary-button>
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
