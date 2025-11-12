@@ -27,6 +27,10 @@ class AcademicPeriodManager extends Component
     public $enrollment_end_date = '';
     public $classes_start_date = '';
     public $classes_end_date = '';
+    // [NUEVAS PROPIEDADES]
+    public $grade_entry_start_date = '';
+    public $grade_entry_end_date = '';
+
     public $status = 'planned';
 
     // --- PROPIEDADES DE ESTADO ---
@@ -71,6 +75,10 @@ class AcademicPeriodManager extends Component
             'enrollment_end_date' => 'required|date|after_or_equal:enrollment_start_date',
             'classes_start_date' => 'required|date',
             'classes_end_date' => 'required|date|after_or_equal:classes_start_date',
+            // [NUEVAS REGLAS]
+            'grade_entry_start_date' => 'nullable|date',
+            'grade_entry_end_date' => 'nullable|date|after_or_equal:grade_entry_start_date',
+
             'status' => 'required|in:planned,active,closed',
             // Regla: El 'code' debe ser único para esta 'institution_id'
             'code' => [
@@ -105,7 +113,9 @@ class AcademicPeriodManager extends Component
         $this->enrollment_end_date = $period->enrollment_end_date->format('Y-m-d');
         $this->classes_start_date = $period->classes_start_date->format('Y-m-d');
         $this->classes_end_date = $period->classes_end_date->format('Y-m-d');
-        
+        // [NUEVO] Formatear fechas de notas (usamos datetime-local)
+        $this->grade_entry_start_date = $period->grade_entry_start_date?->format('Y-m-d\TH:i');
+        $this->grade_entry_end_date = $period->grade_entry_end_date?->format('Y-m-d\TH:i');
         $this->isModalOpen = true;
     }
 
@@ -129,6 +139,9 @@ class AcademicPeriodManager extends Component
     {
         $data = $this->validate();
         $data['institution_id'] = $this->institution_id;
+        // [NUEVO] Convertir vacíos a null
+        $data['grade_entry_start_date'] = $data['grade_entry_start_date'] === '' ? null : $data['grade_entry_start_date'];
+        $data['grade_entry_end_date'] = $data['grade_entry_end_date'] === '' ? null : $data['grade_entry_end_date'];
         
         $model = $this->editingPeriod ?? new AcademicPeriod();
         

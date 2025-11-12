@@ -131,6 +131,16 @@
                     <x-input id="classes_end_date" type="date" class="mt-1 block w-full" wire:model.blur="classes_end_date" />
                     <x-input-error for="classes_end_date" class="mt-2" />
                 </div>
+                <div class="col-span-1">
+                    <x-label for="grade_entry_start_date" value="Inicio Registro de Notas" />
+                    <x-input id="grade_entry_start_date" type="datetime-local" class="mt-1 block w-full" wire:model.blur="grade_entry_start_date" />
+                    <x-input-error for="grade_entry_start_date" class="mt-2" />
+                </div>
+                <div class="col-span-1">
+                    <x-label for="grade_entry_end_date" value="Fin Registro de Notas" />
+                    <x-input id="grade_entry_end_date" type="datetime-local" class="mt-1 block w-full" wire:model.blur="grade_entry_end_date" />
+                    <x-input-error for="grade_entry_end_date" class="mt-2" />
+                </div>
 
                 <div class="col-span-1">
                     <x-label for="status" value="Estado" />

@@ -39,7 +39,11 @@ class AcademicProcessSeeder extends Seeder
                 'enrollment_end_date' => '2025-03-10',
                 'classes_start_date' => '2025-03-15',
                 'classes_end_date' => '2025-07-15',
+                // [NUEVAS LÍNEAS]
+                'grade_entry_start_date' => '2025-07-01 08:00:00', // Inicio de registro de notas
+                'grade_entry_end_date' => '2025-07-15 23:59:59', // Fin de registro
                 'status' => 'active', // ¡Importante! Este es el periodo activo
+                
             ]
         );
 

@@ -21,6 +21,8 @@ class AcademicPeriod extends Model
         'enrollment_end_date',
         'classes_start_date',
         'classes_end_date',
+        'grade_entry_start_date', // <-- [AÑADIR]
+        'grade_entry_end_date',   // <-- [AÑADIR]
         'status',
     ];
 
@@ -31,6 +33,8 @@ class AcademicPeriod extends Model
         'enrollment_end_date' => 'date',
         'classes_start_date' => 'date',
         'classes_end_date' => 'date',
+        'grade_entry_start_date' => 'datetime', // <-- [AÑADIR]
+        'grade_entry_end_date' => 'datetime',   // <-- [AÑADIR]
     ];
 
     /**
