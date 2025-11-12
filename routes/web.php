@@ -36,6 +36,7 @@ use App\Livewire\Pages\Treasury\PaymentManager;
 use App\Livewire\Pages\Certification\CertificateManager;
 use App\Livewire\Pages\Certification\InternshipManager;
 use App\Livewire\Pages\Certification\GraduationProcessManager;
+use App\Livewire\Pages\Certification\MeritRankingManager;
 
 use App\Livewire\Pages\Services\Library\LibraryResourceManager;
 use App\Livewire\Pages\Services\Library\LibraryLoanManager;
@@ -149,6 +150,7 @@ Route::prefix('certification')->middleware(['auth', 'verified', 'permission:gest
     Route::get('certificates', CertificateManager::class)->name('certificates');
     Route::get('internships', InternshipManager::class)->name('internships');
     Route::get('graduation-processes', GraduationProcessManager::class)->name('graduation-processes');
+    Route::get('merit-rankings', MeritRankingManager::class)->middleware('permission:gestionar-cuadro-meritos')->name('merit-rankings');
 });
 
 // Grupo de Rutas para Docentes (Sílabos)

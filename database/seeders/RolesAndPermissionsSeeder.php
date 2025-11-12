@@ -63,6 +63,8 @@ class RolesAndPermissionsSeeder extends Seeder
         // Módulo Comunicación
         Permission::firstOrCreate(['name' => 'gestionar-anuncios']); // Añadido Fase 85
 
+        // [NUEVO PERMISO]
+        Permission::firstOrCreate(['name' => 'gestionar-cuadro-meritos']);
 
         // --- CREACIÓN DE ROLES Y ASIGNACIÓN DE PERMISOS ---
 
@@ -103,6 +105,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'gestionar-certificacion',
             'gestionar-admision',
             'gestionar-anuncios',
+            'gestionar-cuadro-meritos', // <-- [AÑADIR PERMISO]
         ]);
 
         // Rol Tesorería (Caja)

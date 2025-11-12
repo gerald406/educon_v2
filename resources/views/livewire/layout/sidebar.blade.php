@@ -184,6 +184,16 @@
                     <a href="{{ route('certification.certificates') }}" class="block px-3 py-2 rounded-md text-sm font-medium"> Emisión de Certificados </a>
                     <a href="{{ route('certification.internships') }}" class="block px-3 py-2 rounded-md text-sm font-medium"> Gestión de Pasantías </a>
                     <a href="{{ route('certification.graduation-processes') }}" class="block px-3 py-2 rounded-md text-sm font-medium"> Procesos de Titulación </a>
+                    
+                    @can('gestionar-cuadro-meritos')
+                    <a href="{{ route('certification.merit-rankings') }}"                class="block px-3 py-2 rounded-md text-sm font-medium
+                            {{ request()->routeIs('certification.merit-rankings') 
+                                ? 'text-white' 
+                                : 'text-gray-400 hover:text-white' }}">
+                        Cuadro de Méritos
+                    </a>
+                    @endcan
+
                 </div>
             </div>
         @endcan
