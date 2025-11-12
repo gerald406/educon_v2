@@ -29,6 +29,7 @@ use App\Livewire\Pages\Evaluation\Grades\GradeManager;
 use App\Livewire\Pages\Evaluation\Attendances\AttendanceManager;
 use App\Livewire\Pages\Teacher\MySyllabi;
 use App\Livewire\Pages\Teacher\ActivityManager;
+use App\Livewire\Pages\Teacher\SubmissionReview;
 
 use App\Livewire\Pages\Enrollment\EnrollmentProcess;
 use App\Livewire\Pages\Treasury\PaymentManager;
@@ -158,6 +159,7 @@ Route::prefix('certification')->middleware(['auth', 'verified', 'permission:gest
 Route::prefix('teacher')->middleware(['auth', 'verified', 'role:Docente|Coordinador|Administrador'])->name('teacher.')->group(function () {
     Route::get('my-syllabi', MySyllabi::class)->name('my-syllabi');
     Route::get('activities', ActivityManager::class)->middleware('permission:gestionar-actividades')->name('activities');
+    Route::get('submissions', SubmissionReview::class)->middleware('permission:revisar-entregas')->name('submissions');
 });
 
 // Grupo de Rutas para Servicios
