@@ -41,6 +41,11 @@ class GradeManager extends Component
     public $isLocked = false;  // Para bloquear la edición
     public $minPassingGrade = 13; // Nota mínima (debería venir de SystemSettings)
 
+
+    // --- [PROPIEDADES DE BLOQUEO ACTUALIZADAS] ---
+    public $isOutOfDate = false; // Bloqueado por fecha
+    public $gradeEntryMessage = ''; // Mensaje para mostrar al docente
+
     /**
      * Hook 'mount': Carga datos iniciales del docente y periodo.
      */
@@ -57,6 +62,40 @@ class GradeManager extends Component
 
         $this->loadAssignments();
         $this->loadMatrixData();
+        // --- [NUEVA LÓGICA DE VERIFICACIÓN DE FECHAS] ---
+        $this->checkGradeEntryWindow();
+    }
+
+
+    /**
+     * [NUEVO] Verifica si el docente está dentro de la ventana de registro de notas.
+     */
+    public function checkGradeEntryWindow()
+    {
+        if (!$this->activePeriod) {
+            $this->isOutOfDate = true;
+            $this->gradeEntryMessage = 'No hay un periodo académico activo.';
+            return;
+        }
+
+        $now = now();
+        $startDate = $this->activePeriod->grade_entry_start_date;
+        $endDate = $this->activePeriod->grade_entry_end_date;
+
+        if (!$startDate || !$endDate) {
+            $this->isOutOfDate = true;
+            $this->gradeEntryMessage = 'Las fechas para el registro de notas no han sido configuradas por administración.';
+        } elseif ($now->isBefore($startDate)) {
+            $this->isOutOfDate = true;
+            $this->gradeEntryMessage = 'El registro de notas iniciará el: ' . $startDate->format('d/m/Y h:i A');
+        } elseif ($now->isAfter($endDate)) {
+            $this->isOutOfDate = true;
+            $this->gradeEntryMessage = 'El registro de notas finalizó el: ' . $endDate->format('d/m/Y h:i A');
+        } else {
+            // Está dentro de la ventana
+            $this->isOutOfDate = false;
+            $this->gradeEntryMessage = 'El registro de notas cierra el: ' . $endDate->format('d/m/Y h:i A');
+        }
     }
 
     /**
@@ -94,6 +133,7 @@ class GradeManager extends Component
             $this->registrations = collect();
             $this->evaluationTypes = collect();
             $this->grades = [];
+            $this->isLocked = false; // [CAMBIO] Resetea el bloqueo
             return;
         }
 

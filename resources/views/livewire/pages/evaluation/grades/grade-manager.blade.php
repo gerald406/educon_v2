@@ -21,6 +21,22 @@
                             </select>
                         </div>
 
+                        @if($isLocked)
+                            <div class="mt-4 mb-4 p-4 bg-green-100 border border-green-300 text-green-800 rounded-md">
+                                <p class="font-semibold">Registro Finalizado</p>
+                                <p>Las notas de esta sección ya han sido consolidadas y bloqueadas.</p>
+                            </div>
+                        @elseif($isOutOfDate)
+                            <div class="mt-4 mb-4 p-4 bg-red-100 border border-red-300 text-red-800 rounded-md">
+                                <p class="font-semibold">Registro de Notas Cerrado</p>
+                                <p>{{ $gradeEntryMessage }}</p>
+                            </div>
+                        @else
+                            <div class="mt-4 mb-4 p-4 bg-blue-100 border border-blue-300 text-blue-800 rounded-md">
+                                <p class="font-semibold">Registro de Notas Abierto</p>
+                                <p>{{ $gradeEntryMessage }}</p>
+                            </div>
+                        @endif
                         @if($selectedAssignmentId)
                             <div class="overflow-x-auto mt-6">
                                 <table class="min-w-full divide-y divide-gray-200">
@@ -52,7 +68,7 @@
                                                             class="w-24 text-center"
                                                             wire:model.blur="grades.{{ $registration->id }}.{{ $type->id }}"
                                                             wire:change="saveGrade({{ $registration->id }}, {{ $type->id }})"
-                                                            :readonly="$isLocked" />
+                                                            :disabled="$isLocked || $isOutOfDate" />
                                                     </td>
                                                 @endforeach
                                                 
@@ -60,7 +76,6 @@
                                                     @php
                                                         $finalGrade = $finalGrades[$registration->id] ?? null;
                                                     @endphp
-
                                                     @if ($finalGrade !== null)
                                                         <span @class([
                                                             'text-green-600' => $finalGrade >= $minPassingGrade,
@@ -84,23 +99,24 @@
                                 </table>
                             </div>
                             
+                            <div class="mt-4">{{ $registrations->links() }}</div>
 
-                                @if(!$isLocked && $registrations->count() > 0)
-                                    <div class="flex justify-end mt-6 border-t pt-6">
-                                        <x-danger-button wire:click="confirmFinalizeGrades" wire:loading.attr="disabled">
-                                            <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd" /></svg>
-                                            Finalizar y Bloquear Registro de Notas
-                                        </x-danger-button>
-                                    </div>
-                                @elseif($isLocked)
-                                    <div class="mt-6 border-t pt-6">
-                                        <p class="text-green-600 font-semibold text-center">
-                                            <svg class="w-6 h-6 inline-block mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
-                                            Este registro de notas ya ha sido finalizado y consolidado.
-                                        </p>
-                                    </div>
-                                @endif
-                        
+                            @if(!$isLocked && !$isOutOfDate && $registrations->count() > 0)
+                                <div class="flex justify-end mt-6 border-t pt-6">
+                                    <x-danger-button wire:click="confirmFinalizeGrades" wire:loading.attr="disabled">
+                                        <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd" /></svg>
+                                        Finalizar y Bloquear Registro de Notas
+                                    </x-danger-button>
+                                </div>
+                            @elseif($isLocked)
+                                <div class="mt-6 border-t pt-6">
+                                    <p class="text-green-600 font-semibold text-center">
+                                        <svg class="w-6 h-6 inline-block mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                                        Este registro de notas ya ha sido finalizado y consolidado.
+                                    </p>
+                                </div>
+                            @endif
+
                         @else
                             <p class="text-center text-gray-500">Seleccione un curso para ver la matriz de notas.</p>
                         @endif
