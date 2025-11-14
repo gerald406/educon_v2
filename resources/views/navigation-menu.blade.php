@@ -62,6 +62,10 @@
                             {{ __('Revisar Entregas') }}
                         </x-nav-link>
 
+                        <x-nav-link href="{{ route('teacher.attendance-report') }}" :active="request()->routeIs('teacher.attendance-report')">
+                        {{ __('Reporte Asistencia') }}
+                    </x-nav-link>
+
                     @endrole
 
                     @role('Estudiante')
@@ -169,6 +173,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link href="{{ route('teacher.submissions') }}" :active="request()->routeIs('teacher.submissions')">
                     {{ __('Revisar Entregas') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link href="{{ route('teacher.attendance-report') }}" :active="request()->routeIs('teacher.attendance-report')">
+                    {{ __('Reporte Asistencia') }}
                 </x-responsive-nav-link>
             @endrole
 
