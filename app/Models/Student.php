@@ -69,4 +69,12 @@ class Student extends Model
     {
         return $this->hasMany(EnrollmentReserve::class);
     }
+
+    /**
+     * Un estudiante puede tener múltiples matrículas (Enrollments).
+     */
+    public function enrollments()
+    {
+        return $this->hasMany(Enrollment::class);
+    }
 }

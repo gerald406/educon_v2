@@ -8,10 +8,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 // [NUEVO] Importar tipos de relación
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-
 use Illuminate\Database\Eloquent\Relations\HasOne; // <-- [NUEVO] Importar HasOne
-use App\Models\Syllabus; // <-- [NUEVO] Importar Syllabus
 
+use App\Models\Syllabus; // <-- [NUEVO] Importar Syllabus
+use App\Models\Registration;
 // [NUEVO] Importar los modelos relacionados
 use App\Models\Teacher;
 use App\Models\DidacticUnit;
@@ -81,5 +81,14 @@ class TeacherAssignment extends Model
     public function syllabus(): HasOne
     {
         return $this->hasOne(Syllabus::class);
+    }
+
+    /**
+     * [NUEVA FUNCIÓN AÑADIDA]
+     * Una asignación (sección) tiene muchas inscripciones (estudiantes matriculados).
+     */
+    public function registrations(): HasMany
+    {
+        return $this->hasMany(Registration::class);
     }
 }

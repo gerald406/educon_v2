@@ -192,6 +192,7 @@ class AcademicPeriodManager extends Component
             ]);
         }
     }
+    
 
     // --- RENDER ---
     public function render()

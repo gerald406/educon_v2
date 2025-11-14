@@ -15,6 +15,10 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
 
+// [NUEVO] Importar la fachada de Excel y nuestra clase Export
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\EnrolledStudentsExport;
+
 #[Layout('layouts.app')]
 class TeacherAssignmentManager extends Component
 {
@@ -319,6 +323,28 @@ class TeacherAssignmentManager extends Component
     public function updatedSearch()
     {
         $this->resetPage();
+    }
+
+    // --- [NUEVO MÉTODO] ---
+    /**
+     * Exporta la nómina de estudiantes de una sección a Excel.
+     */
+    public function exportEnrolledStudents(TeacherAssignment $assignment)
+    {
+        // Nos aseguramos de que los datos de la asignación estén cargados
+        $assignment->load('didacticUnit');
+        
+        $fileName = 'nomina_' . 
+                    $assignment->didacticUnit->code . 
+                    '_sec_' . $assignment->section . 
+                    '_' . $this->activePeriod->code . 
+                    '.xlsx';
+
+        // Pasamos la asignación a la clase Export
+        return Excel::download(
+            new EnrolledStudentsExport($assignment),
+            $fileName
+        );
     }
 
     // --- RENDER ---

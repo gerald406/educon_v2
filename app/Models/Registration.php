@@ -37,4 +37,21 @@ class Registration extends Model
     {
         return $this->belongsTo(TeacherAssignment::class);
     }
+
+    /**
+     * Una matrícula pertenece a un estudiante
+     */
+    public function student()
+    {
+        return $this->belongsTo(Student::class);
+    }
+
+
+    /**
+     * Una matrícula pertenece a un periodo académico
+     */
+    public function academicPeriod()
+    {
+        return $this->belongsTo(AcademicPeriod::class);
+    }
 }

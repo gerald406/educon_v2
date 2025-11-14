@@ -49,16 +49,20 @@
                                             <td class="px-6 py-4">{{ $assignment->shift->name ?? 'N/A' }}</td>
                                             <td class="px-6 py-4">{{ $assignment->section }}</td>
                                             <td class="px-6 py-4">{{ $assignment->current_enrolled }} / {{ $assignment->max_capacity }}</td>
-                                            <td class="px-6 py-4 text-right">
+                                            
+                                            <td class="px-6 py-4 text-right space-x-1">
+                                                <x-button 
+                                                wire:click="exportEnrolledStudents({{ $assignment->id }})"
+                                                title="Descargar Nómina de Estudiantes"
+                                                class="bg-danger hover:bg-blue-700">                                                    Nómina
+                                                </x-button>
+                                                
                                                 <x-button wire:click="openEditModal({{ $assignment->id }})">Editar</x-button>
                                                 <x-danger-button wire:click="confirmDelete({{ $assignment->id }})">Eliminar</x-danger-button>
                                             </td>
                                         </tr>
                                     @empty
-                                        <tr>
-                                            <td colspan="6" class="px-6 py-4 text-center">No hay carga académica asignada para este periodo.</td>
-                                        </tr>
-                                    @endforelse
+                                        @endforelse
                                 </tbody>
                             </table>
                         </div>
