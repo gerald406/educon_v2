@@ -34,7 +34,9 @@ use App\Livewire\Pages\Teacher\AttendanceReport;
 use App\Livewire\Pages\Teacher\CumulativeAttendanceReport;
 
 use App\Livewire\Pages\Enrollment\EnrollmentProcess;
+
 use App\Livewire\Pages\Treasury\PaymentManager;
+use App\Livewire\Pages\Treasury\CashSessionManager;
 
 use App\Livewire\Pages\Certification\CertificateManager;
 use App\Livewire\Pages\Certification\InternshipManager;
@@ -140,6 +142,7 @@ Route::prefix('evaluation')->middleware(['auth', 'verified', 'role:Docente|Coord
 // [MODIFICADO] Añadido middleware de permiso
 Route::prefix('treasury')->middleware(['auth', 'verified', 'permission:registrar-pagos'])->name('treasury.')->group(function () {
     Route::get('payments', PaymentManager::class)->name('payments');
+    Route::get('cash-sessions', CashSessionManager::class)->middleware('permission:gestionar-sesiones-caja')->name('cash-sessions');
 });
 
 // Grupo de Rutas para Matrícula (Estudiantes y Admin)

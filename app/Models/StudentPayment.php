@@ -16,6 +16,7 @@ class StudentPayment extends Model
         'payment_concept_id',
         'academic_period_id',
         'registered_by_user_id',
+        'voucher_id',
         'original_amount',
         'discount_amount',
         'final_amount',
@@ -65,5 +66,13 @@ class StudentPayment extends Model
     public function registeredBy()
     {
         return $this->belongsTo(User::class, 'registered_by_user_id');
+    }
+
+    /**
+     * El pago (deuda) fue saldado por un comprobante.
+     */
+    public function voucher()
+    {
+        return $this->belongsTo(Voucher::class);
     }
 }

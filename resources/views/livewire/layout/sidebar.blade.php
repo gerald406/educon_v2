@@ -161,8 +161,29 @@
                     </span>
                     <svg :class="{'rotate-180': open, 'rotate-0': !open}" class="h-5 w-5 transform transition-transform duration-150" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                 </button>
-                <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
+                {{-- <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
                     <a href="{{ route('treasury.payments') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('treasury.payments') ? 'text-white' : 'text-gray-400 hover:text-white' }}"> Gestión de Pagos </a>
+                </div> --}}
+                <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
+                    @can('gestionar-sesiones-caja')
+                        <a href="{{ route('treasury.cash-sessions') }}"
+                        class="block px-3 py-2 rounded-md text-sm font-medium
+                                {{ request()->routeIs('treasury.cash-sessions') 
+                                    ? 'text-white' 
+                                    : 'text-gray-400 hover:text-white' }}">
+                            Apertura/Cierre de Caja
+                        </a>
+                    @endcan
+                    
+                    @can('registrar-pagos')
+                        <a href="{{ route('treasury.payments') }}"
+                        class="block px-3 py-2 rounded-md text-sm font-medium
+                                {{ request()->routeIs('treasury.payments') 
+                                    ? 'text-white' 
+                                    : 'text-gray-400 hover:text-white' }}">
+                            Gestión de Pagos
+                        </a>
+                    @endcan
                 </div>
             </div>
         @endcan
