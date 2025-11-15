@@ -17,9 +17,10 @@ class CashSessionManager extends Component
     public $opening_balance = 0.00;
 
     // --- FORMULARIO DE CIERRE ---
-    public $closing_balance = 0.00; // Lo que el cajero "cuenta"
-    public $calculated_balance = 0.00; // Lo que el sistema *calcula*
-    public $total_payments = 0;
+    public $closing_balance_cash = 0.00; // Lo que el cajero "cuenta"
+    public $calculated_cash = 0.00; // Lo que el sistema *calcula*
+    public $total_other_methods = 0.00; // Total Tarjetas, Yape, etc.
+    public $total_vouchers = 0; // Total de pagos (suma)
     public $difference = 0.00;
 
     public function mount()
@@ -74,14 +75,23 @@ class CashSessionManager extends Component
     {
         if (!$this->activeSession) return;
 
-        // Sumar todos los comprobantes emitidos en esta sesión
-        // (En el futuro, filtrar por método de pago, ej. "cash")
-        $this->total_payments = Voucher::where('cash_session_id', $this->activeSession->id)
-            ->where('status', 'issued') // Solo los emitidos
+        // Total en Efectivo
+        $this->calculated_cash = Voucher::where('cash_session_id', $this->activeSession->id)
+            ->where('status', 'issued')
+            ->where('payment_method', 'Efectivo') // Asumiendo que el método se llama 'Efectivo'
             ->sum('total_amount');
 
-        // El saldo calculado es lo que entró + lo que había
-        $this->calculated_balance = $this->activeSession->opening_balance + $this->total_payments;
+        // Total en Otros Métodos
+        $this->total_other_methods = Voucher::where('cash_session_id', $this->activeSession->id)
+            ->where('status', 'issued')
+            ->whereNot('payment_method', 'Efectivo')
+            ->sum('total_amount');
+
+        // Total General
+        $this->total_vouchers = $this->calculated_cash + $this->total_other_methods;
+
+        // El saldo calculado es lo que entró (en efectivo) + lo que había
+        $this->calculated_cash = $this->activeSession->opening_balance + $this->calculated_cash;
 
         // Calcular la diferencia (Sobrante/Faltante)
         $this->calculateDifference();
@@ -90,14 +100,14 @@ class CashSessionManager extends Component
     /**
      * Hook: Recalcula la diferencia cuando el cajero escribe el monto de cierre.
      */
-    public function updatedClosingBalance()
+    public function updatedClosingBalanceCash()
     {
         $this->calculateDifference();
     }
 
     public function calculateDifference()
     {
-        $this->difference = (float)$this->closing_balance - (float)$this-> calculated_balance;
+        $this->difference = (float)$this->closing_balance_cash - (float)$this->calculated_cash;
     }
 
     /**
@@ -114,15 +124,16 @@ class CashSessionManager extends Component
 
         $this->activeSession->update([
             'closing_time' => now(),
-            'closing_balance' => $this->closing_balance,
-            'calculated_balance' => $this->calculated_balance,
+            'closing_balance_cash' => $this->closing_balance_cash,
+            'calculated_cash' => $this->calculated_cash,
+            'total_other_methods' => $this->total_other_methods,
             'difference' => $this->difference,
             'status' => 'closed',
         ]);
 
         $this->dispatch('swal', ['icon' => 'success', 'title' => '¡Caja Cerrada!', 'text' => 'Tu sesión de caja ha finalizado.']);
         $this->activeSession = null;
-        $this->reset('opening_balance', 'closing_balance');
+        $this->reset('opening_balance', 'closing_balance_cash');
     }
 
 

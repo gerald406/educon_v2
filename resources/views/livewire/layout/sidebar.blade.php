@@ -175,6 +175,7 @@
                         </a>
                     @endcan
                     
+                    
                     @can('registrar-pagos')
                         <a href="{{ route('treasury.payments') }}"
                         class="block px-3 py-2 rounded-md text-sm font-medium

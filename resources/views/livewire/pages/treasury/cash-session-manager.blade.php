@@ -26,24 +26,29 @@
                                     <p class="mt-1 text-2xl font-semibold text-gray-900">{{ number_format($activeSession->opening_balance, 2) }}</p>
                                 </div>
                                 <div class="p-4 bg-gray-50 rounded-md border">
-                                    <p class="text-sm font-medium text-gray-500">Total de Pagos Registrados (S/)</p>
-                                    <p class="mt-1 text-2xl font-semibold text-gray-900">{{ number_format($total_payments, 2) }}</p>
+                                    <p class="text-sm font-medium text-gray-500">Total Pagos (Efectivo)</p>
+                                    <p class="mt-1 text-2xl font-semibold text-gray-900">{{ number_format($calculated_cash - $activeSession->opening_balance, 2) }}</p>
                                 </div>
-                                <div class="p-4 bg-blue-50 rounded-md border border-blue-200 col-span-2">
-                                    <p class="text-sm font-medium text-blue-600">Total Calculado en Caja (S/)</p>
+                                <div class="p-4 bg-gray-50 rounded-md border">
+                                    <p class="text-sm font-medium text-gray-500">Total Pagos (Otros Métodos)</p>
+                                    <p class="mt-1 text-2xl font-semibold text-gray-900">{{ number_format($total_other_methods, 2) }}</p>
+                                </div>
+                                <div class="p-4 bg-blue-50 rounded-md border border-blue-200">
+                                    <p class="text-sm font-medium text-blue-600">Total Calculado en Efectivo (S/)</p>
                                     <p class="mt-1 text-3xl font-bold text-blue-800">
-                                        {{ number_format($calculated_balance, 2) }}
+                                        {{ number_format($calculated_cash, 2) }}
                                     </p>
+                                    <span class="text-xs text-blue-700">(Apertura + Pagos en Efectivo)</span>
                                 </div>
                             </div>
                             
                             <hr>
                             
                             <div>
-                                <x-label for="closing_balance" value="Monto Final Contado en Caja (Efectivo)" class="font-bold" />
-                                <x-input id="closing_balance" type="number" step="0.10" class="mt-1 block w-full text-lg" 
-                                         wire:model.live.debounce.300ms="closing_balance" />
-                                <x-input-error for="closing_balance" class="mt-2" />
+                                <x-label for="closing_balance_cash" value="Monto Final Contado en Caja (Efectivo)" class="font-bold" />
+                                <x-input id="closing_balance_cash" type="number" step="0.10" class="mt-1 block w-full text-lg" 
+                                         wire:model.live.debounce.300ms="closing_balance_cash" />
+                                <x-input-error for="closing_balance_cash" class="mt-2" />
                             </div>
                             
                             <div>
@@ -61,7 +66,9 @@
                                 </span>
                             </div>
 
-                            <div class="flex justify-end pt-4">
+                            <div class="flex justify-between items-center pt-4">
+                                <div>
+                                    </div>
                                 <x-danger-button wire:click="closeSession" wire:loading.attr="disabled">
                                     Cerrar Caja
                                 </x-danger-button>
