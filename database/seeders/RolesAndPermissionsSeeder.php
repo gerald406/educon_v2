@@ -46,6 +46,7 @@ class RolesAndPermissionsSeeder extends Seeder
         // Módulo Matrícula (Estudiante)
         Permission::firstOrCreate(['name' => 'matricularse']);
         Permission::firstOrCreate(['name' => 'entregar-actividades']); // Añadido Fase 82
+        Permission::firstOrCreate(['name' => 'ver-mis-asistencias']);
 
         // Módulo Tesorería
         Permission::firstOrCreate(['name' => 'registrar-pagos']);
@@ -79,6 +80,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $roleStudent->syncPermissions([ // syncPermissions es más seguro
             'matricularse',
             'entregar-actividades',
+            'ver-mis-asistencias',
         ]);
 
         // Rol Docente

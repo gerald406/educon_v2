@@ -82,6 +82,9 @@
                         <x-nav-link href="{{ route('student.my-activities') }}" :active="request()->routeIs('student.my-activities')">
                             {{ __('Mis Actividades') }}
                         </x-nav-link>
+                        <x-nav-link href="{{ route('student.my-attendances') }}" :active="request()->routeIs('student.my-attendances')">
+                        {{ __('Mis Asistencias') }}
+                    </x-nav-link>
                     @endrole
 
                 </div>
@@ -194,6 +197,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link href="{{ route('student.my-activities') }}" :active="request()->routeIs('student.my-activities')">
                         {{ __('Mis Actividades') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link href="{{ route('student.my-attendances') }}" :active="request()->routeIs('student.my-attendances')">
+                    {{ __('Mis Asistencias') }}
                 </x-responsive-nav-link>
             @endrole
         </div>

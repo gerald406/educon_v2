@@ -50,6 +50,7 @@ use App\Livewire\Pages\Reports\ReportManager;
 use App\Livewire\Pages\Admission\ApplicantManager;
 
 use App\Livewire\Pages\Student\MyActivities;
+use App\Livewire\Pages\Student\MyAttendances;
 
 use App\Livewire\Pages\Communication\AnnouncementManager;
 
@@ -188,6 +189,7 @@ Route::prefix('admission')->middleware(['auth', 'verified', 'permission:gestiona
 // [NUEVO GRUPO] Grupo de Rutas para Estudiantes
 Route::prefix('student')->middleware(['auth', 'verified', 'role:Estudiante|Administrador'])->name('student.')->group(function () {
     Route::get('my-activities', MyActivities::class)->middleware('permission:entregar-actividades')->name('my-activities');
+    Route::get('my-attendances', MyAttendances::class)->middleware('permission:ver-mis-asistencias')->name('my-attendances');
 });
 
 // [NUEVO GRUPO] Grupo de Rutas para Comunicación
