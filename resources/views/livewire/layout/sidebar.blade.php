@@ -184,6 +184,16 @@
                             Gestión de Pagos
                         </a>
                     @endcan
+
+                    @can('gestionar-correlativos')
+                    <a href="{{ route('treasury.voucher-series') }}"
+                       class="block px-3 py-2 rounded-md text-sm font-medium
+                              {{ request()->routeIs('treasury.voucher-series') 
+                                 ? 'text-white' 
+                                 : 'text-gray-400 hover:text-white' }}">
+                        Gestión de Correlativos
+                    </a>
+                    @endcan
                 </div>
             </div>
         @endcan
