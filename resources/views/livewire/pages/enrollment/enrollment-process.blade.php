@@ -102,6 +102,12 @@
                                 Ya te encuentras matriculado en el periodo <strong>{{ $activePeriod->name }}</strong>.
                             </p>
                         </div>
+                        <div class="mb-6">
+                            <x-button wire:click="downloadEnrollmentForm">
+                                <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 17a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-4V3a1 1 0 00-1-1H9a1 1 0 00-1 1v2H4a2 2 0 00-2 2v10zm0 2V7h4v2h6V7h4v12H6zM10 9a1 1 0 112 0v6a1 1 0 11-2 0V9z" clip-rule="evenodd" /></svg>
+                                Descargar Ficha de Matrícula (PDF)
+                            </x-button>
+                        </div>
                         
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div class="md:col-span-2">

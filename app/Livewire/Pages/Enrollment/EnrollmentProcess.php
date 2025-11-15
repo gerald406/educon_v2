@@ -11,6 +11,10 @@ use App\Models\Student;
 use App\Models\StudentPayment;
 use App\Models\TeacherAssignment;
 use App\Models\PaymentConcept;
+use App\Models\Institution; // <-- [NUEVO]
+
+use Illuminate\Support\Facades\Storage; // <-- [NUEVO]
+use Barryvdh\DomPDF\Facade\Pdf; // <-- [NUEVO]
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +33,9 @@ class EnrollmentProcess extends Component
     public Collection $confirmedSchedules; // Horario de la matrícula confirmada
     public Collection $academicHistory;  // Cursos aprobados
 
+    // ✅ AGREGADA: Propiedad que faltaba
+    public Collection $schedules; // Horarios para la vista
+
     // --- ESTADO DE LA MATRÍCULA ---
     public $step = 'loading'; // loading, payment, confirmation, confirmed
     public ?StudentPayment $pendingEnrollmentPayment = null;
@@ -41,6 +48,12 @@ class EnrollmentProcess extends Component
     {
         $this->student = Auth::user()->student;
         $this->activePeriod = AcademicPeriod::where('status', 'active')->first();
+
+        // ✅ CORREGIDO: Inicializar TODAS las colecciones
+        $this->coursesToEnroll = collect(); // Inicializar como colección vacía
+        $this->schedules = collect();       // ✅ AGREGADO
+        $this->confirmedSchedules = collect(); // ✅ AGREGADO
+        $this->academicHistory = collect(); // ✅ AGREGADO
 
         if (!$this->student || !$this->activePeriod) {
             $this->step = 'error';
@@ -57,7 +70,7 @@ class EnrollmentProcess extends Component
         $this->currentEnrollment = Enrollment::where('student_id', $this->student->id)
             ->where('academic_period_id', $this->activePeriod->id)
             ->first();
-            
+
         // 3. Revisar pago de matrícula
         $this->checkPaymentStatus();
     }
@@ -78,7 +91,7 @@ class EnrollmentProcess extends Component
             ->where('payment_concept_id', $enrollmentConcept->id)
             ->where('status', 'pending')
             ->first();
-            
+
         if ($this->pendingEnrollmentPayment) {
             $this->step = 'payment'; // El estudiante DEBE pagar primero
         } else {
@@ -99,7 +112,7 @@ class EnrollmentProcess extends Component
         } else {
             // Si no está matriculado, calcular y mostrar la selección
             $this->step = 'confirmation';
-            
+
             // 1. Obtener cursos desaprobados de periodos anteriores
             $failed_unit_ids = AcademicRecord::where('student_id', $this->student->id)
                 ->where('course_status', 'failed')
@@ -112,44 +125,59 @@ class EnrollmentProcess extends Component
 
             // 3. Combinar listas (Regla de Negocio #2 y #3)
             $unit_ids_to_take = $failed_unit_ids->merge($current_semester_unit_ids)
-                                ->unique()
-                                ->diff($this->academicHistory); // Quitar los ya aprobados
+                ->unique()
+                ->diff($this->academicHistory); // Quitar los ya aprobados
 
             // 4. Encontrar las secciones (TeacherAssignment) para esos cursos
             //    (Asumimos que solo hay 1 sección por curso, ej. "Sección A")
-            $this->coursesToEnroll = TeacherAssignment::with(['didacticUnit', 'shift', 'schedules.classroomResource'])
+            $this->coursesToEnroll = TeacherAssignment::with(['didacticUnit', 'shift', 'schedules.classroomResource', 'teacher.user'])
                 ->where('academic_period_id', $this->activePeriod->id)
                 ->where('status', 'active')
                 ->whereIn('didactic_unit_id', $unit_ids_to_take)
                 // Agrupar por curso y tomar la primera sección (ej. 'A')
                 // Esta lógica debe mejorarse si hay múltiples secciones (A, B, C)
                 ->get()
-                ->keyBy('didactic_unit_id') 
+                ->keyBy('didactic_unit_id')
                 ->map(fn($assignment) => $this->validateCourseAvailability($assignment)); // Validar c/u
 
             // 5. Validar conflictos de horario
             $this->validateScheduleConflicts();
         }
     }
-    
+
     /**
      * Carga los datos de una matrícula ya confirmada.
      */
     public function loadConfirmedEnrollment()
     {
-        $registrations = $this->currentEnrollment
+        // ✅ CORREGIDO: Asignamos correctamente a $coursesToEnroll
+        $this->coursesToEnroll = $this->currentEnrollment
             ->registrations()
-            ->with(['teacherAssignment.didacticUnit', 'teacherAssignment.teacher.user', 'teacherAssignment.shift', 'teacherAssignment.schedules.classroomResource'])
-            ->get();
-        
-        $this->coursesToEnroll = $registrations->pluck('teacherAssignment');
-        $this->confirmedSchedules = $this->coursesToEnroll
+            ->with([
+                'teacherAssignment.didacticUnit',
+                'teacherAssignment.teacher.user',
+                'teacherAssignment.shift',
+                'teacherAssignment.schedules.classroomResource'
+            ])
+            ->get()
+            ->pluck('teacherAssignment'); // Obtenemos las TeacherAssignments
+
+        $this->loadSchedules(); // Cargar horarios
+    }
+
+    /**
+     * Carga la lista de horarios de los cursos seleccionados.
+     */
+    public function loadSchedules()
+    {
+        // ✅ CORREGIDO: Simplificado para usar siempre coursesToEnroll
+        $this->schedules = $this->coursesToEnroll
             ->pluck('schedules')
             ->flatten()
             ->sortBy('day_of_week')
             ->sortBy('start_time');
     }
-    
+
     /**
      * Valida vacantes y prerrequisitos (la lógica de prerrequisitos ya está en la consulta).
      */
@@ -165,7 +193,7 @@ class EnrollmentProcess extends Component
         }
         return $assignment;
     }
-    
+
     /**
      * Valida cruces de horario en la lista de cursos a matricular.
      */
@@ -185,7 +213,7 @@ class EnrollmentProcess extends Component
                     $this->hasConflicts = true;
                     $course->validation_status = 'conflict';
                     $course->validation_message = 'Cruce de horario';
-                    
+
                     $conflictingCourseId = $scheduleSlots[$slot];
                     if (isset($this->coursesToEnroll[$conflictingCourseId])) {
                         $this->coursesToEnroll[$conflictingCourseId]->validation_status = 'conflict';
@@ -204,18 +232,18 @@ class EnrollmentProcess extends Component
     public function confirmEnrollment()
     {
         if ($this->hasConflicts || $this->step !== 'confirmation') return;
-        
+
         try {
             DB::transaction(function () {
                 $enrollment = Enrollment::create([
                     'student_id' => $this->student->id,
                     'academic_period_id' => $this->activePeriod->id,
                     'semester_enrolled' => $this->student->current_semester,
-                    'enrollment_type' => 'continuing', 
+                    'enrollment_type' => 'continuing',
                     'payment_status' => 'paid',
                     'status' => 'active',
                 ]);
-                
+
                 foreach ($this->coursesToEnroll as $course) {
                     Registration::create([
                         'enrollment_id' => $enrollment->id,
@@ -223,30 +251,71 @@ class EnrollmentProcess extends Component
                     ]);
                     $course->increment('current_enrolled');
                 }
-                
+
                 $this->currentEnrollment = $enrollment;
                 $this->loadConfirmedEnrollment();
                 $this->step = 'confirmed';
             });
-            
-            $this->dispatch('swal', ['icon' => 'success', 'title' => '¡Matrícula Exitosa!', 'text' => 'Te has matriculado correctamente.']);
 
+            $this->dispatch('swal', ['icon' => 'success', 'title' => '¡Matrícula Exitosa!', 'text' => 'Te has matriculado correctamente.']);
         } catch (\Exception $e) {
             $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'No se pudo completar la matrícula. ' . $e->getMessage()]);
         }
     }
 
+    /**
+     * Genera y descarga la Ficha de Matrícula en PDF.
+     */
+    public function downloadEnrollmentForm()
+    {
+        // 1. Asegurarse de que el usuario está matriculado
+        if ($this->step !== 'confirmed' || !$this->currentEnrollment) {
+            $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'Aún no se ha completado la matrícula.']);
+            return;
+        }
+
+        $institution = Institution::first();
+
+        // 2. Lógica del Logo Base64 (sin cambios)
+        $logoData = null;
+        if ($institution?->logo_url && Storage::disk('public')->exists($institution->logo_url)) {
+            $path = Storage::disk('public')->path($institution->logo_url);
+            $fileContent = file_get_contents($path);
+            $mime = mime_content_type($path);
+            $logoData = 'data:' . $mime . ';base64,' . base64_encode($fileContent);
+        }
+
+        // ✅ CORREGIDO: coursesToEnroll ya contiene los TeacherAssignment correctos
+        // gracias a loadConfirmedEnrollment()
+        $coursesToRender = $this->coursesToEnroll;
+
+        $data = [
+            'institution' => $institution,
+            'logoData' => $logoData,
+            'activePeriod' => $this->activePeriod,
+            'student' => $this->student,
+            'enrollment' => $this->currentEnrollment,
+            'courses' => $coursesToRender, // ✅ Ya son TeacherAssignments
+        ];
+
+        $pdf = Pdf::loadView('reports.enrollment-form-pdf', $data);
+
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->stream();
+        }, 'ficha-matricula-' . $this->activePeriod->code . '-' . $this->student->code . '.pdf');
+    }
+
     public function render()
     {
-        // Si estamos en el paso de selección, cargamos el horario para la vista
-        if ($this->step == 'confirmation') {
-             $this->confirmedSchedules = $this->coursesToEnroll
+        // ✅ CORREGIDO: Cargar horarios confirmados tanto para confirmation como confirmed
+        if ($this->step == 'confirmation' || $this->step == 'confirmed') {
+            $this->confirmedSchedules = $this->coursesToEnroll
                 ->pluck('schedules')
                 ->flatten()
                 ->sortBy('day_of_week')
                 ->sortBy('start_time');
         }
-        
+
         return view('livewire.pages.enrollment.enrollment-process');
     }
 }
