@@ -9,13 +9,16 @@ use App\Models\Registration;
 use App\Models\Teacher;
 use App\Models\TeacherAssignment;
 use App\Models\AcademicRecord;
+use App\Models\Institution;
 use App\Models\SystemSetting;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 #[Layout('layouts.app')]
 class GradeManager extends Component
@@ -321,6 +324,62 @@ class GradeManager extends Component
                 $this->finalGrades[$registration->id] = null; // No mostrar si faltan notas
             }
         }
+    }
+
+    /**
+     * Genera y descarga el Acta de Notas Finales en PDF.
+     */
+    public function downloadFinalGradesPdf()
+    {
+        // Solo permitir si las notas están bloqueadas
+        if (!$this->isLocked) {
+            $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'Debe finalizar el registro de notas antes de descargar el acta.']);
+            return;
+        }
+
+        $assignment = TeacherAssignment::with([
+            'didacticUnit.module.studyPlan.career',
+            'shift'
+        ])->find($this->selectedAssignmentId);
+
+        // Cargar los registros finales (los que se crearon con finalizeGrades)
+        $finalRecords = AcademicRecord::with(['student.user'])
+            ->where('academic_period_id', $this->activePeriod->id)
+            ->where('didactic_unit_id', $assignment->didactic_unit_id)
+            ->whereIn('student_id', $this->registrations->pluck('enrollment.student.id'))
+            ->orderBy('student.user.name') // Ordenar por nombre
+            ->get();
+
+        if ($finalRecords->isEmpty()) {
+            $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'No se encontraron registros de notas finales.']);
+            return;
+        }
+
+        $institution = Institution::first();
+
+        // Lógica del Logo Base64 (de Fase 71)
+        $logoData = null;
+        if ($institution?->logo_url && Storage::disk('public')->exists($institution->logo_url)) {
+            $path = Storage::disk('public')->path($institution->logo_url);
+            $fileContent = file_get_contents($path);
+            $mime = mime_content_type($path);
+            $logoData = 'data:' . $mime . ';base64,' . base64_encode($fileContent);
+        }
+
+        $data = [
+            'finalRecords' => $finalRecords,
+            'assignment' => $assignment,
+            'teacher' => $this->currentTeacher,
+            'activePeriod' => $this->activePeriod,
+            'institution' => $institution,
+            'logoData' => $logoData,
+        ];
+
+        $pdf = Pdf::loadView('reports.final-grades-pdf', $data);
+
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->stream();
+        }, 'acta-notas-' . $assignment->didacticUnit->code . '.pdf');
     }
 
     // --- RENDER ---

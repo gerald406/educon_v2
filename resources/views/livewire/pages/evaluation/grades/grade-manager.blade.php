@@ -37,6 +37,7 @@
                                 <p>{{ $gradeEntryMessage }}</p>
                             </div>
                         @endif
+                        
                         @if($selectedAssignmentId)
                             <div class="overflow-x-auto mt-6">
                                 <table class="min-w-full divide-y divide-gray-200">
@@ -68,7 +69,8 @@
                                                             class="w-24 text-center"
                                                             wire:model.blur="grades.{{ $registration->id }}.{{ $type->id }}"
                                                             wire:change="saveGrade({{ $registration->id }}, {{ $type->id }})"
-                                                            :disabled="$isLocked || $isOutOfDate" />
+                                                            :disabled="$isLocked || $isOutOfDate"
+                                                            />
                                                     </td>
                                                 @endforeach
                                                 
@@ -99,8 +101,6 @@
                                 </table>
                             </div>
                             
-                            <div class="mt-4">{{ $registrations->links() }}</div>
-
                             @if(!$isLocked && !$isOutOfDate && $registrations->count() > 0)
                                 <div class="flex justify-end mt-6 border-t pt-6">
                                     <x-danger-button wire:click="confirmFinalizeGrades" wire:loading.attr="disabled">
@@ -108,12 +108,17 @@
                                         Finalizar y Bloquear Registro de Notas
                                     </x-danger-button>
                                 </div>
+                            
                             @elseif($isLocked)
-                                <div class="mt-6 border-t pt-6">
+                                <div class="flex justify-between items-center mt-6 border-t pt-6">
                                     <p class="text-green-600 font-semibold text-center">
                                         <svg class="w-6 h-6 inline-block mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
-                                        Este registro de notas ya ha sido finalizado y consolidado.
+                                        Este registro de notas ya ha sido finalizado.
                                     </p>
+                                    <x-button wire:click="downloadFinalGradesPdf">
+                                        <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 17a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-4V3a1 1 0 00-1-1H9a1 1 0 00-1 1v2H4a2 2 0 00-2 2v10zm0 2V7h4v2h6V7h4v12H6zM10 9a1 1 0 112 0v6a1 1 0 11-2 0V9z" clip-rule="evenodd" /></svg>
+                                        Descargar Acta Final (PDF)
+                                    </x-button>
                                 </div>
                             @endif
 

@@ -69,6 +69,7 @@ class RolesAndPermissionsSeeder extends Seeder
         // [NUEVO PERMISO]
         Permission::firstOrCreate(['name' => 'revisar-entregas']); // Para docentes
         Permission::firstOrCreate(['name' => 'ver-reporte-asistencia']);
+        Permission::firstOrCreate(['name' => 'descargar-acta-final']);
 
         // --- CREACIÓN DE ROLES Y ASIGNACIÓN DE PERMISOS ---
 
@@ -88,6 +89,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'gestionar-actividades',
             'revisar-entregas', // <-- [AÑADIR PERMISO]
             'ver-reporte-asistencia',
+            'descargar-acta-final',
         ]);
 
         // Rol Coordinador (Docente con privilegios)
@@ -102,6 +104,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'gestionar-prerrequisitos',
             'revisar-entregas', // <-- [AÑADIR PERMISO]
             'ver-reporte-asistencia',
+            'descargar-acta-final',
         ]);
 
         // Rol Secretario Académico
