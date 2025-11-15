@@ -63,8 +63,11 @@
                         </x-nav-link>
 
                         <x-nav-link href="{{ route('teacher.attendance-report') }}" :active="request()->routeIs('teacher.attendance-report')">
-                        {{ __('Reporte Asistencia') }}
-                    </x-nav-link>
+                            {{ __('Reporte Asistencia') }}
+                        </x-nav-link>
+                        <x-nav-link href="{{ route('teacher.cumulative-attendance-report') }}" :active="request()->routeIs('cumulative-attendance-report')">
+                            {{ __('Asistencia Acumulada') }}
+                        </x-nav-link>
 
                     @endrole
 
@@ -176,6 +179,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link href="{{ route('teacher.attendance-report') }}" :active="request()->routeIs('teacher.attendance-report')">
                     {{ __('Reporte Asistencia') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link href="{{ route('teacher.cumulative-attendance-report') }}" :active="request()->routeIs('cumulative-attendance-report')">
+                    {{ __('Asistencia Acumulada') }}
                 </x-responsive-nav-link>
             @endrole
 

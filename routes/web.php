@@ -31,6 +31,7 @@ use App\Livewire\Pages\Teacher\MySyllabi;
 use App\Livewire\Pages\Teacher\ActivityManager;
 use App\Livewire\Pages\Teacher\SubmissionReview;
 use App\Livewire\Pages\Teacher\AttendanceReport;
+use App\Livewire\Pages\Teacher\CumulativeAttendanceReport;
 
 use App\Livewire\Pages\Enrollment\EnrollmentProcess;
 use App\Livewire\Pages\Treasury\PaymentManager;
@@ -162,6 +163,7 @@ Route::prefix('teacher')->middleware(['auth', 'verified', 'role:Docente|Coordina
     Route::get('activities', ActivityManager::class)->middleware('permission:gestionar-actividades')->name('activities');
     Route::get('submissions', SubmissionReview::class)->middleware('permission:revisar-entregas')->name('submissions');
     Route::get('attendance-report', AttendanceReport::class)->middleware('permission:ver-reporte-asistencia')->name('attendance-report');
+    Route::get('cumulative-attendance-report', CumulativeAttendanceReport::class)->middleware('permission:ver-reporte-acumulativo-asistencia')->name('cumulative-attendance-report');
 });
 
 // Grupo de Rutas para Servicios
