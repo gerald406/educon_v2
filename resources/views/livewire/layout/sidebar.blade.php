@@ -192,7 +192,7 @@
                                 {{ request()->routeIs('treasury.payments') 
                                     ? 'text-white' 
                                     : 'text-gray-400 hover:text-white' }}">
-                            Gestión de Pagos
+                            Gestión de Deudas
                         </a>
                     @endcan
 
