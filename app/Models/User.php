@@ -32,6 +32,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'document_number',
         // (user_type ya fue eliminado)
     ];
 

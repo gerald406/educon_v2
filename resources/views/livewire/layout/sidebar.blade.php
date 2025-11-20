@@ -174,6 +174,16 @@
                             Apertura/Cierre de Caja
                         </a>
                     @endcan
+
+                    @can('registrar-tramites')
+                        <a href="{{ route('treasury.tupa-pos') }}"
+                            class="block px-3 py-2 rounded-md text-sm font-medium
+                                {{ request()->routeIs('treasury.tupa-pos') 
+                                    ? 'text-white' 
+                                    : 'text-gray-400 hover:text-white' }}">
+                            Venta de Trámites (TUPA)
+                        </a>
+                    @endcan
                     
                     
                     @can('registrar-pagos')
@@ -188,10 +198,10 @@
 
                     @can('gestionar-correlativos')
                     <a href="{{ route('treasury.voucher-series') }}"
-                       class="block px-3 py-2 rounded-md text-sm font-medium
-                              {{ request()->routeIs('treasury.voucher-series') 
-                                 ? 'text-white' 
-                                 : 'text-gray-400 hover:text-white' }}">
+                        class="block px-3 py-2 rounded-md text-sm font-medium
+                            {{ request()->routeIs('treasury.voucher-series') 
+                                ? 'text-white' 
+                                : 'text-gray-400 hover:text-white' }}">
                         Gestión de Correlativos
                     </a>
                     @endcan

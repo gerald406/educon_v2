@@ -38,6 +38,7 @@ use App\Livewire\Pages\Enrollment\EnrollmentProcess;
 use App\Livewire\Pages\Treasury\PaymentManager;
 use App\Livewire\Pages\Treasury\CashSessionManager;
 use App\Livewire\Pages\Treasury\VoucherSeriesManager;
+use App\Livewire\Pages\Treasury\TupaPointOfSale;
 
 use App\Livewire\Pages\Certification\CertificateManager;
 use App\Livewire\Pages\Certification\InternshipManager;
@@ -56,6 +57,8 @@ use App\Livewire\Pages\Student\MyActivities;
 use App\Livewire\Pages\Student\MyAttendances;
 
 use App\Livewire\Pages\Communication\AnnouncementManager;
+
+use App\Http\Controllers\VoucherController;
 
 /*
 |--------------------------------------------------------------------------
@@ -145,6 +148,8 @@ Route::prefix('treasury')->middleware(['auth', 'verified', 'permission:registrar
     Route::get('payments', PaymentManager::class)->name('payments');
     Route::get('cash-sessions', CashSessionManager::class)->middleware('permission:gestionar-sesiones-caja')->name('cash-sessions');
     Route::get('voucher-series', VoucherSeriesManager::class)->middleware('permission:gestionar-correlativos')->name('voucher-series');
+    Route::get('tupa-pos', TupaPointOfSale::class)->middleware('permission:registrar-tramites')->name('tupa-pos');
+    Route::get('voucher/{voucher}/download', [VoucherController::class, 'download'])->name('voucher.download');
 });
 
 // Grupo de Rutas para Matrícula (Estudiantes y Admin)
@@ -201,3 +206,6 @@ Route::prefix('student')->middleware(['auth', 'verified', 'role:Estudiante|Admin
 Route::prefix('communication')->middleware(['auth', 'verified', 'permission:gestionar-anuncios'])->name('communication.')->group(function () {
     Route::get('announcements', AnnouncementManager::class)->name('announcements');
 });
+
+
+Route::get('voucher/{voucher}/download', [VoucherController::class, 'download'])->name('voucher.download');
