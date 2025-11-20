@@ -205,6 +205,16 @@
                         Gestión de Correlativos
                     </a>
                     @endcan
+
+                    @can('anular-comprobantes')
+                        <a href="{{ route('treasury.credit-notes') }}"
+                        class="block px-3 py-2 rounded-md text-sm font-medium
+                                {{ request()->routeIs('treasury.credit-notes') 
+                                    ? 'text-white' 
+                                    : 'text-gray-400 hover:text-white' }}">
+                            Notas de Crédito
+                        </a>
+                    @endcan
                 </div>
             </div>
         @endcan

@@ -39,6 +39,7 @@ use App\Livewire\Pages\Treasury\PaymentManager;
 use App\Livewire\Pages\Treasury\CashSessionManager;
 use App\Livewire\Pages\Treasury\VoucherSeriesManager;
 use App\Livewire\Pages\Treasury\TupaPointOfSale;
+use App\Livewire\Pages\Treasury\CreditNoteManager;
 
 use App\Livewire\Pages\Certification\CertificateManager;
 use App\Livewire\Pages\Certification\InternshipManager;
@@ -150,6 +151,8 @@ Route::prefix('treasury')->middleware(['auth', 'verified', 'permission:registrar
     Route::get('voucher-series', VoucherSeriesManager::class)->middleware('permission:gestionar-correlativos')->name('voucher-series');
     Route::get('tupa-pos', TupaPointOfSale::class)->middleware('permission:registrar-tramites')->name('tupa-pos');
     Route::get('voucher/{voucher}/download', [VoucherController::class, 'download'])->name('voucher.download');
+    Route::get('credit-notes', CreditNoteManager::class)->middleware('permission:anular-comprobantes')->name('credit-notes');
+    Route::get('credit-note/{creditNote}/download', [VoucherController::class, 'downloadCreditNote'])->name('credit-note.download');
 });
 
 // Grupo de Rutas para Matrícula (Estudiantes y Admin)

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Institution;
+use App\Models\CreditNote;
 use App\Models\Voucher;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -24,5 +25,20 @@ class VoucherController extends Controller
 
         // Mostrar en el navegador
         return $pdf->stream('voucher-' . $voucher->series . '-' . $voucher->number . '.pdf');
+    }
+
+    // [NUEVO MÉTODO]
+    public function downloadCreditNote(CreditNote $creditNote)
+    {
+        $creditNote->load(['voucher.client', 'user']);
+        $institution = Institution::first();
+
+        $pdf = Pdf::loadView('treasury.credit-note-pdf', [
+            'creditNote' => $creditNote,
+            'voucher' => $creditNote->voucher,
+            'institution' => $institution,
+        ])->setPaper('a5', 'landscape');
+
+        return $pdf->stream('nota-credito-' . $creditNote->id . '.pdf');
     }
 }

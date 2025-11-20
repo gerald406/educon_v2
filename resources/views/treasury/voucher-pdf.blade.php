@@ -15,9 +15,25 @@
         th, td { text-align: left; padding: 5px; border-bottom: 1px solid #ccc; }
         .totals { text-align: right; margin-top: 10px; }
         .footer { text-align: center; font-size: 10px; margin-top: 30px; border-top: 1px dashed #000; padding-top: 10px; }
+        .watermark {
+            position: fixed;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 100px;
+            color: rgba(255, 0, 0, 0.3);
+            font-weight: bold;
+            border: 5px solid rgba(255, 0, 0, 0.3);
+            padding: 10px 20px;
+            z-index: -1000;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
+    @if($voucher->status == 'annulled')
+        <div class="watermark">ANULADO</div>
+    @endif
     <div class="header">
         <h1>{{ $institution->name }}</h1>
         <p>RUC: {{ $institution->tax_id }}</p>
