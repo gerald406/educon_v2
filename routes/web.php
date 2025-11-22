@@ -60,6 +60,7 @@ use App\Livewire\Pages\Student\MyAttendances;
 use App\Livewire\Pages\Communication\AnnouncementManager;
 
 use App\Http\Controllers\VoucherController;
+use App\Http\Controllers\CashSessionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -153,6 +154,9 @@ Route::prefix('treasury')->middleware(['auth', 'verified', 'permission:registrar
     Route::get('voucher/{voucher}/download', [VoucherController::class, 'download'])->name('voucher.download');
     Route::get('credit-notes', CreditNoteManager::class)->middleware('permission:anular-comprobantes')->name('credit-notes');
     Route::get('credit-note/{creditNote}/download', [VoucherController::class, 'downloadCreditNote'])->name('credit-note.download');
+    Route::get('cash-session/{session}/report/{type}', [CashSessionController::class, 'download'])
+        ->where('type', 'x|z') // Solo permite 'x' o 'z'
+        ->name('cash-session.report');
 });
 
 // Grupo de Rutas para Matrícula (Estudiantes y Admin)

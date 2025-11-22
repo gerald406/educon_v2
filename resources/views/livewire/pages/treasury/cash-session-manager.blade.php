@@ -68,7 +68,13 @@
 
                             <div class="flex justify-between items-center pt-4">
                                 <div>
-                                    </div>
+                                    <a href="{{ route('treasury.cash-session.report', ['session' => $activeSession->id, 'type' => 'x']) }}" 
+                                       target="_blank"
+                                       class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2.4-9h6m-6 4h6m-6-9h6M9 21h6"></path></svg>
+                                        Imprimir Reporte X
+                                    </a>
+                                </div>
                                 <x-danger-button wire:click="closeSession" wire:loading.attr="disabled">
                                     Cerrar Caja
                                 </x-danger-button>
@@ -100,4 +106,16 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('livewire:initialized', () => {
+            Livewire.on('open-pdf', (event) => {
+                // Manejar ambas estructuras posibles del evento (objeto o array)
+                const url = event.url || (Array.isArray(event) && event[0].url);
+                if(url) {
+                    window.open(url, '_blank');
+                }
+            });
+        });
+    </script>
 </div>

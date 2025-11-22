@@ -131,7 +131,11 @@ class CashSessionManager extends Component
             'status' => 'closed',
         ]);
 
+        // [NUEVO] Guardar ID antes de resetear
+        $sessionId = $this->activeSession->id;
+
         $this->dispatch('swal', ['icon' => 'success', 'title' => '¡Caja Cerrada!', 'text' => 'Tu sesión de caja ha finalizado.']);
+        $this->dispatch('open-pdf', url: route('treasury.cash-session.report', ['session' => $sessionId, 'type' => 'z']));
         $this->activeSession = null;
         $this->reset('opening_balance', 'closing_balance_cash');
     }
