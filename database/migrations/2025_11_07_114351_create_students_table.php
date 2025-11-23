@@ -13,12 +13,7 @@ return new class extends Migration
     {
         Schema::create('students', function (Blueprint $table) {
             $table->id();
-            // Llave foránea a 'users'
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            
-            // Opcional: de qué postulante viene
-            $table->foreignId('applicant_id')->nullable()->constrained('applicants')->onDelete('set null');
-            
             // A qué carrera y plan pertenece
             $table->foreignId('career_id')->constrained('careers')->onDelete('cascade');
             $table->foreignId('study_plan_id')->constrained('study_plans')->onDelete('cascade');

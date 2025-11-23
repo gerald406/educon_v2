@@ -30,6 +30,8 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'lastname', // Nuevo
+        'full_name', // Nuevo (opcional si usas Accessors, pero está en tu tabla)
         'email',
         'password',
         'document_number',

@@ -56,9 +56,13 @@ class DatabaseSeeder extends Seeder
         // 5. Llamar al resto de Seeders
         $this->call([
             CatalogSeeder::class,
+            AdmissionModalitySeeder::class,
+            FinancialEntitySeeder::class,
+
             AcademicStructureSeeder::class,
             PeopleSeeder::class,
             AcademicProcessSeeder::class,
+            AdmissionOfferingSeeder::class,
             EnrollmentSeeder::class,
         ]);
     }

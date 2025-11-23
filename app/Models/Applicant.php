@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Applicant extends Model
@@ -12,40 +13,68 @@ class Applicant extends Model
 
     protected $fillable = [
         'user_id',
-        'career_id',
-        'study_plan_id',
+        'phone',
+        'address',
+        'gender',
+        'birthday',
+        'ubigeo_birth_id',
+        'photo_url',
+        'origin_school_id',
+        'school_graduation_year',
+        'admission_offering_id',
+        'admission_modality_id',
+        'financial_entity_id',
+        'payment_operation_code',
         'code',
-        'admission_type',
         'exam_score',
         'merit_position',
         'application_status',
+        'registration_step',
+        'notes',
     ];
 
     protected $casts = [
+        'birthday' => 'date',
         'exam_score' => 'decimal:2',
     ];
 
-    /**
-     * Un perfil de postulante pertenece a un usuario.
-     */
-    public function user()
+    // --- RELACIONES ---
+
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Un postulante aplica a una carrera.
-     */
-    public function career()
+    // Ubigeo de Nacimiento
+    public function birthLocation(): BelongsTo
     {
-        return $this->belongsTo(Career::class);
+        return $this->belongsTo(Location::class, 'ubigeo_birth_id', 'iddist');
     }
 
-    /**
-     * Un postulante aplica a un plan de estudios.
-     */
-    public function studyPlan()
+    public function originSchool(): BelongsTo
     {
-        return $this->belongsTo(StudyPlan::class);
+        return $this->belongsTo(OriginSchool::class);
+    }
+
+    // Oferta (Carrera + Turno)
+    public function admissionOffering(): BelongsTo
+    {
+        return $this->belongsTo(AdmissionOffering::class);
+    }
+
+    public function admissionModality(): BelongsTo
+    {
+        return $this->belongsTo(AdmissionModality::class);
+    }
+
+    public function financialEntity(): BelongsTo
+    {
+        return $this->belongsTo(FinancialEntity::class);
+    }
+
+    // Accessor para obtener el nombre de la carrera fácilmente
+    public function getCareerNameAttribute()
+    {
+        return $this->admissionOffering?->career?->name;
     }
 }

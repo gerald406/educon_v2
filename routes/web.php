@@ -53,6 +53,9 @@ use App\Livewire\Pages\Services\Tutoring\TutoringManager;
 use App\Livewire\Pages\Reports\ReportManager;
 
 use App\Livewire\Pages\Admission\ApplicantManager;
+use App\Livewire\Pages\Admission\AdmissionModalityManager;
+use App\Livewire\Pages\Admission\AdmissionOfferingManager;
+use App\Livewire\Pages\Admission\FinancialEntityManager;
 
 use App\Livewire\Pages\Student\MyActivities;
 use App\Livewire\Pages\Student\MyAttendances;
@@ -61,6 +64,7 @@ use App\Livewire\Pages\Communication\AnnouncementManager;
 
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\CashSessionController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -200,6 +204,9 @@ Route::prefix('reports')->middleware(['auth', 'verified', 'role:Administrador'])
 // [NUEVO GRUPO] Grupo de Rutas para Admisión
 Route::prefix('admission')->middleware(['auth', 'verified', 'permission:gestionar-admision'])->name('admission.')->group(function () {
     Route::get('applicants', ApplicantManager::class)->name('applicants');
+    Route::get('modalities', AdmissionModalityManager::class)->name('modalities');
+    Route::get('financial-entities', FinancialEntityManager::class)->name('financial-entities');
+    Route::get('offerings', AdmissionOfferingManager::class)->name('offerings');
 });
 
 

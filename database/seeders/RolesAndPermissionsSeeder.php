@@ -81,6 +81,9 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'anular-comprobantes']); // Notas de Crédito
         Permission::firstOrCreate(['name' => 'registrar-tramites']); // Punto de Venta TUPA
 
+
+        Permission::firstOrCreate(['name' => 'gestionar-actividades']);
+
         // --- CREACIÓN DE ROLES Y ASIGNACIÓN DE PERMISOS ---
 
         // Rol Estudiante

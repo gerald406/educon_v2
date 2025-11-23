@@ -12,7 +12,6 @@ class Student extends Model
 
     protected $fillable = [
         'user_id',
-        'applicant_id',
         'career_id',
         'study_plan_id',
         'code',
@@ -41,10 +40,7 @@ class Student extends Model
     /**
      * Un estudiante (opcionalmente) viene de un registro de postulante.
      */
-    public function applicant()
-    {
-        return $this->belongsTo(Applicant::class);
-    }
+
 
     /**
      * Un estudiante pertenece a una carrera.
