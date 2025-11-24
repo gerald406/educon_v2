@@ -57,6 +57,7 @@ use App\Livewire\Pages\Admission\ApplicantManager;
 use App\Livewire\Pages\Admission\AdmissionModalityManager;
 use App\Livewire\Pages\Admission\AdmissionOfferingManager;
 use App\Livewire\Pages\Admission\FinancialEntityManager;
+use App\Livewire\Pages\Admission\AdmissionDashboard;
 
 use App\Livewire\Pages\Student\MyActivities;
 use App\Livewire\Pages\Student\MyAttendances;
@@ -210,6 +211,7 @@ Route::prefix('admission')->middleware(['auth', 'verified', 'permission:gestiona
     Route::get('offerings', AdmissionOfferingManager::class)->name('offerings');
     Route::get('constancia/{applicant}', [AdmissionDocumentController::class, 'constancia'])->name('constancia');
     Route::get('ficha/{applicant}', [AdmissionDocumentController::class, 'ficha'])->name('ficha');
+    Route::get('dashboard', AdmissionDashboard::class)->name('dashboard');
 });
 
 
