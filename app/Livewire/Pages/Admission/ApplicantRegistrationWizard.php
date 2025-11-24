@@ -16,7 +16,8 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-#[Layout('layouts.guest')] // Usamos el layout guest para postulantes externos
+// Usamos 'layouts.guest' porque es para público externo (sin sidebar)
+#[Layout('layouts.guest')]
 class ApplicantRegistrationWizard extends Component
 {
     use WithFileUploads;
@@ -26,42 +27,46 @@ class ApplicantRegistrationWizard extends Component
 
     // --- PASO 1: IDENTIFICACIÓN ---
     public $dni = '';
-    public $message = '';
+    public $searchMessage = '';
 
     // --- PASO 2: DATOS PERSONALES ---
     public $name = '';
-    public $lastname = ''; // Apellido Paterno + Materno (según tu migración modificada)
+    public $paternal_surname = '';
+    public $maternal_surname = '';
     public $email = '';
     public $phone = '';
     public $address = '';
     public $gender = '';
     public $birthday = '';
-    public $photo;
+    public $photo; // Archivo temporal
     public $is_new_user = true;
 
-    // Ubigeo Nacimiento
+    // Ubigeo Nacimiento (Cascada)
     public $departments = [], $provinces = [], $districts = [];
-    public $selectedDep = '', $selectedProv = '', $selectedDist = '';
+    public $selectedDep = '', $selectedProv = '', $selectedDistId = '';
 
-    // --- PASO 3: COLEGIO ---
+    // --- PASO 3: COLEGIO DE PROCEDENCIA ---
     public $schoolSearch = '';
     public $schoolResults = [];
     public $selectedSchoolId = null;
     public $selectedSchoolName = '';
     public $schoolYear = '';
 
-    // --- PASO 4: POSTULACIÓN ---
+    // Ubigeo Colegio (Cascada independiente)
+    public $schoolDepartments = [], $schoolProvinces = [], $schoolDistricts = [];
+    public $schoolSelectedDep = '', $schoolSelectedProv = '', $schoolSelectedDistId = '';
+
+    // --- PASO 4: REGISTRO DE POSTULANTE ---
+    public $offerings = [];
+    public $modalities = [];
+    public $financialEntities = [];
+
     public $selectedOfferingId = '';
     public $selectedModalityId = '';
     public $selectedFinancialEntityId = '';
     public $paymentCode = '';
 
-    // Listas de carga
-    public $offerings = [];
-    public $modalities = [];
-    public $financialEntities = [];
-
-    // Inyección de Dependencia del Servicio
+    // Inyección de Servicio
     protected function personService()
     {
         return new PersonDataService();
@@ -69,45 +74,44 @@ class ApplicantRegistrationWizard extends Component
 
     public function mount()
     {
-        // Cargar departamentos iniciales
+        // Cargar departamentos para los selectores
         $this->departments = Location::select('nombdep')->distinct()->orderBy('nombdep')->pluck('nombdep', 'nombdep');
+        $this->schoolDepartments = $this->departments; // Reutilizamos la lista
+
+        // Cargar catálogos para el Paso 4
         $this->loadCatalogs();
     }
 
     public function loadCatalogs()
     {
-        // Cargar Modalidades y Bancos para el Paso 4
         $this->modalities = AdmissionModality::where('is_active', true)->get();
         $this->financialEntities = FinancialEntity::where('is_active', true)->get();
 
-        // Cargar Oferta (Carrera + Turno) del periodo activo (Simplificado)
-        // Aquí deberías filtrar por el periodo de admisión activo
+        // Cargar Oferta (Carrera + Turno) del periodo activo (podrías filtrar por periodo aquí)
         $this->offerings = AdmissionOffering::with(['career', 'shift'])
             ->where('is_active', true)
             ->get();
     }
 
-    // --- LÓGICA PASO 1: BUSCAR DNI ---
+    // ========================================================================
+    // LÓGICA PASO 1: BÚSQUEDA
+    // ========================================================================
     public function searchDni()
     {
         $this->validate(['dni' => 'required|digits:8']);
-        $this->resetErrorBag();
-        $this->message = '';
+        $this->searchMessage = '';
 
-        // 1. Buscar en BD Local (Users)
+        // 1. Buscar en BD Local
         $user = User::where('document_number', $this->dni)->first();
 
         if ($user) {
             $this->is_new_user = false;
+            // Asumimos que 'lastname' guarda "Paterno Materno". Intentamos separarlos visualmente si es posible
             $this->name = $user->name;
-            $this->lastname = $user->lastname; // Usando tu campo nuevo
+            // Si tienes 'lastname' completo en BD, lo ponemos en paterno temporalmente
+            $this->paternal_surname = $user->lastname;
             $this->email = $user->email;
-            $this->message = "Usuario encontrado en el sistema. Verifique sus datos.";
-
-            // Si ya tiene postulación, podríamos redirigir o cargar
-            if ($user->applicant) {
-                // Lógica para retomar inscripción... (Omitida por brevedad)
-            }
+            $this->searchMessage = "Usuario encontrado. Sus datos se han cargado.";
         } else {
             // 2. Buscar en API Externa
             $this->is_new_user = true;
@@ -115,60 +119,63 @@ class ApplicantRegistrationWizard extends Component
 
             if ($apiData) {
                 $this->name = $apiData['nombres'];
-                // Concatenamos apellidos para tu campo 'lastname'
-                $this->lastname = $apiData['apellido_paterno'] . ' ' . $apiData['apellido_materno'];
-                $this->message = "Datos encontrados en RENIEC.";
+                $this->paternal_surname = $apiData['apellido_paterno'];
+                $this->maternal_surname = $apiData['apellido_materno'];
+                $this->searchMessage = "Datos recuperados de RENIEC/API.";
             } else {
-                $this->message = "DNI no encontrado. Por favor ingrese sus datos manualmente.";
-                $this->name = '';
-                $this->lastname = '';
+                $this->searchMessage = "DNI no encontrado. Ingrese sus datos manualmente.";
             }
         }
 
         $this->currentStep = 2;
     }
 
-    // --- LÓGICA UBIGEO (Cascada) ---
+    // ========================================================================
+    // LÓGICA PASO 2: DATOS PERSONALES & UBIGEO
+    // ========================================================================
+
+    // Cuando cambia el Departamento
     public function updatedSelectedDep($value)
     {
         $this->provinces = Location::where('nombdep', $value)
-            ->select('nombprov')
-            ->distinct()
-            ->orderBy('nombprov')
-            ->pluck('nombprov', 'nombprov');
+            ->select('nombprov')->distinct()->orderBy('nombprov')->pluck('nombprov', 'nombprov');
         $this->selectedProv = '';
         $this->districts = [];
     }
 
+    // Cuando cambia la Provincia
     public function updatedSelectedProv($value)
     {
         $this->districts = Location::where('nombdep', $this->selectedDep)
             ->where('nombprov', $value)
-            ->select('iddist', 'nombdist')
             ->orderBy('nombdist')
-            ->pluck('nombdist', 'iddist'); // El value será el iddist (código)
-        $this->selectedDist = '';
+            ->pluck('nombdist', 'iddist'); // El valor es el IDDIST (Código Ubigeo)
+        $this->selectedDistId = '';
     }
 
-    // --- LÓGICA PASO 2 -> 3 ---
     public function submitStep2()
     {
         $this->validate([
             'name' => 'required',
-            'lastname' => 'required',
+            'paternal_surname' => 'required',
+            'maternal_surname' => 'required',
             'email' => 'required|email',
             'phone' => 'required',
             'address' => 'required',
             'gender' => 'required',
             'birthday' => 'required|date',
-            'selectedDist' => 'required', // Ubigeo
-            'photo' => 'nullable|image|max:2048', // Opcional si ya tiene
+            'selectedDistId' => 'required', // Ubigeo Nacimiento
+            'photo' => 'nullable|image|max:2048', // 2MB Max
         ]);
 
         $this->currentStep = 3;
     }
 
-    // --- LÓGICA PASO 3: COLEGIO ---
+    // ========================================================================
+    // LÓGICA PASO 3: COLEGIO
+    // ========================================================================
+
+    // Buscador predictivo de colegios
     public function updatedSchoolSearch($value)
     {
         if (strlen($value) < 3) {
@@ -184,21 +191,24 @@ class ApplicantRegistrationWizard extends Component
     {
         $this->selectedSchoolId = $id;
         $this->selectedSchoolName = $name;
-        $this->schoolSearch = $name; // Mostrar nombre en input
-        $this->schoolResults = [];
+        $this->schoolSearch = $name;
+        $this->schoolResults = []; // Ocultar lista
     }
 
     public function submitStep3()
     {
         $this->validate([
-            'selectedSchoolId' => 'required',
+            'selectedSchoolId' => 'required', // Debe seleccionar de la lista o implementar lógica de "Nuevo Colegio"
             'schoolYear' => 'required|digits:4',
-        ], ['selectedSchoolId.required' => 'Debe seleccionar un colegio de la lista.']);
+        ], ['selectedSchoolId.required' => 'Debe seleccionar un colegio válido.']);
 
         $this->currentStep = 4;
     }
 
-    // --- LÓGICA FINAL (GUARDAR TODO) ---
+    // ========================================================================
+    // LÓGICA PASO 4: REGISTRO FINAL
+    // ========================================================================
+
     public function submitFinal()
     {
         $this->validate([
@@ -214,50 +224,50 @@ class ApplicantRegistrationWizard extends Component
                 ['document_number' => $this->dni],
                 [
                     'name' => $this->name,
-                    'lastname' => $this->lastname,
+                    // Concatenamos apellidos para guardar en 'lastname' como string único
+                    'lastname' => $this->paternal_surname . ' ' . $this->maternal_surname,
                     'email' => $this->email,
+                    // Si es nuevo, contraseña es DNI. Si existe, no la tocamos.
                     'password' => $this->is_new_user ? Hash::make($this->dni) : User::where('document_number', $this->dni)->first()->password,
-                    // Asegurar rol 'Estudiante' o 'Postulante' si usas Spatie
                 ]
             );
 
-            // 2. Subir foto si existe
+            // Asignar rol 'Estudiante' o 'Postulante' (Si usas Spatie)
+            // $user->assignRole('Postulante'); 
+
+            // 2. Guardar Foto
             $photoPath = null;
             if ($this->photo) {
                 $photoPath = $this->photo->store('applicants', 'public');
             }
 
-            // 3. Crear Postulante (Applicant)
-            $applicant = Applicant::create([
+            // 3. Guardar Postulante
+            Applicant::create([
                 'user_id' => $user->id,
-
-                // Datos Paso 2
                 'phone' => $this->phone,
                 'address' => $this->address,
                 'gender' => $this->gender,
                 'birthday' => $this->birthday,
-                'ubigeo_birth_id' => $this->selectedDist,
+                'ubigeo_birth_id' => $this->selectedDistId,
                 'photo_url' => $photoPath,
 
-                // Datos Paso 3 (Colegio)
                 'origin_school_id' => $this->selectedSchoolId,
                 'school_graduation_year' => $this->schoolYear,
 
-                // Datos Paso 4 (Académico y Pago)
                 'admission_offering_id' => $this->selectedOfferingId,
                 'admission_modality_id' => $this->selectedModalityId,
                 'financial_entity_id' => $this->selectedFinancialEntityId,
                 'payment_operation_code' => $this->paymentCode,
 
-                'application_status' => 'registrado',
-                'registration_step' => 5, // Finalizado
-                'code' => $this->dni, // Código temporal
+                'application_status' => 'registered',
+                'registration_step' => 5, // Proceso completado
+                'code' => $this->dni, // Usamos el DNI como código
             ]);
         });
 
-        session()->flash('message', '¡Inscripción realizada con éxito!');
-        // Redirigir a página de éxito/descarga
-        // return redirect()->route('admission.success', ['id' => $applicant->id]);
+        session()->flash('message', '¡Inscripción exitosa!');
+        // Aquí podrías redirigir a una página de "Éxito" que permita descargar el PDF
+        // return redirect()->route('admission.success'); 
     }
 
     public function render()

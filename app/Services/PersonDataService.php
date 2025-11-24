@@ -8,21 +8,16 @@ use Illuminate\Support\Facades\Log;
 class PersonDataService
 {
     /**
-     * Busca datos de una persona por DNI en múltiples fuentes.
-     * Retorna un array estandarizado o null.
+     * Busca datos de una persona por DNI en APIs externas.
+     * Replica tu lógica de CodeIgniter: Intenta una API, si falla, intenta la otra.
      */
     public function search(string $dni): ?array
     {
-        // 1. Validación básica
-        if (!preg_match('/^\d{8}$/', $dni)) {
-            return null;
-        }
-
-        // 2. Intentar API Principal (Reniec / ApisNet - Según tu código CI3)
+        // 1. Intentar API Principal (Reniec / ApisNet)
         $data = $this->consultarApiReniec($dni);
         if ($data) return $data;
 
-        // 3. Intentar API Secundaria (APIsPeru - Fallback)
+        // 2. Intentar API Secundaria (APIsPeru - Fallback)
         $data = $this->consultarApiBackup($dni);
         if ($data) return $data;
 
@@ -35,30 +30,31 @@ class PersonDataService
     protected function consultarApiReniec(string $dni): ?array
     {
         try {
-            $token = 'apis-token-10006.1tUMId7aN9QaoM-OlBiwiIB3D-AqcKA8'; // Tu token
+            // Token recuperado de tu código anterior
+            $token = 'apis-token-10006.1tUMId7aN9QaoM-OlBiwiIB3D-AqcKA8';
             $url = "https://api.apis.net.pe/v2/reniec/dni?numero={$dni}";
 
             $response = Http::withToken($token)
                 ->withHeaders(['Referer' => 'https://apis.net.pe/consulta-dni-api'])
-                ->timeout(5)
+                ->timeout(3) // 3 segundos máximo de espera
                 ->get($url);
 
             if ($response->successful()) {
                 $data = $response->json();
-                
-                // Validar respuesta válida
+
+                // Validar respuesta
                 if (isset($data['numeroDocumento'])) {
                     return [
                         'dni' => $data['numeroDocumento'],
                         'nombres' => $data['nombres'],
                         'apellido_paterno' => $data['apellidoPaterno'],
                         'apellido_materno' => $data['apellidoMaterno'],
-                        'found' => true
+                        'source' => 'API 1'
                     ];
                 }
             }
         } catch (\Exception $e) {
-            Log::error("Error API Reniec: " . $e->getMessage());
+            Log::warning("Error API Reniec: " . $e->getMessage());
         }
 
         return null;
@@ -73,7 +69,7 @@ class PersonDataService
             $token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6ImdjYXVuYWg0MDdAZ21haWwuY29tIn0.lGR0VkjP_rwul2lEX1z485sOfArFmEO6xArOG6tSmfk';
             $url = "https://dniruc.apisperu.com/api/v1/dni/{$dni}?token={$token}";
 
-            $response = Http::timeout(5)->get($url);
+            $response = Http::timeout(3)->get($url);
 
             if ($response->successful() && $response->json('success')) {
                 $data = $response->json();
@@ -82,11 +78,11 @@ class PersonDataService
                     'nombres' => $data['nombres'],
                     'apellido_paterno' => $data['apellidoPaterno'],
                     'apellido_materno' => $data['apellidoMaterno'],
-                    'found' => true
+                    'source' => 'API 2'
                 ];
             }
         } catch (\Exception $e) {
-            Log::error("Error API Backup: " . $e->getMessage());
+            Log::warning("Error API Backup: " . $e->getMessage());
         }
 
         return null;

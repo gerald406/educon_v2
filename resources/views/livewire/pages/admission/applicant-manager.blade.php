@@ -7,139 +7,263 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
-                <div class="p-6 lg:p-8 bg-white border-b border-gray-200">
-                    
-                    <div class="flex justify-between items-center mb-4">
-                        <x-input type="text" wire:model.live.debounce.300ms="search" placeholder="Buscar por nombre, email o código..." class="w-1/2" />
-                        <x-button wire:click="openCreateModal">
-                            Registrar Nuevo Postulante
-                        </x-button>
-                    </div>
+            <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
+                
+                <div class="flex justify-between items-center mb-4">
+                    <x-input type="text" wire:model.live.debounce.300ms="search" placeholder="Buscar por nombre o DNI en la lista..." class="w-1/2" />
+                    <x-button wire:click="openCreateModal">Nuevo Postulante</x-button>
+                </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">DNI</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Postulante</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Carrera</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Modalidad</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nota</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($applicants as $applicant)
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium">Cód. Postulante</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium">Nombre Completo</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium">Programa al que Postula</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium">Nota Examen</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium">Estado</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium">Acciones</th>
+                                    <td class="px-6 py-4">{{ $applicant->user->document_number }}</td>
+                                    <td class="px-6 py-4">
+                                        <div class="font-bold">{{ $applicant->user->lastname }}</div>
+                                        <div class="text-sm">{{ $applicant->user->name }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm">{{ $applicant->admissionOffering->career->name ?? '-' }}</td>
+                                    <td class="px-6 py-4 text-sm">{{ $applicant->admissionModality->name ?? '-' }}</td>
+                                    <td class="px-6 py-4 font-bold">{{ $applicant->exam_score ?? '-' }}</td>
+                                    <td class="px-6 py-4 text-right">
+                                        <x-button wire:click="openEditModal({{ $applicant->id }})">Editar</x-button>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                @forelse ($users as $user)
-                                    <tr>
-                                        <td class="px-6 py-4">{{ $user->applicant->code }}</td>
-                                        <td class="px-6 py-4">{{ $user->name }}</td>
-                                        <td class="px-6 py-4">{{ $user->applicant->career->name ?? 'N/A' }}</td>
-                                        <td class="px-6 py-4">{{ $user->applicant->exam_score ?? '--' }}</td>
-                                        <td class="px-6 py-4">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                {{ $user->applicant->application_status }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 text-right space-x-1">
-                                            <x-button wire:click="confirmApprove({{ $user->id }})" class="bg-green-600 hover:bg-green-700">
-                                                Aprobar
-                                            </x-button>
-                                            
-                                            <x-secondary-button wire:click="openEditModal({{ $user->id }})">
-                                                Editar
-                                            </x-secondary-button>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6" class="px-6 py-4 text-center">No se encontraron postulantes.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <div class="mt-4">{{ $users->links() }}</div>
+                            @empty
+                                <tr><td colspan="6" class="text-center py-4 text-gray-500">No hay postulantes registrados.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                    <div class="mt-4">{{ $applicants->links() }}</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <x-dialog-modal wire:model.live="isModalOpen">
+    <x-dialog-modal wire:model="isModalOpen" maxWidth="2xl">
         <x-slot name="title">
-            {{ $editingUser ? 'Editar Postulante' : 'Registrar Nuevo Postulante' }}
+            {{ $editingApplicant ? 'Editar' : 'Registrar' }} Postulante
         </x-slot>
-
+        
         <x-slot name="content">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
-                <div class="col-span-2">
-                    <x-label for="user.name" value="Nombre Completo" />
-                    <x-input id="user.name" type="text" class="mt-1 block w-full" wire:model.blur="user.name" />
-                    <x-input-error for="user.name" class="mt-2" />
+                @if(!$editingApplicant)
+                <div class="md:col-span-3 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                    <label class="block text-sm font-medium text-gray-700">Ingrese DNI para buscar (RENIEC/Local)</label>
+                    <div class="flex mt-1 gap-2">
+                        <x-input type="text" wire:model="searchDni" class="flex-1" placeholder="8 dígitos" maxlength="8"/>
+                        <x-button wire:click="searchPersonByDni" wire:loading.attr="disabled">
+                            <svg wire:loading.remove class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <span wire:loading class="text-xs">Buscando...</span>
+                        </x-button>
+                    </div>
+                    <x-input-error for="searchDni" class="mt-2" />
                 </div>
-                <div class="col-span-1">
-                    <x-label for="user.email" value="Email" />
-                    <x-input id="user.email" type="email" class="mt-1 block w-full" wire:model.blur="user.email" />
-                    <x-input-error for="user.email" class="mt-2" />
+                @endif
+
+                <div class="md:col-span-3 border-b pb-1 mb-2 font-bold text-gray-700 mt-2">1. Datos Personales</div>
+
+                <div>
+                    <x-label>DNI</x-label>
+                    <x-input type="text" class="w-full bg-gray-100" wire:model="dni" readonly />
+                    <x-input-error for="dni" class="mt-2" />
                 </div>
-                <div class="col-span-1">
-                    <x-label for="applicant.code" value="Código de Postulante" />
-                    <x-input id="applicant.code" type="text" class="mt-1 block w-full" wire:model.blur="applicant.code" />
-                    <x-input-error for="applicant.code" class="mt-2" />
+                
+                <div>
+                    <x-label>Apellido Paterno</x-label>
+                    <x-input type="text" class="w-full" wire:model="paternal_surname" />
+                    <x-input-error for="paternal_surname" class="mt-2" />
+                </div>
+                <div>
+                    <x-label>Apellido Materno</x-label>
+                    <x-input type="text" class="w-full" wire:model="maternal_surname" />
+                    <x-input-error for="maternal_surname" class="mt-2" />
+                </div>
+                <div class="md:col-span-3">
+                    <x-label>Nombres</x-label>
+                    <x-input type="text" class="w-full" wire:model="name" />
+                    <x-input-error for="name" class="mt-2" />
+                </div>
+                
+                <div>
+                    <x-label>Email</x-label>
+                    <x-input type="email" class="w-full" wire:model="email"/>
+                    <x-input-error for="email" class="mt-2" />
+                </div>
+                <div>
+                    <x-label>Celular</x-label>
+                    <x-input type="text" class="w-full" wire:model="phone"/>
+                    <x-input-error for="phone" class="mt-2" />
+                </div>
+                
+                <div>
+                    <x-label>Fecha Nacimiento</x-label>
+                    <x-input type="date" class="w-full" wire:model="birthday"/>
+                    <x-input-error for="birthday" class="mt-2" />
+                </div>
+                <div>
+                    <x-label>Sexo</x-label>
+                    <select wire:model="gender" class="w-full border-gray-300 rounded-md shadow-sm">
+                        <option value="">Seleccione...</option>
+                        <option value="masculino">Masculino</option>
+                        <option value="femenino">Femenino</option>
+                    </select>
+                    <x-input-error for="gender" class="mt-2" />
+                </div>
+                <div class="md:col-span-2"> 
+                    <x-label>Dirección Domiciliaria</x-label>
+                    <x-input type="text" class="w-full" wire:model="address" placeholder="Av. / Jr. / Calle..." />
+                    <x-input-error for="address" class="mt-2" />
+                </div>
+                
+                
+                <div class="md:col-span-3">
+                     <x-label>Foto (Tamaño Pasaporte)</x-label>
+                     <input type="file" wire:model="photo" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+                     @if ($photo)
+                        <span class="text-green-600 text-xs">Imagen seleccionada</span>
+                     @elseif ($photo_url_db)
+                        <div class="mt-2">
+                            <img src="{{ asset('storage/'.$photo_url_db) }}" class="h-20 w-20 object-cover rounded">
+                        </div>
+                     @endif
+                     <x-input-error for="photo" class="mt-2" />
                 </div>
 
-                <div class="col-span-2 border-t mt-2"></div>
+                <div class="md:col-span-3 relative">
+                    <x-label>Lugar de Nacimiento (Distrito)</x-label>
+                    <x-input type="text" class="w-full" wire:model.live.debounce.300ms="ubigeoSearch" placeholder="Escriba el nombre del distrito..." />
+                    
+                    @if(!empty($ubigeoResults))
+                        <ul class="absolute z-50 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
+                            @foreach($ubigeoResults as $loc)
+                                <li class="p-2 hover:bg-gray-100 cursor-pointer text-sm border-b" 
+                                    wire:click="selectUbigeo('{{ $loc['iddist'] }}', '{{ $loc['nombdep'] }} / {{ $loc['nombprov'] }} / {{ $loc['nombdist'] }}')">
+                                    <span class="font-bold">{{ $loc['nombdist'] }}</span> 
+                                    <span class="text-xs text-gray-500">({{ $loc['nombprov'] }}, {{ $loc['nombdep'] }})</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                    
+                    @if($selectedUbigeoName)
+                        <div class="mt-1 p-2 bg-green-50 border border-green-200 rounded text-sm text-green-800">
+                            <strong>Seleccionado:</strong> {{ $selectedUbigeoName }}
+                        </div>
+                    @endif
+                    <x-input-error for="selectedDistId" class="mt-2" />
+                </div>
+
+                <div class="md:col-span-3 border-b pb-1 mb-2 mt-4 font-bold text-gray-700">2. Datos del Colegio</div>
                 
-                <div class="col-span-1">
-                    <x-label for="selectedCareerId" value="Programa al que Postula" />
-                    <select id="selectedCareerId" wire:model.live="selectedCareerId" class="form-select mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                        @foreach($careers as $id => $name)
-                            <option value="{{ $id }}">{{ $name }}</option>
+                <div class="md:col-span-2 relative">
+                    <x-label>Buscar Colegio</x-label>
+                    <x-input type="text" class="w-full" wire:model.live.debounce.300ms="schoolSearch" placeholder="Escriba el nombre del colegio..." />
+                    
+                    @if(!empty($schoolResults))
+                        <ul class="absolute z-50 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
+                            @foreach($schoolResults as $school)
+                                <li class="p-2 hover:bg-gray-100 cursor-pointer text-sm border-b transition-colors" 
+                                    wire:click="selectSchool({{ $school->id }}, '{{ $school->name }}')">
+                                    <span class="font-bold block">{{ $school->name }}</span>
+                                    <span>
+                                        <span class="font-semibold text-blue-600">{{ $school['d_niv_mod'] ?? 'N/A' }}</span>
+                                        
+                                        <span class="mx-1">|</span>
+                                        
+                                        {{ $school['location']['nombdist'] ?? '' }} - {{ $school['location']['nombdep'] ?? '' }}
+                                    </span>
+                                    
+                                    <span>Cód: {{ $school['modular_code'] }}</span>
+
+                                    {{-- <span class="text-xs text-gray-500">
+                                        {{ $school->location->nombdist ?? '?' }} - {{ $school->location->nombdep ?? '?' }}
+                                    </span> --}}
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                    
+                    @if($selectedSchoolName)
+                        <div class="mt-1 p-2 bg-green-50 border border-green-200 rounded text-sm text-green-800">
+                            <strong>Seleccionado:</strong> {{ $selectedSchoolName }}
+                        </div>
+                    @endif
+                    <x-input-error for="selectedSchoolId" class="mt-2" />
+                </div>
+                <div>
+                    <x-label>Año Egreso</x-label>
+                    <x-input type="number" class="w-full" wire:model="schoolYear"/>
+                    <x-input-error for="schoolYear" class="mt-2" />
+                </div>
+
+                <div class="md:col-span-3 border-b pb-1 mb-2 mt-4 font-bold text-gray-700">3. Datos de Postulación</div>
+
+                <div class="md:col-span-3">
+                    <x-label>Programa y Turno</x-label>
+                    <select wire:model="selectedOfferingId" class="form-select w-full border-gray-300 rounded-md">
+                        <option value="">Seleccione...</option>
+                        @foreach($offerings as $offer)
+                            <option value="{{ $offer->id }}">
+                                {{ $offer->career->name }} - {{ $offer->shift->name }}
+                            </option>
                         @endforeach
                     </select>
-                    <x-input-error for="selectedCareerId" class="mt-2" />
+                    <x-input-error for="selectedOfferingId" class="mt-2" />
                 </div>
                 
-                <div class="col-span-1">
-                    <x-label for="selectedStudyPlanId" value="Plan de Estudio" />
-                    <select id="selectedStudyPlanId" wire:model="selectedStudyPlanId" class="form-select mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                        @if($availableStudyPlans->isEmpty()) disabled @endif>
-                        <option value="">-- Seleccione plan --</option>
-                        @foreach($availableStudyPlans as $id => $name)
-                            <option value="{{ $id }}">{{ $name }}</option>
+                <div class="md:col-span-3">
+                    <x-label>Modalidad</x-label>
+                    <select wire:model="selectedModalityId" class="form-select w-full border-gray-300 rounded-md">
+                        <option value="">Seleccione...</option>
+                        @foreach($modalities as $m) 
+                            <option value="{{ $m->id }}">{{ $m->name }}</option> 
                         @endforeach
                     </select>
-                    <x-input-error for="selectedStudyPlanId" class="mt-2" />
+                    <x-input-error for="selectedModalityId" class="mt-2" />
                 </div>
                 
-                <div class="col-span-1">
-                    <x-label for="applicant.admission_type" value="Tipo de Admisión" />
-                    <select id="applicant.admission_type" wire:model="applicant.admission_type" class="form-select mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                        <option value="regular">Regular</option>
-                        <option value="extraordinary">Extraordinario</option>
-                        <option value="external_transfer">Traslado Externo</option>
-                        <option value="internal_transfer">Traslado Interno</option>
+                <div class="md:col-span-2">
+                    <x-label>Entidad Financiera</x-label>
+                    <select wire:model="selectedFinancialEntityId" class="form-select w-full border-gray-300 rounded-md">
+                        <option value="">Seleccione...</option>
+                        @foreach($financialEntities as $fe) 
+                            <option value="{{ $fe->id }}">{{ $fe->name }}</option> 
+                        @endforeach
                     </select>
-                    <x-input-error for="applicant.admission_type" class="mt-2" />
+                    <x-input-error for="selectedFinancialEntityId" class="mt-2" />
+                </div>
+                <div>
+                    <x-label>Cód. Operación</x-label>
+                    <x-input type="text" class="w-full" wire:model="paymentCode"/>
+                    <x-input-error for="paymentCode" class="mt-2" />
                 </div>
                 
-                <div class="col-span-1">
-                    <x-label for="applicant.exam_score" value="Nota Examen (Opcional)" />
-                    <x-input id="applicant.exam_score" type="number" step="0.5" class="mt-1 block w-full" wire:model.blur="applicant.exam_score" />
-                    <x-input-error for="applicant.exam_score" class="mt-2" />
+                @if($editingApplicant)
+                <div class="md:col-span-3 bg-yellow-50 p-2 rounded border border-yellow-200 mt-2">
+                    <x-label>Nota Examen</x-label>
+                    <x-input type="number" step="0.01" class="w-full" wire:model="examScore"/>
                 </div>
+                @endif
             </div>
         </x-slot>
 
         <x-slot name="footer">
-            <x-secondary-button wire:click="closeModal">
-                Cancelar
-            </x-secondary-button>
-            <x-button class="ms-3" wire:click="save" wire:loading.attr="disabled">
-                Guardar
-            </x-button>
+            <x-secondary-button wire:click="$set('isModalOpen', false)">Cancelar</x-secondary-button>
+            <x-button class="ml-2" wire:click="save">Guardar</x-button>
         </x-slot>
     </x-dialog-modal>
 </div>
