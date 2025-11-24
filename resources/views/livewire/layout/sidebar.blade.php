@@ -71,6 +71,10 @@
                                 : 'text-gray-400 hover:text-white' }}">
                         Gestión de Postulantes
                     </a>
+                    <a href="{{ route('admission.fast-grades') }}"
+                        class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admission.fast-grades') ? 'text-white' : 'text-gray-400 hover:text-white' }}">
+                        Registro de Notas
+                    </a>
                     <div class="border-t border-gray-700 my-1"></div> 
                     <a href="{{ route('admission.offerings') }}"
                         class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admission.offerings') ? 'text-white' : 'text-gray-400 hover:text-white' }}">
