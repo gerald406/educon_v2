@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdmissionDocumentController;
 use Illuminate\Support\Facades\Route;
 
 // Importaciones de todos los componentes
@@ -207,6 +208,8 @@ Route::prefix('admission')->middleware(['auth', 'verified', 'permission:gestiona
     Route::get('modalities', AdmissionModalityManager::class)->name('modalities');
     Route::get('financial-entities', FinancialEntityManager::class)->name('financial-entities');
     Route::get('offerings', AdmissionOfferingManager::class)->name('offerings');
+    Route::get('constancia/{applicant}', [AdmissionDocumentController::class, 'constancia'])->name('constancia');
+    Route::get('ficha/{applicant}', [AdmissionDocumentController::class, 'ficha'])->name('ficha');
 });
 
 
