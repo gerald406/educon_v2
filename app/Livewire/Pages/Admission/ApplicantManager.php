@@ -5,6 +5,8 @@ namespace App\Livewire\Pages\Admission;
 use App\Models\AdmissionModality;
 use App\Models\AdmissionOffering;
 use App\Models\Applicant;
+use App\Models\DidacticUnit; // [NUEVO]
+use App\Models\Enrollment;   // [NUEVO]
 use App\Models\FinancialEntity;
 use App\Models\Location;
 use App\Models\OriginSchool;
@@ -12,8 +14,11 @@ use App\Models\User;
 use App\Models\Student; // Importar arriba
 use App\Models\AcademicPeriod; // Importar
 use App\Models\PaymentConcept; // Importar
+use App\Models\Registration; // [NUEVO]
 use App\Models\StudentPayment; // Importar
 use App\Models\StudyPlan;
+use App\Models\TeacherAssignment; // [NUEVO]
+use App\Models\Voucher;      // [NUEVO]
 // use App\livewire\Pages\Admission\On;
 use Livewire\Attributes\On;
 
@@ -90,6 +95,9 @@ class ApplicantManager extends Component
     public $migrationStudyPlans = [];
     public $selectedMigrationStudyPlanId = '';
     public $migrationStudentCode = ''; // Para previsualizar o editar el código
+
+    // [NUEVO] Campo para el Voucher
+    public $migrationVoucherNumber = '';
 
     protected function personService()
     {
@@ -285,21 +293,39 @@ class ApplicantManager extends Component
             return;
         }
 
-        // 2. Cargar planes de estudio de la carrera del postulante
+        // 2. Cargar planes de estudio
         $careerId = $this->migratingApplicant->admissionOffering->career_id;
         $this->migrationStudyPlans = StudyPlan::where('career_id', $careerId)
             ->where('status', 'active')
-            ->orderBy('start_date', 'desc') // El más reciente primero
+            ->orderBy('start_date', 'desc')
             ->get();
 
-        // Seleccionar el primero por defecto
         $this->selectedMigrationStudyPlanId = $this->migrationStudyPlans->first()?->id;
 
-        // 3. Pre-generar código de estudiante (Sugerencia)
+        // 3. [CORREGIDO] Generar código de estudiante (Lógica robusta)
         $year = date('Y');
-        $lastStudent = Student::where('code', 'like', "E{$year}%")->orderBy('code', 'desc')->first();
-        $sequence = $lastStudent ? intval(substr($lastStudent->code, 5)) + 1 : 1;
-        $this->migrationStudentCode = "E{$year}-" . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+
+        // Buscamos el último código que empiece con 'E' + Año (ej. E2025)
+        // Usamos RAW length para asegurar que cortamos bien
+        $lastStudent = Student::where('code', 'like', "E{$year}%")
+            ->select('code')
+            ->orderByRaw('LENGTH(code) DESC') // Primero por longitud para evitar problemas de orden
+            ->orderBy('code', 'desc')       // Luego por valor
+            ->first();
+
+        $sequence = 1;
+        if ($lastStudent) {
+            // Extraemos los últimos dígitos (asumiendo formato E2025-XXXXX o E2025XXXX)
+            // Quitamos 'E2025' (5 caracteres) o 'E2025-' (6 caracteres)
+            // Ajusta esto según tu formato exacto. Asumiremos E2025-00001 (con guión)
+            $numberPart = substr($lastStudent->code, 6);
+            if (is_numeric($numberPart)) {
+                $sequence = intval($numberPart) + 1;
+            }
+        }
+
+        $this->migrationStudentCode = "E{$year}-" . str_pad($sequence, 5, '0', STR_PAD_LEFT);
+        $this->migrationVoucherNumber = ''; // Resetear voucher
 
         $this->isMigrationModalOpen = true;
     }
@@ -311,24 +337,42 @@ class ApplicantManager extends Component
     {
         $this->validate([
             'selectedMigrationStudyPlanId' => 'required|exists:study_plans,id',
-            'migrationStudentCode' => 'required|unique:students,code'
+            'migrationStudentCode' => 'required|unique:students,code',
+            'migrationVoucherNumber' => 'required|string', // Validar que ingresó algo
         ]);
 
-        DB::transaction(function () {
-            $applicant = $this->migratingApplicant;
+        // 1. Validar Voucher
+        // Buscamos un voucher emitido a este usuario que no esté anulado
 
-            // 1. Crear Estudiante
+        // 1. Validar Voucher
+        $voucher = Voucher::where('number', $this->migrationVoucherNumber)
+            ->where('client_id', $this->migratingApplicant->user_id)
+            ->where('status', 'issued')
+            ->first();
+
+        if (!$voucher) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Voucher no válido',
+                'text' => 'No se encontró un comprobante válido con ese número para este postulante.'
+            ]);
+            return;
+        }
+
+        DB::transaction(function () use ($voucher) {
+            $applicant = $this->migratingApplicant;
+            $offering = $applicant->admissionOffering;
+
+            // Crear Estudiante
             $student = Student::create([
                 'user_id' => $applicant->user_id,
-                'career_id' => $applicant->admissionOffering->career_id,
-                'study_plan_id' => $this->selectedMigrationStudyPlanId, // [USAMOS EL SELECCIONADO]
+                'career_id' => $offering->career_id,
+                'study_plan_id' => $this->selectedMigrationStudyPlanId,
                 'code' => $this->migrationStudentCode,
                 'current_semester' => 1,
                 'academic_status' => 'regular',
                 'admission_date' => now(),
-                'applicant_id' => $applicant->id, // Referencia
-
-                // Copia de datos extendidos
+                'applicant_id' => $applicant->id,
                 'phone' => $applicant->phone,
                 'address' => $applicant->address,
                 'gender' => $applicant->gender,
@@ -339,33 +383,58 @@ class ApplicantManager extends Component
                 'photo_url' => $applicant->photo_url,
             ]);
 
-            // 2. Actualizar Rol
+            // Actualizar Rol y Estado
             $applicant->user->assignRole('Estudiante');
+            $applicant->update(['application_status' => 'aprobado']);
 
-            // 3. Actualizar Postulante
-            $applicant->update(['application_status' => 'aprobado']); // O 'ingresante'
-
-            // 4. Generar Deuda de Matrícula
+            // Crear Matrícula
             $period = AcademicPeriod::where('status', 'active')->first();
-            $concept = PaymentConcept::where('code', 'MAT-REG')->first(); // Código del TUPA para matrícula
 
-            if ($period && $concept) {
-                StudentPayment::create([
+            if ($period) {
+                $enrollment = Enrollment::create([
                     'student_id' => $student->id,
-                    'payment_concept_id' => $concept->id,
                     'academic_period_id' => $period->id,
-                    'original_amount' => $concept->amount,
-                    'final_amount' => $concept->amount,
-                    'due_date' => now()->addDays(5),
-                    'status' => 'pending',
-                    'registered_by_user_id' => auth()->id(),
-                    'notes' => 'Pago generado automáticamente por proceso de admisión.',
+                    'semester_enrolled' => 1,
+                    'enrollment_type' => 'first_time',
+                    'payment_status' => 'paid',
+                    'status' => 'active',
+                    'notes' => "Matrícula automática (Ingresante). Voucher: {$voucher->series}-{$voucher->number}",
+                    'amount_paid' => $voucher->total_amount
                 ]);
+
+                // [FIX] Obtener IDs de Módulos primero, luego buscar Unidades Didácticas
+                $moduleIds = DB::table('modules')
+                    ->where('study_plan_id', $this->selectedMigrationStudyPlanId)
+                    ->pluck('id');
+
+                // Ahora buscamos las Unidades Didácticas del 1er semestre
+                $units1stSemester = DidacticUnit::whereIn('module_id', $moduleIds)
+                    ->where('semester', 1)
+                    ->pluck('id');
+
+                // Buscar Asignaciones Docentes (Secciones abiertas)
+                $assignments = TeacherAssignment::whereIn('didactic_unit_id', $units1stSemester)
+                    ->where('academic_period_id', $period->id)
+                    ->where('shift_id', $offering->shift_id)
+                    ->where('status', 'active')
+                    ->get()
+                    ->unique('didactic_unit_id'); // Una sección por curso
+
+                foreach ($assignments as $assignment) {
+                    Registration::create([
+                        'enrollment_id' => $enrollment->id,
+                        'teacher_assignment_id' => $assignment->id,
+                        'status' => 'enrolled',
+                        'registration_type' => 'mandatory'
+                    ]);
+
+                    $assignment->increment('current_enrolled');
+                }
             }
         });
 
         $this->closeMigrationModal();
-        $this->dispatch('swal', ['icon' => 'success', 'title' => '¡Proceso Completado!', 'text' => 'El postulante ahora es un estudiante regular.']);
+        $this->dispatch('swal', ['icon' => 'success', 'title' => '¡Matrícula Exitosa!', 'text' => "El ingresante {$this->migrationStudentCode} ha sido matriculado."]);
     }
 
     public function closeMigrationModal()

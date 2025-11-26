@@ -56,6 +56,18 @@
                                             </button>
                                         @endif
 
+                                        
+                                        @if($applicant->application_status === 'aprobado' && $applicant->user->student)
+                                            <a href="{{ route('people.students.enrollment-form', $applicant->user->student->id) }}" 
+                                            target="_blank" 
+                                            class="text-green-600 hover:text-green-900 mr-3 inline-flex items-center" 
+                                            title="Descargar Ficha de Matrícula">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                </svg>
+                                            </a>
+                                        @endif
+
                                         <x-button wire:click="openEditModal({{ $applicant->id }})">Editar</x-button>
                                     </td>
                                 </tr>
@@ -284,7 +296,7 @@
             <x-button class="ml-2" wire:click="save">Guardar</x-button>
         </x-slot>
     </x-dialog-modal>
-    
+
     <x-dialog-modal wire:model="isMigrationModalOpen" maxWidth="lg">
         <x-slot name="title">
             Registrar Ingresante
@@ -319,13 +331,26 @@
                         <p class="text-xs text-gray-500 mt-1">Este código se ha generado automáticamente.</p>
                     </div>
 
+                    <div class="bg-green-50 p-4 rounded-md border border-green-200">
+                        <h4 class="font-bold text-green-900 text-sm mb-2">3. Validación de Pago (Caja)</h4>
+                        <x-label value="Número de Recibo / Voucher" class="mb-1" />
+                        <div class="flex gap-2">
+                            <x-input type="text" class="w-full" wire:model="migrationVoucherNumber" placeholder="Ingrese el Nro. de Recibo (ej. 123)" />
+                        </div>
+                        <p class="text-xs text-green-700 mt-2">
+                            El estudiante debe haber pagado su derecho de matrícula en Caja previamente. 
+                            Ingrese el número del comprobante para validar y procesar la matrícula automática.
+                        </p>
+                    </div>
+
                     <div class="border-t pt-4 mt-4">
                         <p class="text-sm text-gray-600">
                             Al confirmar:
                             <ul class="list-disc list-inside text-xs mt-1 ml-2">
-                                <li>Se creará el perfil de estudiante.</li>
-                                <li>Se asignará el rol de usuario "Estudiante".</li>
-                                <li>Se generará una deuda de matrícula pendiente en Caja.</li>
+                                <li>Se creará el perfil de estudiante con código <strong>{{ $migrationStudentCode }}</strong>.</li>
+                                <li>Se generará la <strong>Matrícula Automática</strong> para el Semestre 1.</li>
+                                <li>Se inscribirá en todos los cursos del turno correspondiente.</li>
+                                <li>No se generarán deudas pendientes.</li>
                             </ul>
                         </p>
                     </div>
