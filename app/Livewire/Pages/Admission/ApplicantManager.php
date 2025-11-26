@@ -9,6 +9,14 @@ use App\Models\FinancialEntity;
 use App\Models\Location;
 use App\Models\OriginSchool;
 use App\Models\User;
+use App\Models\Student; // Importar arriba
+use App\Models\AcademicPeriod; // Importar
+use App\Models\PaymentConcept; // Importar
+use App\Models\StudentPayment; // Importar
+use App\Models\StudyPlan;
+// use App\livewire\Pages\Admission\On;
+use Livewire\Attributes\On;
+
 use App\Services\PersonDataService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -75,6 +83,13 @@ class ApplicantManager extends Component
     public Collection $offerings;
     public Collection $modalities;
     public Collection $financialEntities;
+
+    // --- [NUEVAS PROPIEDADES PARA MIGRACIÓN] ---
+    public $isMigrationModalOpen = false;
+    public ?Applicant $migratingApplicant = null;
+    public $migrationStudyPlans = [];
+    public $selectedMigrationStudyPlanId = '';
+    public $migrationStudentCode = ''; // Para previsualizar o editar el código
 
     protected function personService()
     {
@@ -255,6 +270,110 @@ class ApplicantManager extends Component
         ];
     }
 
+    /**
+     * Abre el modal de confirmación para convertir al postulante.
+     */
+    public function openMigrationModal($applicantId)
+    {
+        $this->migratingApplicant = Applicant::with(['user', 'admissionOffering.career'])->find($applicantId);
+
+        if (!$this->migratingApplicant) return;
+
+        // 1. Verificar si ya es estudiante
+        if (Student::where('user_id', $this->migratingApplicant->user_id)->exists()) {
+            $this->dispatch('swal', ['icon' => 'warning', 'title' => 'Ya registrado', 'text' => 'Este postulante ya tiene un código de estudiante.']);
+            return;
+        }
+
+        // 2. Cargar planes de estudio de la carrera del postulante
+        $careerId = $this->migratingApplicant->admissionOffering->career_id;
+        $this->migrationStudyPlans = StudyPlan::where('career_id', $careerId)
+            ->where('status', 'active')
+            ->orderBy('start_date', 'desc') // El más reciente primero
+            ->get();
+
+        // Seleccionar el primero por defecto
+        $this->selectedMigrationStudyPlanId = $this->migrationStudyPlans->first()?->id;
+
+        // 3. Pre-generar código de estudiante (Sugerencia)
+        $year = date('Y');
+        $lastStudent = Student::where('code', 'like', "E{$year}%")->orderBy('code', 'desc')->first();
+        $sequence = $lastStudent ? intval(substr($lastStudent->code, 5)) + 1 : 1;
+        $this->migrationStudentCode = "E{$year}-" . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+
+        $this->isMigrationModalOpen = true;
+    }
+
+    /**
+     * Ejecuta la conversión final.
+     */
+    public function processMigration()
+    {
+        $this->validate([
+            'selectedMigrationStudyPlanId' => 'required|exists:study_plans,id',
+            'migrationStudentCode' => 'required|unique:students,code'
+        ]);
+
+        DB::transaction(function () {
+            $applicant = $this->migratingApplicant;
+
+            // 1. Crear Estudiante
+            $student = Student::create([
+                'user_id' => $applicant->user_id,
+                'career_id' => $applicant->admissionOffering->career_id,
+                'study_plan_id' => $this->selectedMigrationStudyPlanId, // [USAMOS EL SELECCIONADO]
+                'code' => $this->migrationStudentCode,
+                'current_semester' => 1,
+                'academic_status' => 'regular',
+                'admission_date' => now(),
+                'applicant_id' => $applicant->id, // Referencia
+
+                // Copia de datos extendidos
+                'phone' => $applicant->phone,
+                'address' => $applicant->address,
+                'gender' => $applicant->gender,
+                'birthday' => $applicant->birthday,
+                'ubigeo_birth_id' => $applicant->ubigeo_birth_id,
+                'origin_school_id' => $applicant->origin_school_id,
+                'school_graduation_year' => $applicant->school_graduation_year,
+                'photo_url' => $applicant->photo_url,
+            ]);
+
+            // 2. Actualizar Rol
+            $applicant->user->assignRole('Estudiante');
+
+            // 3. Actualizar Postulante
+            $applicant->update(['application_status' => 'aprobado']); // O 'ingresante'
+
+            // 4. Generar Deuda de Matrícula
+            $period = AcademicPeriod::where('status', 'active')->first();
+            $concept = PaymentConcept::where('code', 'MAT-REG')->first(); // Código del TUPA para matrícula
+
+            if ($period && $concept) {
+                StudentPayment::create([
+                    'student_id' => $student->id,
+                    'payment_concept_id' => $concept->id,
+                    'academic_period_id' => $period->id,
+                    'original_amount' => $concept->amount,
+                    'final_amount' => $concept->amount,
+                    'due_date' => now()->addDays(5),
+                    'status' => 'pending',
+                    'registered_by_user_id' => auth()->id(),
+                    'notes' => 'Pago generado automáticamente por proceso de admisión.',
+                ]);
+            }
+        });
+
+        $this->closeMigrationModal();
+        $this->dispatch('swal', ['icon' => 'success', 'title' => '¡Proceso Completado!', 'text' => 'El postulante ahora es un estudiante regular.']);
+    }
+
+    public function closeMigrationModal()
+    {
+        $this->isMigrationModalOpen = false;
+        $this->migratingApplicant = null;
+    }
+
     public function openCreateModal()
     {
         $this->resetForm();
@@ -346,6 +465,84 @@ class ApplicantManager extends Component
         } catch (\Exception $e) {
             $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'No se pudo guardar: ' . $e->getMessage()]);
         }
+    }
+
+    public function confirmMigrateToStudent($applicantId)
+    {
+        $this->dispatch('swal:confirm', [
+            'id' => $applicantId,
+            'title' => '¿Registrar Ingresante?',
+            'text' => 'Se creará un registro de estudiante y se generará la deuda de matrícula. El postulante debe haber pagado su derecho de admisión.',
+            'onConfirmed' => 'migrateToStudent'
+        ]);
+    }
+
+    #[On('migrateToStudent')]
+    public function migrateToStudent($id)
+    {
+        $applicant = Applicant::with('user')->find($id);
+
+        if (!$applicant) return;
+
+        // 1. Verificar si ya es estudiante
+        $exists = Student::where('user_id', $applicant->user_id)->exists();
+        if ($exists) {
+            $this->dispatch('swal', ['icon' => 'warning', 'title' => 'Ya registrado', 'text' => 'Este postulante ya tiene un código de estudiante.']);
+            return;
+        }
+
+        DB::transaction(function () use ($applicant) {
+            // 2. Generar Código de Estudiante (Lógica simple: Año + Correlativo)
+            $year = date('Y');
+            $lastStudent = Student::where('code', 'like', "$year%")->orderBy('code', 'desc')->first();
+            $sequence = $lastStudent ? intval(substr($lastStudent->code, 4)) + 1 : 1;
+            $studentCode = $year . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+
+            // 3. Crear Estudiante (Copiando datos)
+            $student = Student::create([
+                'user_id' => $applicant->user_id,
+                'career_id' => $applicant->admissionOffering->career_id, // Carrera de la oferta
+                'study_plan_id' => $this->selectedMigrationStudyPlanId,
+                'code' => $studentCode,
+                'current_semester' => 1,
+                'academic_status' => 'regular',
+                'admission_date' => now(),
+                'admission_code' => $applicant->code,
+
+                // Copia de datos
+                'phone' => $applicant->phone,
+                'address' => $applicant->address,
+                'gender' => $applicant->gender,
+                'birthday' => $applicant->birthday,
+                'ubigeo_birth_id' => $applicant->ubigeo_birth_id,
+                'origin_school_id' => $applicant->origin_school_id,
+                'school_graduation_year' => $applicant->school_graduation_year,
+                'photo_url' => $applicant->photo_url, // Copiamos la ruta
+            ]);
+
+            // 4. Actualizar Rol de Usuario
+            $applicant->user->assignRole('Estudiante');
+            $applicant->update(['application_status' => 'approved']); // O 'ingresante'
+
+            // 5. Generar Deuda de Matrícula (Para que vaya a Caja)
+            $period = AcademicPeriod::where('status', 'active')->first();
+            $concept = PaymentConcept::where('code', 'MAT-REG')->first(); // Asegúrate que exista este concepto
+
+            if ($period && $concept) {
+                StudentPayment::create([
+                    'student_id' => $student->id,
+                    'payment_concept_id' => $concept->id,
+                    'academic_period_id' => $period->id,
+                    'original_amount' => $concept->amount,
+                    'final_amount' => $concept->amount,
+                    'due_date' => now()->addDays(5),
+                    'status' => 'pending',
+                    'registered_by_user_id' => auth()->id(),
+                ]);
+            }
+        });
+
+        $this->dispatch('swal', ['icon' => 'success', 'title' => '¡Bienvenido!', 'text' => 'El postulante ahora es un estudiante. Se ha generado su deuda de matrícula.']);
     }
 
     public function render()

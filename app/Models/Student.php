@@ -21,6 +21,15 @@ class Student extends Model
         'academic_status',
         'admission_date',
         'graduation_date',
+        // Nuevos campos
+        'phone',
+        'address',
+        'gender',
+        'birthday',
+        'ubigeo_birth_id',
+        'origin_school_id',
+        'school_graduation_year',
+        'photo_url'
     ];
 
     protected $casts = [

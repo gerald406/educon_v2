@@ -48,6 +48,13 @@
                                         <a href="{{ route('admission.ficha', $applicant->id) }}" target="_blank" class="text-green-600 hover:text-green-900 mr-3 inline-flex items-center" title="Descargar Ficha">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
                                         </a>
+                                        @if($applicant->application_status != 'approved' && $applicant->application_status != 'aprobado') 
+                                            <button wire:click="openMigrationModal({{ $applicant->id }})" 
+                                                    class="ml-2 text-purple-600 hover:text-purple-900" 
+                                                    title="Registrar Ingresante">
+                                                <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                                            </button>
+                                        @endif
 
                                         <x-button wire:click="openEditModal({{ $applicant->id }})">Editar</x-button>
                                     </td>
@@ -275,6 +282,68 @@
         <x-slot name="footer">
             <x-secondary-button wire:click="$set('isModalOpen', false)">Cancelar</x-secondary-button>
             <x-button class="ml-2" wire:click="save">Guardar</x-button>
+        </x-slot>
+    </x-dialog-modal>
+    
+    <x-dialog-modal wire:model="isMigrationModalOpen" maxWidth="lg">
+        <x-slot name="title">
+            Registrar Ingresante
+        </x-slot>
+
+        <x-slot name="content">
+            @if($migratingApplicant)
+                <div class="space-y-4">
+                    <div class="bg-blue-50 p-4 rounded-md border border-blue-200">
+                        <h4 class="font-bold text-blue-900 text-lg">{{ $migratingApplicant->user->lastname }} {{ $migratingApplicant->user->name }}</h4>
+                        <p class="text-sm text-blue-700">DNI: {{ $migratingApplicant->user->document_number }}</p>
+                        <p class="text-sm text-blue-700 mt-1">Carrera: <strong>{{ $migratingApplicant->admissionOffering->career->name }}</strong></p>
+                    </div>
+
+                    <div>
+                        <x-label value="1. Seleccione el Plan de Estudios" class="font-bold mb-1" />
+                        <select wire:model="selectedMigrationStudyPlanId" class="w-full border-gray-300 rounded-md shadow-sm">
+                            @forelse($migrationStudyPlans as $plan)
+                                <option value="{{ $plan->id }}">{{ $plan->name }} ({{ $plan->code }})</option>
+                            @empty
+                                <option value="">No hay planes activos para esta carrera</option>
+                            @endforelse
+                        </select>
+                        @if(empty($migrationStudyPlans))
+                            <p class="text-red-500 text-xs mt-1">¡Error! No se puede matricular sin un plan de estudios activo.</p>
+                        @endif
+                    </div>
+
+                    <div>
+                        <x-label value="2. Código de Estudiante Asignado" class="font-bold mb-1" />
+                        <x-input type="text" class="w-full bg-gray-100" wire:model="migrationStudentCode" readonly />
+                        <p class="text-xs text-gray-500 mt-1">Este código se ha generado automáticamente.</p>
+                    </div>
+
+                    <div class="border-t pt-4 mt-4">
+                        <p class="text-sm text-gray-600">
+                            Al confirmar:
+                            <ul class="list-disc list-inside text-xs mt-1 ml-2">
+                                <li>Se creará el perfil de estudiante.</li>
+                                <li>Se asignará el rol de usuario "Estudiante".</li>
+                                <li>Se generará una deuda de matrícula pendiente en Caja.</li>
+                            </ul>
+                        </p>
+                    </div>
+                </div>
+            @endif
+        </x-slot>
+
+        <x-slot name="footer">
+            <x-secondary-button wire:click="closeMigrationModal">
+                Cancelar
+            </x-secondary-button>
+
+            <x-button class="ml-2 bg-purple-600 hover:bg-purple-700" 
+                    wire:click="processMigration" 
+                    wire:loading.attr="disabled"
+                    :disabled="empty($migrationStudyPlans)">
+                Confirmar Ingreso
+            </x-button>
         </x-slot>
     </x-dialog-modal>
 </div>
