@@ -161,13 +161,31 @@
                         <a href="{{ route('academic-process.academic-periods') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('academic-process.academic-periods') ? 'text-white' : 'text-gray-400 hover:text-white' }}"> Periodos Académicos </a>
                     @endcan
                     @can('gestionar-carga-academica')
-                        <a href="{{ route('academic-process.teacher-assignments') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('academic-process.teacher-assignments') ? 'text-white' : 'text-gray-400 hover:text-white' }}"> Carga Académica (Secciones) </a>
+                        <a href="{{ route('academic-process.teacher-assignments') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('academic-process.teacher-assignments') ? 'text-white' : 'text-gray-400 hover:text-white' }}"> Carga Académica </a>
                     @endcan
                     @can('gestionar-horarios')
                         <a href="{{ route('academic-process.schedules') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('academic-process.schedules') ? 'text-white' : 'text-gray-400 hover:text-white' }}"> Gestión de Horarios </a>
                     @endcan
                     @can('aprobar-silabos')
                         <a href="{{ route('academic-process.syllabus-approval') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('academic-process.syllabus-approval') ? 'text-white' : 'text-gray-400 hover:text-white' }}"> Aprobación de Sílabos </a>
+                    @endcan
+                    @can('gestionar-matricula-regular')
+                        <a href="{{ route('academic-process.regular-enrollment') }}" 
+                           class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('academic-process.regular-enrollment') ? 'text-white' : 'text-gray-400 hover:text-white' }}">
+                            Matrícula Regular
+                        </a>
+                    @endcan
+                    @can('gestionar-reservas-matricula')
+                        <a href="{{ route('academic-process.reservations') }}" 
+                            class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('academic-process.reservations') ? 'text-white' : 'text-gray-400 hover:text-white' }}">
+                            Reservas de Matrícula
+                        </a>
+                    @endcan
+                    @can('gestionar-reincorporaciones')
+                        <a href="{{ route('academic-process.reincorporations') }}" 
+                           class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('academic-process.reincorporations') ? 'text-white' : 'text-gray-400 hover:text-white' }}">
+                            Reincorporaciones
+                        </a>
                     @endcan
                 </div>
             </div>

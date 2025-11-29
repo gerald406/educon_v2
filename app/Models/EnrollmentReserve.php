@@ -14,6 +14,8 @@ class EnrollmentReserve extends Model
 
     protected $fillable = [
         'student_id',
+        'academic_period_id',
+        'resolution_code',
         'reason',
         'start_date',
         'end_date',
@@ -32,5 +34,10 @@ class EnrollmentReserve extends Model
     public function student()
     {
         return $this->belongsTo(Student::class);
+    }
+
+    public function academicPeriod()
+    {
+        return $this->belongsTo(AcademicPeriod::class);
     }
 }

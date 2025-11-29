@@ -84,6 +84,10 @@ class RolesAndPermissionsSeeder extends Seeder
 
         Permission::firstOrCreate(['name' => 'gestionar-actividades']);
 
+        Permission::firstOrCreate(['name' => 'gestionar-reservas-matricula']);
+        Permission::firstOrCreate(['name' => 'gestionar-reincorporaciones']);
+        Permission::firstOrCreate(['name' => 'gestionar-matricula-regular']);
+
         // --- CREACIÓN DE ROLES Y ASIGNACIÓN DE PERMISOS ---
 
         // Rol Estudiante
@@ -133,6 +137,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'gestionar-admision',
             'gestionar-anuncios',
             'gestionar-cuadro-meritos', // <-- [AÑADIR PERMISO]
+            'gestionar-reservas-matricula',
+            'gestionar-reincorporaciones',
+            'gestionar-matricula-regular',
         ]);
 
         // Rol Tesorería (Caja)

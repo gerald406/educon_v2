@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('enrollment_reserves', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
-            
+
             // A qué periodo académico aplica la reserva (Lo crearemos más adelante)
-            // $table->foreignId('academic_period_id')->constrained('academic_periods');
-            
+            //$table->foreignId('academic_period_id')->constrained('academic_periods');
+
             $table->text('reason');
             $table->date('start_date');
             $table->date('end_date');

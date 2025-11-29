@@ -68,7 +68,9 @@ use App\Livewire\Pages\Communication\AnnouncementManager;
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\CashSessionController;
 use App\Http\Controllers\StudentReportController;
-
+use App\Livewire\Pages\AcademicProcess\EnrollmentReservationManager;
+use App\Livewire\Pages\AcademicProcess\RegularEnrollmentManager;
+use App\Livewire\Pages\AcademicProcess\ReincorporationManager;
 
 /*
 |--------------------------------------------------------------------------
@@ -146,6 +148,13 @@ Route::prefix('academic-process')->middleware(['auth', 'verified'])->name('acade
     Route::get('teacher-assignments', TeacherAssignmentManager::class)->middleware('permission:gestionar-carga-academica')->name('teacher-assignments');
     Route::get('schedules', ScheduleManager::class)->middleware('permission:gestionar-horarios')->name('schedules');
     Route::get('syllabus-approval', SyllabusApproval::class)->middleware('permission:aprobar-silabos')->name('syllabus-approval');
+    Route::get('reservations', EnrollmentReservationManager::class)
+        ->middleware('permission:gestionar-reservas-matricula')
+        ->name('reservations');
+    Route::get('reincorporations', ReincorporationManager::class)->middleware('permission:gestionar-reincorporaciones')->name('reincorporations');
+    Route::get('regular-enrollment', RegularEnrollmentManager::class)
+        ->middleware('permission:gestionar-matricula-regular')
+        ->name('regular-enrollment');
 });
 
 // Grupo de Rutas para Evaluación (Docentes y roles superiores)
