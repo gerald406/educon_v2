@@ -71,6 +71,8 @@ use App\Http\Controllers\StudentReportController;
 use App\Livewire\Pages\AcademicProcess\EnrollmentReservationManager;
 use App\Livewire\Pages\AcademicProcess\RegularEnrollmentManager;
 use App\Livewire\Pages\AcademicProcess\ReincorporationManager;
+use App\Livewire\Pages\Security\RoleManager;
+use App\Livewire\Pages\Security\UserManager;
 
 /*
 |--------------------------------------------------------------------------
@@ -243,3 +245,8 @@ Route::prefix('communication')->middleware(['auth', 'verified', 'permission:gest
 
 
 Route::get('voucher/{voucher}/download', [VoucherController::class, 'download'])->name('voucher.download');
+
+Route::prefix('security')->middleware(['auth', 'verified', 'permission:gestionar-roles'])->name('security.')->group(function () {
+    Route::get('roles', RoleManager::class)->name('roles');
+    Route::get('users', UserManager::class)->middleware('permission:gestionar-usuarios')->name('users');
+});

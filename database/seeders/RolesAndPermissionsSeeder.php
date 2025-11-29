@@ -88,6 +88,9 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'gestionar-reincorporaciones']);
         Permission::firstOrCreate(['name' => 'gestionar-matricula-regular']);
 
+        Permission::firstOrCreate(['name' => 'gestionar-roles']);
+        Permission::firstOrCreate(['name' => 'gestionar-usuarios']);
+
         // --- CREACIÓN DE ROLES Y ASIGNACIÓN DE PERMISOS ---
 
         // Rol Estudiante

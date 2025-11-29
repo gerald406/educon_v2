@@ -69,6 +69,82 @@ class User extends Authenticatable
     ];
 
     /**
+     * Determina si el usuario tiene acceso al panel administrativo/staff
+     * basándose en permisos de gestión.
+     */
+    public function hasAdminAccess(): bool
+    {
+        // Permisos que indican que el usuario es parte del staff administrativo
+        $adminPermissions = [
+            'gestionar-institucion',
+            'gestionar-configuracion',
+            'gestionar-estructura-academica',
+            'gestionar-prerrequisitos',
+            'gestionar-docentes',
+            'gestionar-estudiantes',
+            'gestionar-periodos',
+            'gestionar-carga-academica',
+            'gestionar-horarios',
+            'aprobar-silabos',
+            'registrar-pagos',
+            'gestionar-sesiones-caja',
+            'gestionar-correlativos',
+            'registrar-tramites',
+            'anular-comprobantes',
+            'gestionar-certificacion',
+            'gestionar-cuadro-meritos',
+            'gestionar-biblioteca',
+            'gestionar-admision',
+            'gestionar-anuncios',
+            'gestionar-reservas-matricula',
+            'gestionar-reincorporaciones',
+            'gestionar-matricula-regular',
+            'gestionar-roles',
+            'gestionar-usuarios',
+        ];
+
+        return $this->hasAnyPermission($adminPermissions);
+    }
+
+    /**
+     * Determina si el usuario es EXCLUSIVAMENTE un docente
+     * (NO un usuario administrativo que puede tener permisos de docencia)
+     */
+    public function isTeacher(): bool
+    {
+        // Si tiene acceso admin, NO es un docente de la vista regular
+        if ($this->hasAdminAccess()) {
+            return false;
+        }
+
+        // Solo si NO es admin Y tiene permisos típicos de docente
+        return $this->hasAnyPermission([
+            'registrar-notas',
+            'registrar-asistencia',
+            'subir-silabo',
+        ]);
+    }
+
+    /**
+     * Determina si el usuario es EXCLUSIVAMENTE un estudiante
+     * (NO un usuario administrativo)
+     */
+    public function isStudent(): bool
+    {
+        // Si tiene acceso admin, NO es un estudiante
+        if ($this->hasAdminAccess()) {
+            return false;
+        }
+
+        // Solo si NO es admin Y tiene permisos de estudiante
+        return $this->hasAnyPermission([
+            'matricularse',
+            'entregar-actividades',
+            'ver-mis-asistencias',
+        ]);
+    }
+
+    /**
      * Obtiene el perfil de docente asociado al usuario.
      */
     public function teacher(): HasOne

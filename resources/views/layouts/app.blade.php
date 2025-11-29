@@ -21,13 +21,16 @@
 
         <div x-data="{ sidebarOpen: false }" class="min-h-screen bg-gray-100">
             
+            {{-- Sidebar (Solo para usuarios con acceso administrativo) --}}
             @auth
-            @if(Auth::user()->hasAnyRole(['Administrador', 'Secretario Academico', 'Coordinador', 'Tesoreria']))
+            @if(Auth::user()->hasAdminAccess())
                 
+                {{-- Sidebar Desktop (Fijo a la izquierda) --}}
                 <div class="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
                     <livewire:layout.sidebar />
                 </div>
 
+                {{-- Sidebar Mobile (Overlay deslizante) --}}
                 <div x-show="sidebarOpen" 
                      class="fixed inset-0 flex z-40 md:hidden" 
                      x-transition:enter="transition-opacity ease-linear duration-300"
@@ -38,8 +41,10 @@
                      x-transition:leave-end="opacity-0"
                      @click.away="sidebarOpen = false">
                     
+                    {{-- Fondo oscuro --}}
                     <div @click="sidebarOpen = false" class="fixed inset-0 bg-gray-600 bg-opacity-75" aria-hidden="true"></div>
                     
+                    {{-- Panel del Sidebar --}}
                     <div class="relative flex-1 flex flex-col max-w-xs w-full"
                          x-transition:enter="transition ease-in-out duration-300 transform"
                          x-transition:enter-start="-translate-x-full"
@@ -53,13 +58,16 @@
             @endif
             @endauth
 
+            {{-- Contenedor Principal (se ajusta automáticamente si hay sidebar) --}}
             <div @class([
                     'flex flex-col flex-1',
-                    'md:pl-64' => Auth::check() && Auth::user()->hasAnyRole(['Administrador', 'Secretario Academico', 'Coordinador', 'Tesoreria'])
+                    'md:pl-64' => Auth::check() && Auth::user()->hasAdminAccess()
                  ])>
                 
+                {{-- Barra de Navegación Superior --}}
                 @livewire('navigation-menu')
 
+                {{-- Header de Página (opcional) --}}
                 @if (isset($header))
                     <header class="bg-white shadow">
                         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -68,6 +76,7 @@
                     </header>
                 @endif
 
+                {{-- Contenido Principal --}}
                 <main>
                     {{ $slot }}
                 </main>

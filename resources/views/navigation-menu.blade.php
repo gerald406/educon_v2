@@ -1,12 +1,11 @@
 <nav x-data="{ open: false }" class="bg-white border-b border-gray-100 sticky top-0 z-30">
-    <!-- Primary Navigation Menu -->
+    
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
                 
-                <!-- [CAMBIO] Hamburger (Para Admin en móvil) -->
-                <!-- Comprueba si el usuario tiene rol de Admin/Gestión -->
-                @if(Auth::user()->hasAnyRole(['Administrador', 'Secretario Academico', 'Coordinador', 'Tesoreria']))
+                <!-- Hamburger (Para usuarios con acceso administrativo en móvil) -->
+                @if(Auth::user()->hasAdminAccess())
                     <div class="-me-2 flex items-center sm:hidden">
                         <button @click="sidebarOpen = ! sidebarOpen" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
                             <svg class="size-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
@@ -17,9 +16,8 @@
                     </div>
                 @endif
                 
-                <!-- [CAMBIO] Logo (Para Docentes y Estudiantes que NO tienen sidebar) -->
-                <!-- Comprueba si el usuario NO tiene un rol de Admin/Gestión -->
-                @if(!Auth::user()->hasAnyRole(['Administrador', 'Secretario Academico', 'Coordinador', 'Tesoreria']))
+                <!-- Logo (Para usuarios SIN acceso administrativo) -->
+                @if(!Auth::user()->hasAdminAccess())
                     <div class="shrink-0 flex items-center">
                         <a href="{{ route('dashboard') }}">
                             <x-application-mark class="block h-9 w-auto" />
@@ -27,78 +25,96 @@
                     </div>
                 @endif
 
-
-                <!-- [CAMBIO] Navigation Links (Lógica de Roles) -->
+                <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     
-                    @role('Administrador|Secretario Academico|Coordinador|Tesoreria')
-                        <!-- Vista de Admin: Solo Dashboard, el resto está en el Sidebar -->
+                    {{-- Vista de Usuarios Administrativos/Staff --}}
+                    @if(Auth::user()->hasAdminAccess())
                         <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                             {{ __('Dashboard') }}
                         </x-nav-link>
-                    @endrole
+                    @endif
                     
-                    @role('Docente|Coordinador')
-                        <!-- Vista de Docente -->
+                    {{-- Vista de Docentes --}}
+                    @if(Auth::user()->isTeacher())
                         <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                             {{ __('Dashboard') }}
                         </x-nav-link>
                         
-                        <!-- Enlace de Sílabos que faltaba -->
-                        <x-nav-link href="{{ route('teacher.my-syllabi') }}" :active="request()->routeIs('teacher.my-syllabi')">
-                            {{ __('Mis Sílabos') }}
-                        </x-nav-link>
+                        @can('subir-silabo')
+                            <x-nav-link href="{{ route('teacher.my-syllabi') }}" :active="request()->routeIs('teacher.my-syllabi')">
+                                {{ __('Mis Sílabos') }}
+                            </x-nav-link>
+                        @endcan
                         
-                        <x-nav-link href="{{ route('evaluation.grades') }}" :active="request()->routeIs('evaluation.grades')">
-                            {{ __('Registro de Notas') }}
-                        </x-nav-link>
-                        <x-nav-link href="{{ route('evaluation.attendances') }}" :active="request()->routeIs('evaluation.attendances')">
-                            {{ __('Registro de Asistencia') }}
-                        </x-nav-link>
-                        <x-nav-link href="{{ route('teacher.activities') }}" :active="request()->routeIs('teacher.activities')">
-                            {{ __('Actividades') }}
-                        </x-nav-link>
-                        <x-nav-link href="{{ route('teacher.submissions') }}" :active="request()->routeIs('teacher.submissions')">
-                            {{ __('Revisar Entregas') }}
-                        </x-nav-link>
+                        @can('registrar-notas')
+                            <x-nav-link href="{{ route('evaluation.grades') }}" :active="request()->routeIs('evaluation.grades')">
+                                {{ __('Registro de Notas') }}
+                            </x-nav-link>
+                        @endcan
+                        
+                        @can('registrar-asistencia')
+                            <x-nav-link href="{{ route('evaluation.attendances') }}" :active="request()->routeIs('evaluation.attendances')">
+                                {{ __('Registro de Asistencia') }}
+                            </x-nav-link>
+                        @endcan
+                        
+                        @can('gestionar-actividades')
+                            <x-nav-link href="{{ route('teacher.activities') }}" :active="request()->routeIs('teacher.activities')">
+                                {{ __('Actividades') }}
+                            </x-nav-link>
+                        @endcan
+                        
+                        @can('revisar-entregas')
+                            <x-nav-link href="{{ route('teacher.submissions') }}" :active="request()->routeIs('teacher.submissions')">
+                                {{ __('Revisar Entregas') }}
+                            </x-nav-link>
+                        @endcan
 
-                        <x-nav-link href="{{ route('teacher.attendance-report') }}" :active="request()->routeIs('teacher.attendance-report')">
-                            {{ __('Reporte Asistencia') }}
-                        </x-nav-link>
-                        <x-nav-link href="{{ route('teacher.cumulative-attendance-report') }}" :active="request()->routeIs('cumulative-attendance-report')">
-                            {{ __('Asistencia Acumulada') }}
-                        </x-nav-link>
+                        @can('ver-reporte-asistencia')
+                            <x-nav-link href="{{ route('teacher.attendance-report') }}" :active="request()->routeIs('teacher.attendance-report')">
+                                {{ __('Reporte Asistencia') }}
+                            </x-nav-link>
+                        @endcan
+                        
+                        @can('ver-reporte-acumulativo-asistencia')
+                            <x-nav-link href="{{ route('teacher.cumulative-attendance-report') }}" :active="request()->routeIs('teacher.cumulative-attendance-report')">
+                                {{ __('Asistencia Acumulada') }}
+                            </x-nav-link>
+                        @endcan
+                    @endif
 
-                    @endrole
-
-                    @role('Estudiante')
-                        <!-- Vista de Estudiante -->
+                    {{-- Vista de Estudiantes --}}
+                    @if(Auth::user()->isStudent())
                         <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                             {{ __('Inicio') }}
                         </x-nav-link>
-                        <x-nav-link href="{{ route('enrollment.process') }}" :active="request()->routeIs('enrollment.process')">
-                            {{ __('Proceso de Matrícula') }}
-                        </x-nav-link>
-                        <x-nav-link href="{{ route('student.my-activities') }}" :active="request()->routeIs('student.my-activities')">
-                            {{ __('Mis Actividades') }}
-                        </x-nav-link>
-                        <x-nav-link href="{{ route('student.my-attendances') }}" :active="request()->routeIs('student.my-attendances')">
-                        {{ __('Mis Asistencias') }}
-                    </x-nav-link>
-                    @endrole
+                        
+                        @can('matricularse')
+                            <x-nav-link href="{{ route('enrollment.process') }}" :active="request()->routeIs('enrollment.process')">
+                                {{ __('Proceso de Matrícula') }}
+                            </x-nav-link>
+                        @endcan
+                        
+                        @can('entregar-actividades')
+                            <x-nav-link href="{{ route('student.my-activities') }}" :active="request()->routeIs('student.my-activities')">
+                                {{ __('Mis Actividades') }}
+                            </x-nav-link>
+                        @endcan
+                        
+                        @can('ver-mis-asistencias')
+                            <x-nav-link href="{{ route('student.my-attendances') }}" :active="request()->routeIs('student.my-attendances')">
+                                {{ __('Mis Asistencias') }}
+                            </x-nav-link>
+                        @endcan
+                    @endif
 
                 </div>
-                <!-- [FIN DE CAMBIOS] -->
 
             </div>
 
             <div class="hidden sm:flex sm:items-center sm:ms-6">
-                <!-- Teams Dropdown (Lo dejamos como estaba) -->
-                @if (Laravel\Jetstream\Jetstream::hasTeamFeatures())
-                    <!-- ... (código de teams) ... -->
-                @endif
-
-                <!-- Settings Dropdown (Perfil de Usuario - sin cambios) -->
+                <!-- Settings Dropdown -->
                 <div class="ms-3 relative">
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
@@ -133,9 +149,8 @@
                 </div>
             </div>
 
-            <!-- [CAMBIO] Hamburger (Para Docente/Estudiante en móvil) -->
-            <!-- Comprueba si el usuario NO tiene un rol de Admin/Gestión -->
-            @if(!Auth::user()->hasAnyRole(['Administrador', 'Secretario Academico', 'Coordinador', 'Tesoreria']))
+            <!-- Hamburger (Para docentes/estudiantes en móvil) -->
+            @if(!Auth::user()->hasAdminAccess())
                 <div class="-me-2 flex items-center sm:hidden">
                     <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
                         <svg class="size-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
@@ -151,60 +166,91 @@
 
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
-        
-        <!-- [CAMBIO] Lógica de Roles para Menú Responsivo -->
         <div class="pt-2 pb-3 space-y-1">
-            @role('Administrador|Secretario Academico|Coordinador|Tesoreria')
+            
+            {{-- Menú Responsive para Administradores --}}
+            @if(Auth::user()->hasAdminAccess())
                 <x-responsive-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                     {{ __('Dashboard') }}
                 </x-responsive-nav-link>
-            @endrole
+            @endif
 
-            @role('Docente|Coordinador')
+            {{-- Menú Responsive para Docentes --}}
+            @if(Auth::user()->isTeacher())
                 <x-responsive-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                     {{ __('Dashboard') }}
                 </x-responsive-nav-link>
-                <!-- Corregido a responsive-nav-link -->
-                <x-responsive-nav-link href="{{ route('teacher.my-syllabi') }}" :active="request()->routeIs('teacher.my-syllabi')">
-                    {{ __('Mis Sílabos') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link href="{{ route('evaluation.grades') }}" :active="request()->routeIs('evaluation.grades')">
-                    {{ __('Registro de Notas') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link href="{{ route('evaluation.attendances') }}" :active="request()->routeIs('evaluation.attendances')">
-                    {{ __('Registro de Asistencia') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link href="{{ route('teacher.activities') }}" :active="request()->routeIs('teacher.activities')">
+                
+                @can('subir-silabo')
+                    <x-responsive-nav-link href="{{ route('teacher.my-syllabi') }}" :active="request()->routeIs('teacher.my-syllabi')">
+                        {{ __('Mis Sílabos') }}
+                    </x-responsive-nav-link>
+                @endcan
+                
+                @can('registrar-notas')
+                    <x-responsive-nav-link href="{{ route('evaluation.grades') }}" :active="request()->routeIs('evaluation.grades')">
+                        {{ __('Registro de Notas') }}
+                    </x-responsive-nav-link>
+                @endcan
+                
+                @can('registrar-asistencia')
+                    <x-responsive-nav-link href="{{ route('evaluation.attendances') }}" :active="request()->routeIs('evaluation.attendances')">
+                        {{ __('Registro de Asistencia') }}
+                    </x-responsive-nav-link>
+                @endcan
+                
+                @can('gestionar-actividades')
+                    <x-responsive-nav-link href="{{ route('teacher.activities') }}" :active="request()->routeIs('teacher.activities')">
                         {{ __('Actividades') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link href="{{ route('teacher.submissions') }}" :active="request()->routeIs('teacher.submissions')">
-                    {{ __('Revisar Entregas') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link href="{{ route('teacher.attendance-report') }}" :active="request()->routeIs('teacher.attendance-report')">
-                    {{ __('Reporte Asistencia') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link href="{{ route('teacher.cumulative-attendance-report') }}" :active="request()->routeIs('cumulative-attendance-report')">
-                    {{ __('Asistencia Acumulada') }}
-                </x-responsive-nav-link>
-            @endrole
+                    </x-responsive-nav-link>
+                @endcan
+                
+                @can('revisar-entregas')
+                    <x-responsive-nav-link href="{{ route('teacher.submissions') }}" :active="request()->routeIs('teacher.submissions')">
+                        {{ __('Revisar Entregas') }}
+                    </x-responsive-nav-link>
+                @endcan
+                
+                @can('ver-reporte-asistencia')
+                    <x-responsive-nav-link href="{{ route('teacher.attendance-report') }}" :active="request()->routeIs('teacher.attendance-report')">
+                        {{ __('Reporte Asistencia') }}
+                    </x-responsive-nav-link>
+                @endcan
+                
+                @can('ver-reporte-acumulativo-asistencia')
+                    <x-responsive-nav-link href="{{ route('teacher.cumulative-attendance-report') }}" :active="request()->routeIs('teacher.cumulative-attendance-report')">
+                        {{ __('Asistencia Acumulada') }}
+                    </x-responsive-nav-link>
+                @endcan
+            @endif
 
-            @role('Estudiante')
+            {{-- Menú Responsive para Estudiantes --}}
+            @if(Auth::user()->isStudent())
                 <x-responsive-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                     {{ __('Inicio') }}
                 </x-responsive-nav-link>
-                <x-responsive-nav-link href="{{ route('enrollment.process') }}" :active="request()->routeIs('enrollment.process')">
-                    {{ __('Proceso de Matrícula') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link href="{{ route('student.my-activities') }}" :active="request()->routeIs('student.my-activities')">
+                
+                @can('matricularse')
+                    <x-responsive-nav-link href="{{ route('enrollment.process') }}" :active="request()->routeIs('enrollment.process')">
+                        {{ __('Proceso de Matrícula') }}
+                    </x-responsive-nav-link>
+                @endcan
+                
+                @can('entregar-actividades')
+                    <x-responsive-nav-link href="{{ route('student.my-activities') }}" :active="request()->routeIs('student.my-activities')">
                         {{ __('Mis Actividades') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link href="{{ route('student.my-attendances') }}" :active="request()->routeIs('student.my-attendances')">
-                    {{ __('Mis Asistencias') }}
-                </x-responsive-nav-link>
-            @endrole
+                    </x-responsive-nav-link>
+                @endcan
+                
+                @can('ver-mis-asistencias')
+                    <x-responsive-nav-link href="{{ route('student.my-attendances') }}" :active="request()->routeIs('student.my-attendances')">
+                        {{ __('Mis Asistencias') }}
+                    </x-responsive-nav-link>
+                @endcan
+            @endif
         </div>
 
-        <!-- Responsive Settings Options (sin cambios) -->
+        <!-- Responsive Settings Options -->
         <div class="pt-4 pb-1 border-t border-gray-200">
             <div class="flex items-center px-4">
                 @if (Laravel\Jetstream\Jetstream::managesProfilePhotos())
@@ -226,9 +272,6 @@
                     @csrf
                     <x-responsive-nav-link href="{{ route('logout') }}" @click.prevent="$root.submit();">{{ __('Log Out') }}</x-responsive-nav-link>
                 </form>
-                @if (Laravel\Jetstream\Jetstream::hasTeamFeatures())
-                    <!-- ... (código de Teams sin cambios) ... -->
-                @endif
             </div>
         </div>
     </div>
