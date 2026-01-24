@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 28-11-2025 a las 18:14:52
+-- Tiempo de generación: 29-11-2025 a las 23:03:19
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -297,17 +297,9 @@ CREATE TABLE `cache` (
 --
 
 INSERT INTO `cache` (`key`, `value`, `expiration`) VALUES
-('laravel-cache-356a192b7913b04c54574d18c28d46e6395428ab', 'i:1;', 1764348991),
-('laravel-cache-356a192b7913b04c54574d18c28d46e6395428ab:timer', 'i:1764348991;', 1764348991),
-('laravel-cache-60e91c3a8dd294864aefe34dc2acddff', 'i:1;', 1764348866),
-('laravel-cache-60e91c3a8dd294864aefe34dc2acddff:timer', 'i:1764348865;', 1764348865),
-('laravel-cache-a6cf3449fbccdc26d9aeadb6f26b8c25', 'i:1;', 1764170231),
-('laravel-cache-a6cf3449fbccdc26d9aeadb6f26b8c25:timer', 'i:1764170231;', 1764170231),
-('laravel-cache-d9668a26c0eef2c1f5c9ab3f5bad64b3', 'i:1;', 1764176245),
-('laravel-cache-d9668a26c0eef2c1f5c9ab3f5bad64b3:timer', 'i:1764176245;', 1764176245),
-('laravel-cache-e0dffe7ac8afeb45dc508705973d050f', 'i:1;', 1764349428),
-('laravel-cache-e0dffe7ac8afeb45dc508705973d050f:timer', 'i:1764349428;', 1764349428),
-('laravel-cache-spatie.permission.cache', 'a:3:{s:5:\"alias\";a:4:{s:1:\"a\";s:2:\"id\";s:1:\"b\";s:4:\"name\";s:1:\"c\";s:10:\"guard_name\";s:1:\"r\";s:5:\"roles\";}s:11:\"permissions\";a:32:{i:0;a:4:{s:1:\"a\";i:1;s:1:\"b\";s:21:\"gestionar-institucion\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:7;}}i:1;a:4:{s:1:\"a\";i:2;s:1:\"b\";s:23:\"gestionar-configuracion\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:7;}}i:2;a:4:{s:1:\"a\";i:3;s:1:\"b\";s:30:\"gestionar-estructura-academica\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:7;}}i:3;a:4:{s:1:\"a\";i:4;s:1:\"b\";s:24:\"gestionar-prerrequisitos\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:3;i:1;i:7;}}i:4;a:4:{s:1:\"a\";i:5;s:1:\"b\";s:18:\"gestionar-docentes\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:7;}}i:5;a:4:{s:1:\"a\";i:6;s:1:\"b\";s:21:\"gestionar-estudiantes\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:4;i:1;i:7;}}i:6;a:4:{s:1:\"a\";i:7;s:1:\"b\";s:18:\"gestionar-periodos\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:4;i:1;i:7;}}i:7;a:4:{s:1:\"a\";i:8;s:1:\"b\";s:25:\"gestionar-carga-academica\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:4;i:1;i:7;}}i:8;a:4:{s:1:\"a\";i:9;s:1:\"b\";s:18:\"gestionar-horarios\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:3;i:1;i:7;}}i:9;a:4:{s:1:\"a\";i:10;s:1:\"b\";s:15:\"aprobar-silabos\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:3;i:1;i:7;}}i:10;a:4:{s:1:\"a\";i:11;s:1:\"b\";s:15:\"registrar-notas\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:2;i:1;i:3;i:2;i:7;}}i:11;a:4:{s:1:\"a\";i:12;s:1:\"b\";s:20:\"registrar-asistencia\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:2;i:1;i:3;i:2;i:7;}}i:12;a:4:{s:1:\"a\";i:13;s:1:\"b\";s:12:\"subir-silabo\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:2;i:1;i:3;i:2;i:7;}}i:13;a:4:{s:1:\"a\";i:14;s:1:\"b\";s:12:\"matricularse\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:7;}}i:14;a:4:{s:1:\"a\";i:15;s:1:\"b\";s:20:\"entregar-actividades\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:7;}}i:15;a:4:{s:1:\"a\";i:16;s:1:\"b\";s:19:\"ver-mis-asistencias\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:7;}}i:16;a:4:{s:1:\"a\";i:17;s:1:\"b\";s:15:\"registrar-pagos\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:5;i:1;i:7;}}i:17;a:4:{s:1:\"a\";i:18;s:1:\"b\";s:23:\"gestionar-certificacion\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:4;i:1;i:7;}}i:18;a:4:{s:1:\"a\";i:19;s:1:\"b\";s:20:\"gestionar-biblioteca\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:7;}}i:19;a:4:{s:1:\"a\";i:20;s:1:\"b\";s:19:\"registrar-prestamos\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:7;}}i:20;a:4:{s:1:\"a\";i:21;s:1:\"b\";s:18:\"gestionar-admision\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:4;i:1;i:7;}}i:21;a:4:{s:1:\"a\";i:22;s:1:\"b\";s:18:\"gestionar-anuncios\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:4;i:1;i:7;}}i:22;a:4:{s:1:\"a\";i:23;s:1:\"b\";s:24:\"gestionar-cuadro-meritos\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:4;i:1;i:7;}}i:23;a:4:{s:1:\"a\";i:24;s:1:\"b\";s:16:\"revisar-entregas\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:2;i:1;i:3;i:2;i:7;}}i:24;a:4:{s:1:\"a\";i:25;s:1:\"b\";s:22:\"ver-reporte-asistencia\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:2;i:1;i:3;i:2;i:7;}}i:25;a:4:{s:1:\"a\";i:26;s:1:\"b\";s:20:\"descargar-acta-final\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:2;i:1;i:3;i:2;i:7;}}i:26;a:4:{s:1:\"a\";i:27;s:1:\"b\";s:34:\"ver-reporte-acumulativo-asistencia\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:2;i:1;i:3;i:2;i:7;}}i:27;a:4:{s:1:\"a\";i:28;s:1:\"b\";s:23:\"gestionar-sesiones-caja\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:5;i:1;i:7;}}i:28;a:4:{s:1:\"a\";i:29;s:1:\"b\";s:22:\"gestionar-correlativos\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:7;}}i:29;a:4:{s:1:\"a\";i:30;s:1:\"b\";s:19:\"anular-comprobantes\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:7;}}i:30;a:4:{s:1:\"a\";i:31;s:1:\"b\";s:18:\"registrar-tramites\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:5;i:1;i:7;}}i:31;a:4:{s:1:\"a\";i:32;s:1:\"b\";s:21:\"gestionar-actividades\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:2;i:1;i:3;i:2;i:7;}}}s:5:\"roles\";a:6:{i:0;a:3:{s:1:\"a\";i:7;s:1:\"b\";s:13:\"Administrador\";s:1:\"c\";s:3:\"web\";}i:1;a:3:{s:1:\"a\";i:3;s:1:\"b\";s:11:\"Coordinador\";s:1:\"c\";s:3:\"web\";}i:2;a:3:{s:1:\"a\";i:4;s:1:\"b\";s:20:\"Secretario Academico\";s:1:\"c\";s:3:\"web\";}i:3;a:3:{s:1:\"a\";i:2;s:1:\"b\";s:7:\"Docente\";s:1:\"c\";s:3:\"web\";}i:4;a:3:{s:1:\"a\";i:1;s:1:\"b\";s:10:\"Estudiante\";s:1:\"c\";s:3:\"web\";}i:5;a:3:{s:1:\"a\";i:5;s:1:\"b\";s:9:\"Tesoreria\";s:1:\"c\";s:3:\"web\";}}}', 1764435210);
+('laravel-cache-bae7cfd54a80a4f1eb1317cc11a2ebe7', 'i:1;', 1764450717),
+('laravel-cache-bae7cfd54a80a4f1eb1317cc11a2ebe7:timer', 'i:1764450717;', 1764450717),
+('laravel-cache-spatie.permission.cache', 'a:3:{s:5:\"alias\";a:4:{s:1:\"a\";s:2:\"id\";s:1:\"b\";s:4:\"name\";s:1:\"c\";s:10:\"guard_name\";s:1:\"r\";s:5:\"roles\";}s:11:\"permissions\";a:37:{i:0;a:4:{s:1:\"a\";i:1;s:1:\"b\";s:21:\"gestionar-institucion\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:7;}}i:1;a:4:{s:1:\"a\";i:2;s:1:\"b\";s:23:\"gestionar-configuracion\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:7;}}i:2;a:4:{s:1:\"a\";i:3;s:1:\"b\";s:30:\"gestionar-estructura-academica\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:7;}}i:3;a:4:{s:1:\"a\";i:4;s:1:\"b\";s:24:\"gestionar-prerrequisitos\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:3;i:1;i:7;}}i:4;a:4:{s:1:\"a\";i:5;s:1:\"b\";s:18:\"gestionar-docentes\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:7;i:1;i:8;}}i:5;a:4:{s:1:\"a\";i:6;s:1:\"b\";s:21:\"gestionar-estudiantes\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:4;i:1;i:7;}}i:6;a:4:{s:1:\"a\";i:7;s:1:\"b\";s:18:\"gestionar-periodos\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:4;i:1;i:7;}}i:7;a:4:{s:1:\"a\";i:8;s:1:\"b\";s:25:\"gestionar-carga-academica\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:4;i:1;i:7;i:2;i:8;}}i:8;a:4:{s:1:\"a\";i:9;s:1:\"b\";s:18:\"gestionar-horarios\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:3;i:1;i:7;i:2;i:8;}}i:9;a:4:{s:1:\"a\";i:10;s:1:\"b\";s:15:\"aprobar-silabos\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:3;i:1;i:7;}}i:10;a:4:{s:1:\"a\";i:11;s:1:\"b\";s:15:\"registrar-notas\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:2;i:1;i:3;i:2;i:7;}}i:11;a:4:{s:1:\"a\";i:12;s:1:\"b\";s:20:\"registrar-asistencia\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:2;i:1;i:3;i:2;i:7;}}i:12;a:4:{s:1:\"a\";i:13;s:1:\"b\";s:12:\"subir-silabo\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:2;i:1;i:3;i:2;i:7;}}i:13;a:4:{s:1:\"a\";i:14;s:1:\"b\";s:12:\"matricularse\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:7;}}i:14;a:4:{s:1:\"a\";i:15;s:1:\"b\";s:20:\"entregar-actividades\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:7;}}i:15;a:4:{s:1:\"a\";i:16;s:1:\"b\";s:19:\"ver-mis-asistencias\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:7;}}i:16;a:4:{s:1:\"a\";i:17;s:1:\"b\";s:15:\"registrar-pagos\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:5;i:1;i:7;}}i:17;a:4:{s:1:\"a\";i:18;s:1:\"b\";s:23:\"gestionar-certificacion\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:4;i:1;i:7;}}i:18;a:4:{s:1:\"a\";i:19;s:1:\"b\";s:20:\"gestionar-biblioteca\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:7;}}i:19;a:4:{s:1:\"a\";i:20;s:1:\"b\";s:19:\"registrar-prestamos\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:7;}}i:20;a:4:{s:1:\"a\";i:21;s:1:\"b\";s:18:\"gestionar-admision\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:4;i:1;i:7;}}i:21;a:4:{s:1:\"a\";i:22;s:1:\"b\";s:18:\"gestionar-anuncios\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:4;i:1;i:7;i:2;i:8;}}i:22;a:4:{s:1:\"a\";i:23;s:1:\"b\";s:24:\"gestionar-cuadro-meritos\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:4;i:1;i:7;}}i:23;a:4:{s:1:\"a\";i:24;s:1:\"b\";s:16:\"revisar-entregas\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:2;i:1;i:3;i:2;i:7;}}i:24;a:4:{s:1:\"a\";i:25;s:1:\"b\";s:22:\"ver-reporte-asistencia\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:2;i:1;i:3;i:2;i:7;i:3;i:8;}}i:25;a:4:{s:1:\"a\";i:26;s:1:\"b\";s:20:\"descargar-acta-final\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:2;i:1;i:3;i:2;i:7;}}i:26;a:4:{s:1:\"a\";i:27;s:1:\"b\";s:34:\"ver-reporte-acumulativo-asistencia\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:2;i:1;i:3;i:2;i:7;i:3;i:8;}}i:27;a:4:{s:1:\"a\";i:28;s:1:\"b\";s:23:\"gestionar-sesiones-caja\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:5;i:1;i:7;}}i:28;a:4:{s:1:\"a\";i:29;s:1:\"b\";s:22:\"gestionar-correlativos\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:7;}}i:29;a:4:{s:1:\"a\";i:30;s:1:\"b\";s:19:\"anular-comprobantes\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:7;}}i:30;a:4:{s:1:\"a\";i:31;s:1:\"b\";s:18:\"registrar-tramites\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:5;i:1;i:7;}}i:31;a:4:{s:1:\"a\";i:32;s:1:\"b\";s:21:\"gestionar-actividades\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:2;i:1;i:3;i:2;i:7;i:3;i:8;}}i:32;a:4:{s:1:\"a\";i:33;s:1:\"b\";s:28:\"gestionar-reservas-matricula\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:4;i:1;i:7;}}i:33;a:4:{s:1:\"a\";i:34;s:1:\"b\";s:27:\"gestionar-reincorporaciones\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:4;i:1;i:7;}}i:34;a:4:{s:1:\"a\";i:35;s:1:\"b\";s:27:\"gestionar-matricula-regular\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:4;i:1;i:7;}}i:35;a:4:{s:1:\"a\";i:36;s:1:\"b\";s:15:\"gestionar-roles\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:7;}}i:36;a:4:{s:1:\"a\";i:37;s:1:\"b\";s:18:\"gestionar-usuarios\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:7;}}}s:5:\"roles\";a:7:{i:0;a:3:{s:1:\"a\";i:7;s:1:\"b\";s:13:\"Administrador\";s:1:\"c\";s:3:\"web\";}i:1;a:3:{s:1:\"a\";i:3;s:1:\"b\";s:11:\"Coordinador\";s:1:\"c\";s:3:\"web\";}i:2;a:3:{s:1:\"a\";i:8;s:1:\"b\";s:13:\"Asistente JUA\";s:1:\"c\";s:3:\"web\";}i:3;a:3:{s:1:\"a\";i:4;s:1:\"b\";s:20:\"Secretario Academico\";s:1:\"c\";s:3:\"web\";}i:4;a:3:{s:1:\"a\";i:2;s:1:\"b\";s:7:\"Docente\";s:1:\"c\";s:3:\"web\";}i:5;a:3:{s:1:\"a\";i:1;s:1:\"b\";s:10:\"Estudiante\";s:1:\"c\";s:3:\"web\";}i:6;a:3:{s:1:\"a\";i:5;s:1:\"b\";s:9:\"Tesoreria\";s:1:\"c\";s:3:\"web\";}}}', 1764535834);
 
 -- --------------------------------------------------------
 
@@ -528,7 +520,7 @@ CREATE TABLE `enrollments` (
 --
 
 INSERT INTO `enrollments` (`id`, `student_id`, `academic_period_id`, `enrollment_date`, `semester_enrolled`, `enrollment_type`, `amount_paid`, `payment_status`, `status`, `notes`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(2, 5, 1, '2025-11-26 18:44:19', 1, 'first_time', 120.00, 'paid', 'active', 'Matrícula automática (Ingresante). Voucher: R25-4', '2025-11-26 21:55:28', '2025-11-26 21:55:28', NULL),
+(2, 5, 1, '2025-11-29 02:40:30', 1, 'reincorporation', 120.00, 'paid', 'active', 'Reincorporación. Voucher: R25-6. ', '2025-11-26 21:55:28', '2025-11-29 02:40:30', NULL),
 (3, 6, 1, '2025-11-26 18:44:19', 1, 'first_time', 120.00, 'paid', 'active', 'Matrícula automática (Ingresante). Voucher: R25-5', '2025-11-28 22:01:12', '2025-11-28 22:01:12', NULL);
 
 -- --------------------------------------------------------
@@ -540,6 +532,8 @@ INSERT INTO `enrollments` (`id`, `student_id`, `academic_period_id`, `enrollment
 CREATE TABLE `enrollment_reserves` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `student_id` bigint(20) UNSIGNED NOT NULL,
+  `academic_period_id` bigint(20) UNSIGNED NOT NULL,
+  `resolution_code` varchar(50) NOT NULL,
   `reason` text NOT NULL,
   `start_date` date NOT NULL,
   `end_date` date NOT NULL,
@@ -548,6 +542,13 @@ CREATE TABLE `enrollment_reserves` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `enrollment_reserves`
+--
+
+INSERT INTO `enrollment_reserves` (`id`, `student_id`, `academic_period_id`, `resolution_code`, `reason`, `start_date`, `end_date`, `supporting_document_url`, `status`, `created_at`, `updated_at`) VALUES
+(1, 5, 1, 'RD 1245', 'dffhserhshfths', '2025-11-28', '2025-12-31', NULL, 'expired', '2025-11-29 01:34:38', '2025-11-29 02:40:30');
 
 -- --------------------------------------------------------
 
@@ -2812,7 +2813,8 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (56, '2025_11_22_211038_create_admission_offerings_table', 1),
 (57, '2025_11_22_211042_update_users_table_add_surnames', 1),
 (58, '2025_11_22_214345_create_applicants_table', 1),
-(59, '2025_11_26_135009_add_details_to_students_table', 2);
+(59, '2025_11_26_135009_add_details_to_students_table', 2),
+(60, '2025_11_28_201012_add_resolution_code_to_enrollment_reserves_table', 3);
 
 -- --------------------------------------------------------
 
@@ -2856,7 +2858,9 @@ INSERT INTO `model_has_roles` (`role_id`, `model_type`, `model_id`) VALUES
 (2, 'App\\Models\\User', 9),
 (2, 'App\\Models\\User', 10),
 (2, 'App\\Models\\User', 11),
-(7, 'App\\Models\\User', 1);
+(5, 'App\\Models\\User', 18),
+(7, 'App\\Models\\User', 1),
+(8, 'App\\Models\\User', 65);
 
 -- --------------------------------------------------------
 
@@ -6507,7 +6511,12 @@ INSERT INTO `permissions` (`id`, `name`, `guard_name`, `created_at`, `updated_at
 (29, 'gestionar-correlativos', 'web', '2025-11-26 18:45:40', '2025-11-26 18:45:40'),
 (30, 'anular-comprobantes', 'web', '2025-11-26 18:45:40', '2025-11-26 18:45:40'),
 (31, 'registrar-tramites', 'web', '2025-11-26 18:45:40', '2025-11-26 18:45:40'),
-(32, 'gestionar-actividades', 'web', '2025-11-26 18:45:40', '2025-11-26 18:45:40');
+(32, 'gestionar-actividades', 'web', '2025-11-26 18:45:40', '2025-11-26 18:45:40'),
+(33, 'gestionar-reservas-matricula', 'web', '2025-11-29 01:33:02', '2025-11-29 01:33:02'),
+(34, 'gestionar-reincorporaciones', 'web', '2025-11-29 01:58:27', '2025-11-29 01:58:27'),
+(35, 'gestionar-matricula-regular', 'web', '2025-11-29 03:38:47', '2025-11-29 03:38:47'),
+(36, 'gestionar-roles', 'web', '2025-11-29 21:16:18', '2025-11-29 21:16:18'),
+(37, 'gestionar-usuarios', 'web', '2025-11-30 00:24:10', '2025-11-30 00:24:10');
 
 -- --------------------------------------------------------
 
@@ -6586,7 +6595,8 @@ INSERT INTO `roles` (`id`, `name`, `guard_name`, `created_at`, `updated_at`) VAL
 (4, 'Secretario Academico', 'web', '2025-11-26 18:45:40', '2025-11-26 18:45:40'),
 (5, 'Tesoreria', 'web', '2025-11-26 18:45:40', '2025-11-26 18:45:40'),
 (6, 'Externo', 'web', '2025-11-26 18:45:41', '2025-11-26 18:45:41'),
-(7, 'Administrador', 'web', '2025-11-26 18:45:41', '2025-11-26 18:45:41');
+(7, 'Administrador', 'web', '2025-11-26 18:45:41', '2025-11-26 18:45:41'),
+(8, 'Asistente JUA', 'web', '2025-11-29 21:21:48', '2025-11-29 21:21:48');
 
 -- --------------------------------------------------------
 
@@ -6610,14 +6620,17 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (4, 3),
 (4, 7),
 (5, 7),
+(5, 8),
 (6, 4),
 (6, 7),
 (7, 4),
 (7, 7),
 (8, 4),
 (8, 7),
+(8, 8),
 (9, 3),
 (9, 7),
+(9, 8),
 (10, 3),
 (10, 7),
 (11, 2),
@@ -6645,6 +6658,7 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (21, 7),
 (22, 4),
 (22, 7),
+(22, 8),
 (23, 4),
 (23, 7),
 (24, 2),
@@ -6653,12 +6667,14 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (25, 2),
 (25, 3),
 (25, 7),
+(25, 8),
 (26, 2),
 (26, 3),
 (26, 7),
 (27, 2),
 (27, 3),
 (27, 7),
+(27, 8),
 (28, 5),
 (28, 7),
 (29, 7),
@@ -6667,7 +6683,16 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (31, 7),
 (32, 2),
 (32, 3),
-(32, 7);
+(32, 7),
+(32, 8),
+(33, 4),
+(33, 7),
+(34, 4),
+(34, 7),
+(35, 4),
+(35, 7),
+(36, 7),
+(37, 7);
 
 -- --------------------------------------------------------
 
@@ -6706,10 +6731,10 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('5EkkjlnJheFNj2BGDhgR9CiASY2GU84C1LJa4PB8', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiYWtmNVdmYzFhcHNVcElrYUNqdnhIbWc5aGRYbU9QWmR5dHo4bGVDcCI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MTg6Imh0dHA6Ly9lZHVjb24udGVzdCI7czo1OiJyb3V0ZSI7Tjt9fQ==', 1764349395),
-('9fQDTLEDVBJH6x9ErZGSiv97au8BOGmqK6E2YwyZ', 63, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiVFRVRHpINmdwbE9zck1JSzlZSkNVcjJIM2RXbkNYTlRvb3FlQ0NiRCI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6Mzc6Imh0dHA6Ly9lZHVjb24udGVzdC9lbnJvbGxtZW50L3Byb2Nlc3MiO3M6NToicm91dGUiO3M6MTg6ImVucm9sbG1lbnQucHJvY2VzcyI7fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjYzO3M6MjE6InBhc3N3b3JkX2hhc2hfc2FuY3R1bSI7czo2MDoiJDJ5JDEyJEg1MGJMQkk0Y0VqbmRaUXZoS044US5pbjhta29WaGVCdUJEakwzdmhNM085b3pXT1lSaEdXIjt9', 1764176197),
-('9YRNCEwAaME48fFBuP1TjiNaxh6vwg9FPI5BuI3k', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiS3dTekVtaHlROEx0WGhQcXBveVVNSE05OXIzTmhySlpWVWpMU1BpYyI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6NTI6Imh0dHA6Ly9lZHVjb24udGVzdC9wZW9wbGUvc3R1ZGVudHMvNS9lbnJvbGxtZW50LWZvcm0iO3M6NToicm91dGUiO3M6MzE6InBlb3BsZS5zdHVkZW50cy5lbnJvbGxtZW50LWZvcm0iO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO3M6MjE6InBhc3N3b3JkX2hhc2hfc2FuY3R1bSI7czo2MDoiJDJ5JDEyJG5TWC45MHJQblJZbTFucjFCSVhvOS5GYVEwWm05Y0xJcTd2MzI5Q1VIOGVyRUNMZ2lQeE8uIjt9', 1764176136),
-('mzgEqXzAt0WY1QFj3PkIRZquF54VDntQSMv9lEJ2', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiSlU0WEsyRWhyZDJMSnBTRUs2dUZuV1g2aWZCS1ZTNjB5V1V0Qjg4MSI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6NTI6Imh0dHA6Ly9lZHVjb24udGVzdC9wZW9wbGUvc3R1ZGVudHMvNi9lbnJvbGxtZW50LWZvcm0iO3M6NToicm91dGUiO3M6MzE6InBlb3BsZS5zdHVkZW50cy5lbnJvbGxtZW50LWZvcm0iO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO3M6MjE6InBhc3N3b3JkX2hhc2hfc2FuY3R1bSI7czo2MDoiJDJ5JDEyJG5TWC45MHJQblJZbTFucjFCSVhvOS5GYVEwWm05Y0xJcTd2MzI5Q1VIOGVyRUNMZ2lQeE8uIjt9', 1764349290);
+('EhSIic2fcbQioO71tNiDLNSFXPlJhaGwdqNfmEPY', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiUURTOWdON05lMEMyQ3dndzRMS2MxczluWWwxNjlaNWxtTkpPR2NsSCI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MTg6Imh0dHA6Ly9lZHVjb24udGVzdCI7czo1OiJyb3V0ZSI7Tjt9fQ==', 1764450601),
+('fAYDeIpgFr345oW0aPZim57Bds3ehmt4EYhGGkex', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiM2N5clZabFV6SWtEWmxSZlBCQWJWT1ZBdUV3NTgxVVVYdW9qWHhKQSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjQ6Imh0dHA6Ly9lZHVjb24udGVzdC9sb2dpbiI7czo1OiJyb3V0ZSI7czo1OiJsb2dpbiI7fX0=', 1764453057),
+('n5jaflBR9bty8h8fvlOoskmAa4UdXelHUxRaRrkI', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiZW1SSU82TEduZnd2MXVyRUpGYXU5Q2lyTVdXUEFnUGU1aWVEWlFWRCI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjQ6Imh0dHA6Ly9lZHVjb24udGVzdC9sb2dpbiI7czo1OiJyb3V0ZSI7czo1OiJsb2dpbiI7fX0=', 1764453574),
+('OX05rPgbFDBtUVu4y8Wp3AcgZpwjmTb6cGXaNk4x', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiUUNsQTlEUDRWR1JUTEhZZ0VXUnNtem1qR0xVeUdQaEw3VXJYeTdzMiI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MTg6Imh0dHA6Ly9lZHVjb24udGVzdCI7czo1OiJyb3V0ZSI7Tjt9fQ==', 1764449400);
 
 -- --------------------------------------------------------
 
@@ -6774,7 +6799,7 @@ CREATE TABLE `students` (
 
 INSERT INTO `students` (`id`, `user_id`, `career_id`, `study_plan_id`, `code`, `current_semester`, `accumulated_credits`, `weighted_average`, `academic_status`, `phone`, `address`, `gender`, `birthday`, `ubigeo_birth_id`, `admission_date`, `graduation_date`, `created_at`, `updated_at`, `deleted_at`, `origin_school_id`, `school_graduation_year`, `photo_url`) VALUES
 (2, 62, 1, 1, 'E2025-0001', 1, 0, 0.00, 'regular', '987654321', 'Jr puno 123', 'masculino', '1988-07-28', '210101', '2025-11-26', NULL, '2025-11-26 20:07:04', '2025-11-26 20:07:04', NULL, 2394, '2020', 'applicants/9eOxQ1CLPSjX0UxHV7MBQzdRgaMUlFICKu0CVeOn.png'),
-(5, 63, 1, 1, 'E2025-00002', 1, 0, 0.00, 'regular', '91234568', 'Jr altiplano 44', 'femenino', '1986-12-13', '210103', '2025-11-26', NULL, '2025-11-26 21:55:28', '2025-11-26 21:55:28', NULL, 142, '2021', 'applicants/vXVlDcS6uYdsc2qRJdvlJOvqKSoXi9us2g0V0Rln.png'),
+(5, 63, 1, 1, 'E2025-00002', 1, 0, 0.00, 'regular', '91234568', 'Jr altiplano 44', 'femenino', '1986-12-13', '210103', '2025-11-26', NULL, '2025-11-26 21:55:28', '2025-11-29 02:40:30', NULL, 142, '2021', 'applicants/vXVlDcS6uYdsc2qRJdvlJOvqKSoXi9us2g0V0Rln.png'),
 (6, 64, 1, 1, 'E2025-00003', 1, 0, 0.00, 'regular', '912121212', 'je puno 12344', 'masculino', '1990-12-13', '210101', '2025-11-28', NULL, '2025-11-28 22:01:12', '2025-11-28 22:01:12', NULL, 867, '2020', 'applicants/NBe1UCz6jZ83lT5oF0Sy2uX00MgOxQIK2yVYQBx3.png');
 
 -- --------------------------------------------------------
@@ -7020,7 +7045,7 @@ INSERT INTO `users` (`id`, `name`, `lastname`, `email`, `full_name`, `document_n
 (15, 'Keely Reichert', NULL, 'tristian.torphy@example.org', NULL, NULL, 'student', '2025-11-26 18:45:45', '$2y$12$s8NxCUqnFDmbmIY6dbsIFu1aoFMYKyrgv6zAAi6nvdkwqKZqQM0he', NULL, NULL, NULL, 'Is0QVnWetr', NULL, NULL, '2025-11-26 18:45:45', '2025-11-26 18:45:45'),
 (16, 'Raul Shields', NULL, 'stamm.korey@example.org', NULL, NULL, 'student', '2025-11-26 18:45:45', '$2y$12$s8NxCUqnFDmbmIY6dbsIFu1aoFMYKyrgv6zAAi6nvdkwqKZqQM0he', NULL, NULL, NULL, 'tqM8LnMe5U', NULL, NULL, '2025-11-26 18:45:45', '2025-11-26 18:45:45'),
 (17, 'Alicia Romaguera', NULL, 'bwill@example.org', NULL, NULL, 'student', '2025-11-26 18:45:45', '$2y$12$s8NxCUqnFDmbmIY6dbsIFu1aoFMYKyrgv6zAAi6nvdkwqKZqQM0he', NULL, NULL, NULL, 'QI6kJwICyV', NULL, NULL, '2025-11-26 18:45:45', '2025-11-26 18:45:45'),
-(18, 'Winifred Gutmann IV', NULL, 'kylee02@example.com', NULL, NULL, 'student', '2025-11-26 18:45:45', '$2y$12$s8NxCUqnFDmbmIY6dbsIFu1aoFMYKyrgv6zAAi6nvdkwqKZqQM0he', NULL, NULL, NULL, 'jQuhot9Tgb', NULL, NULL, '2025-11-26 18:45:45', '2025-11-26 18:45:45'),
+(18, 'Winifred Gutmann IV', NULL, 'kylee02@example.com', NULL, NULL, 'student', '2025-11-26 18:45:45', '$2y$12$WgpZy8fFoYKbOwTJedyYG.Q76suvW21MnjQlwH7bVlRdfwQf6JQx6', NULL, NULL, NULL, 'T52jDywzO6IXgeGZFjgNrkc7nEg75K0zeijbudqZ4j2v9ZlY4iTK6Pb3jXJu', NULL, NULL, '2025-11-26 18:45:45', '2025-11-30 00:29:06'),
 (19, 'Eriberto Johnson', NULL, 'okon.laurence@example.org', NULL, NULL, 'student', '2025-11-26 18:45:45', '$2y$12$s8NxCUqnFDmbmIY6dbsIFu1aoFMYKyrgv6zAAi6nvdkwqKZqQM0he', NULL, NULL, NULL, 'QeIzPebM5J', NULL, NULL, '2025-11-26 18:45:45', '2025-11-26 18:45:45'),
 (20, 'Wilbert Daniel', NULL, 'ftowne@example.com', NULL, NULL, 'student', '2025-11-26 18:45:45', '$2y$12$s8NxCUqnFDmbmIY6dbsIFu1aoFMYKyrgv6zAAi6nvdkwqKZqQM0he', NULL, NULL, NULL, 'GGqY1FFwcr', NULL, NULL, '2025-11-26 18:45:45', '2025-11-26 18:45:45'),
 (21, 'Rogelio Auer', NULL, 'lynch.natalia@example.net', NULL, NULL, 'student', '2025-11-26 18:45:45', '$2y$12$s8NxCUqnFDmbmIY6dbsIFu1aoFMYKyrgv6zAAi6nvdkwqKZqQM0he', NULL, NULL, NULL, 'BRUx1Fvbmi', NULL, NULL, '2025-11-26 18:45:45', '2025-11-26 18:45:45'),
@@ -7066,7 +7091,8 @@ INSERT INTO `users` (`id`, `name`, `lastname`, `email`, `full_name`, `document_n
 (61, 'Ward Prohaska V', NULL, 'jayda79@example.com', NULL, NULL, 'student', '2025-11-26 18:45:45', '$2y$12$s8NxCUqnFDmbmIY6dbsIFu1aoFMYKyrgv6zAAi6nvdkwqKZqQM0he', NULL, NULL, NULL, '86aGADpg71', NULL, NULL, '2025-11-26 18:45:45', '2025-11-26 18:45:45'),
 (62, 'GERARDINO JUVENAL', 'CAUNA HUANCA', 'admin@admin.com', NULL, '45537302', 'student', NULL, '$2y$12$Bij.XSRnD3MMM/6vUcqGOeVFUqFkIs.ZFQQYrLt6hjR.7HGy6VuGK', NULL, NULL, NULL, NULL, NULL, NULL, '2025-11-26 19:54:57', '2025-11-26 19:54:57'),
 (63, 'CELIA', 'CARI CALSIN', 'celia@admin.com', NULL, '43854482', 'student', NULL, '$2y$12$H50bLBI4cEjndZQvhKN8Q.in8mkoVheBuBDjL3vhM3O9ozWOYRhGW', NULL, NULL, NULL, NULL, NULL, NULL, '2025-11-26 20:32:39', '2025-11-26 20:32:39'),
-(64, 'EDSON DENIS', 'ZANABRIA TICONA', 'edson@admin.com', NULL, '45899134', 'student', NULL, '$2y$12$U5dfgAQ6ciGqKgowXWF2muOB741yop/IAVPvM54KG2uAZAV5byZoq', NULL, NULL, NULL, NULL, NULL, NULL, '2025-11-28 21:56:32', '2025-11-28 21:56:32');
+(64, 'EDSON DENIS', 'ZANABRIA TICONA', 'edson@admin.com', NULL, '45899134', 'student', NULL, '$2y$12$U5dfgAQ6ciGqKgowXWF2muOB741yop/IAVPvM54KG2uAZAV5byZoq', NULL, NULL, NULL, NULL, NULL, NULL, '2025-11-28 21:56:32', '2025-11-28 21:56:32'),
+(65, 'Gerardino Juvenal CAUNA HUANCA', NULL, 'gcauna@unap.edu.pe', NULL, NULL, 'student', NULL, '$2y$12$NFHGpmZvgSkea8WEFcvNe.P74VwYSuai34zJGZMfn2xp4vum24XjG', NULL, NULL, NULL, NULL, NULL, NULL, '2025-11-30 00:25:59', '2025-11-30 00:27:26');
 
 -- --------------------------------------------------------
 
@@ -7100,7 +7126,8 @@ INSERT INTO `vouchers` (`id`, `cash_session_id`, `issuer_id`, `client_id`, `vouc
 (1, 1, 1, 62, 'recibo', 'R25', 2, 120.00, 'cash', '124', 'Pago de deuda: Matrícula Regular', 'issued', '2025-11-26 20:20:00', '2025-11-26 20:20:36', '2025-11-26 20:20:36'),
 (2, 1, 1, 62, 'recibo', 'R25', 3, 120.00, 'Efectivo', '', '', 'issued', '2025-11-26 20:22:08', '2025-11-26 20:22:08', '2025-11-26 20:22:08'),
 (3, 1, 1, 63, 'recibo', 'R25', 4, 120.00, 'Efectivo', '', '', 'issued', '2025-11-26 21:45:41', '2025-11-26 21:45:41', '2025-11-26 21:45:41'),
-(4, 1, 1, 64, 'recibo', 'R25', 5, 120.00, 'Efectivo', '', '', 'issued', '2025-11-28 22:00:20', '2025-11-28 22:00:20', '2025-11-28 22:00:20');
+(4, 1, 1, 64, 'recibo', 'R25', 5, 120.00, 'Efectivo', '', '', 'issued', '2025-11-28 22:00:20', '2025-11-28 22:00:20', '2025-11-28 22:00:20'),
+(5, 1, 1, 63, 'recibo', 'R25', 6, 120.00, 'Efectivo', '', '', 'issued', '2025-11-29 02:08:54', '2025-11-29 02:08:54', '2025-11-29 02:08:54');
 
 -- --------------------------------------------------------
 
@@ -7128,7 +7155,8 @@ INSERT INTO `voucher_items` (`id`, `voucher_id`, `payment_concept_id`, `descript
 (1, 1, 1, 'Matrícula Regular', 1, 120.00, 120.00, '2025-11-26 20:20:36', '2025-11-26 20:20:36'),
 (2, 2, 1, 'Matrícula Regular', 1, 120.00, 120.00, '2025-11-26 20:22:08', '2025-11-26 20:22:08'),
 (3, 3, 1, 'Matrícula Regular', 1, 120.00, 120.00, '2025-11-26 21:45:41', '2025-11-26 21:45:41'),
-(4, 4, 1, 'Matrícula Regular', 1, 120.00, 120.00, '2025-11-28 22:00:20', '2025-11-28 22:00:20');
+(4, 4, 1, 'Matrícula Regular', 1, 120.00, 120.00, '2025-11-28 22:00:20', '2025-11-28 22:00:20'),
+(5, 5, 1, 'Matrícula Regular', 1, 120.00, 120.00, '2025-11-29 02:08:54', '2025-11-29 02:08:54');
 
 -- --------------------------------------------------------
 
@@ -7150,7 +7178,7 @@ CREATE TABLE `voucher_series` (
 --
 
 INSERT INTO `voucher_series` (`id`, `institution_id`, `voucher_type`, `series`, `current_number`, `status`) VALUES
-(1, 1, 'recibo', 'R25', 5, 'active');
+(1, 1, 'recibo', 'R25', 6, 'active');
 
 --
 -- Índices para tablas volcadas
@@ -7312,7 +7340,8 @@ ALTER TABLE `enrollments`
 --
 ALTER TABLE `enrollment_reserves`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `enrollment_reserves_student_id_foreign` (`student_id`);
+  ADD KEY `enrollment_reserves_student_id_foreign` (`student_id`),
+  ADD KEY `enrollment_reserves_academic_period_id_foreign` (`academic_period_id`);
 
 --
 -- Indices de la tabla `evaluation_types`
@@ -7749,7 +7778,7 @@ ALTER TABLE `enrollments`
 -- AUTO_INCREMENT de la tabla `enrollment_reserves`
 --
 ALTER TABLE `enrollment_reserves`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `evaluation_types`
@@ -7827,7 +7856,7 @@ ALTER TABLE `merit_rankings`
 -- AUTO_INCREMENT de la tabla `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
 
 --
 -- AUTO_INCREMENT de la tabla `modules`
@@ -7851,7 +7880,7 @@ ALTER TABLE `payment_concepts`
 -- AUTO_INCREMENT de la tabla `permissions`
 --
 ALTER TABLE `permissions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT de la tabla `personal_access_tokens`
@@ -7875,7 +7904,7 @@ ALTER TABLE `registrations`
 -- AUTO_INCREMENT de la tabla `roles`
 --
 ALTER TABLE `roles`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `schedules`
@@ -7941,19 +7970,19 @@ ALTER TABLE `tutorings`
 -- AUTO_INCREMENT de la tabla `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
 
 --
 -- AUTO_INCREMENT de la tabla `vouchers`
 --
 ALTER TABLE `vouchers`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `voucher_items`
 --
 ALTER TABLE `voucher_items`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `voucher_series`
@@ -8078,6 +8107,7 @@ ALTER TABLE `enrollments`
 -- Filtros para la tabla `enrollment_reserves`
 --
 ALTER TABLE `enrollment_reserves`
+  ADD CONSTRAINT `enrollment_reserves_academic_period_id_foreign` FOREIGN KEY (`academic_period_id`) REFERENCES `academic_periods` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `enrollment_reserves_student_id_foreign` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE;
 
 --
