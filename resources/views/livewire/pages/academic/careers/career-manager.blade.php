@@ -11,30 +11,41 @@
                 <div class="p-6 lg:p-8 bg-white border-b border-gray-200">
                     
                     <div class="flex justify-between items-center mb-4">
-                        <x-input type="text" wire:model.live.debounce.300ms="search" placeholder="Buscar programa..." />
-                        <x-button wire:click="openCreateModal">
-                            Crear Nuevo Programa
+                        <div class="w-1/3 relative">
+                            <x-input type="text" wire:model.live.debounce.300ms="search" placeholder="Buscar programa..." class="w-full" />
+                            <div wire:loading wire:target="search" class="absolute right-3 top-2.5 text-gray-400">
+                                <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <x-button wire:click="openCreateModal" wire:loading.attr="disabled" wire:target="openCreateModal">
+                            <span wire:loading.remove wire:target="openCreateModal">Crear Nuevo Programa</span>
+                            <span wire:loading wire:target="openCreateModal">Cargando...</span>
                         </x-button>
                     </div>
 
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto relative">
+                        <div wire:loading.block wire:target="search, deleteCareer" class="absolute inset-0 bg-white/50 z-10"></div>
+                        
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium">Código</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium">Nombre del Programa</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium">Semestres</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium">Estado</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium">Acciones</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Código</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Nombre del Programa</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Semestres</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Estado</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @forelse ($careers as $career)
-                                    <tr>
-                                        <td class="px-6 py-4">{{ $career->code }}</td>
+                                    <tr class="hover:bg-gray-50 transition duration-150 ease-in-out">
+                                        <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{{ $career->code }}</td>
                                         <td class="px-6 py-4">{{ $career->name }}</td>
-                                        <td class="px-6 py-4">{{ $career->duration_semesters }}</td>
-                                        <td class="px-6 py-4">
+                                        <td class="px-6 py-4 whitespace-nowrap">{{ $career->duration_semesters }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
                                             <span @class([
                                                 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
                                                 'bg-green-100 text-green-800' => $career->status == 'active',
@@ -43,14 +54,21 @@
                                                 {{ $career->status == 'active' ? 'Activo' : 'Inactivo' }}
                                             </span>
                                         </td>
-                                        <td class="px-6 py-4 text-right">
-                                            <x-button wire:click="openEditModal({{ $career->id }})">Editar</x-button>
-                                            <x-danger-button wire:click="confirmDelete({{ $career->id }})">Eliminar</x-danger-button>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <button wire:click="openEditModal({{ $career->id }})" class="text-indigo-600 hover:text-indigo-900 mr-3 transition duration-150 ease-in-out">Editar</button>
+                                            <button wire:click="confirmDelete({{ $career->id }})" class="text-red-600 hover:text-red-900 transition duration-150 ease-in-out">Eliminar</button>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="px-6 py-4 text-center">No se encontraron programas de estudio.</td>
+                                        <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                            <div class="flex flex-col items-center justify-center">
+                                                <svg class="h-12 w-12 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                                </svg>
+                                                <span class="text-lg">No se encontraron programas de estudio.</span>
+                                            </div>
+                                        </td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -118,11 +136,12 @@
         </x-slot>
 
         <x-slot name="footer">
-            <x-secondary-button wire:click="closeModal">
+            <x-secondary-button wire:click="closeModal" wire:loading.attr="disabled">
                 Cancelar
             </x-secondary-button>
             <x-button class="ms-3" wire:click="save" wire:loading.attr="disabled">
-                Guardar
+                <span wire:loading.remove wire:target="save">Guardar</span>
+                <span wire:loading wire:target="save">Guardando...</span>
             </x-button>
         </x-slot>
     </x-dialog-modal>

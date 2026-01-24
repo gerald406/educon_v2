@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Pages\Academic\Careers;
 
+use App\Actions\Academic\CreateCareer;
+use App\Actions\Academic\UpdateCareer;
 use App\Models\Career;
 use App\Models\Institution;
 use Illuminate\Database\QueryException;
@@ -31,23 +33,6 @@ class CareerManager extends Component
 
     // Colección para el dropdown de instituciones
     public Collection $institutions;
-
-    /**
-     * Define las reglas de validación.
-     */
-    protected function rules()
-    {
-        return [
-            'institution_id' => 'required|exists:institutions,id',
-            'name' => 'required|string|max:150',
-            'duration_semesters' => 'required|integer|min:1|max:12',
-            'degree_awarded' => 'nullable|string|max:200',
-            'status' => 'required|in:active,inactive',
-            // Regla dinámica para 'code'
-            'code' => 'required|string|max:10|unique:careers,code' . 
-                      ($this->editingCareer ? ',' . $this->editingCareer->id : ''),
-        ];
-    }
 
     /**
      * Hook 'mount': Se ejecuta cuando el componente se carga.
@@ -96,19 +81,30 @@ class CareerManager extends Component
         }
     }
 
-    public function save()
+    public function save(CreateCareer $creator, UpdateCareer $updater)
     {
-        $data = $this->validate();
-        
-        $model = $this->editingCareer ?? new Career();
-        $model->fill($data);
-        $model->save();
+        $input = [
+            'institution_id' => $this->institution_id,
+            'code' => $this->code,
+            'name' => $this->name,
+            'duration_semesters' => $this->duration_semesters,
+            'degree_awarded' => $this->degree_awarded,
+            'status' => $this->status,
+        ];
+
+        if ($this->editingCareer) {
+            $updater->update($this->editingCareer, $input);
+            $message = 'Programa actualizado correctamente.';
+        } else {
+            $creator->create($input);
+            $message = 'Programa creado correctamente.';
+        }
         
         $this->closeModal();
         $this->dispatch('swal', [
             'icon' => 'success',
             'title' => '¡Hecho!',
-            'text' => 'Programa de Estudio guardado correctamente.',
+            'text' => $message,
         ]);
     }
 
