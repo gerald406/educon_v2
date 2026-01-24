@@ -43,18 +43,23 @@ class AdmissionDashboard extends Component
         // 2. Registros Recientes
         $this->recentRegistrations = Applicant::where('created_at', '>=', now()->subDays(7))->count();
 
-        // 3. Por Modalidad (CORREGIDO con DB::table)
-        $this->applicantsByModality = DB::table('applicants')
+        // 3. Por Modalidad
+        $modalityData = DB::table('applicants')
             ->leftJoin('admission_modalities', 'applicants.admission_modality_id', '=', 'admission_modalities.id')
             ->select(
                 DB::raw('COALESCE(admission_modalities.name, "Sin Modalidad") as modality_name'),
                 DB::raw('count(*) as total')
             )
-            ->groupBy('modality_name') // Agrupamos por el alias (MySQL lo permite) o usa la columna
+            ->groupBy('modality_name')
             ->get();
 
-        // 4. Por Programa (CORREGIDO con DB::table)
-        $this->applicantsByProgram = DB::table('applicants')
+        $this->applicantsByModality = [
+            'labels' => $modalityData->pluck('modality_name')->toArray(),
+            'data' => $modalityData->pluck('total')->toArray(),
+        ];
+
+        // 4. Por Programa
+        $programData = DB::table('applicants')
             ->leftJoin('admission_offerings', 'applicants.admission_offering_id', '=', 'admission_offerings.id')
             ->leftJoin('careers', 'admission_offerings.career_id', '=', 'careers.id')
             ->select(
@@ -63,6 +68,11 @@ class AdmissionDashboard extends Component
             )
             ->groupBy('career_name')
             ->get();
+
+        $this->applicantsByProgram = [
+            'labels' => $programData->pluck('career_name')->toArray(),
+            'data' => $programData->pluck('total')->toArray(),
+        ];
     }
 
     public function downloadReportA()
