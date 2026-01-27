@@ -3,28 +3,33 @@
 namespace App\Livewire\Pages\AcademicProcess\TeacherAssignments;
 
 use App\Models\AcademicPeriod;
-use App\Models\DidacticUnit; // <-- [NUEVO] Importar modelo
+use App\Models\Career;
+use App\Models\DidacticUnit;
+use App\Models\Module;
 use App\Models\Shift;
-use App\Models\Teacher; // <-- [NUEVO] Importar modelo
+use App\Models\StudyPlan;
+use App\Models\Teacher;
 use App\Models\TeacherAssignment;
-use App\Services\TeacherWorkloadService; // <-- [NUEVO] Importar el servicio
-use Illuminate\Database\QueryException;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-// [NUEVO] Importar la fachada de Excel y nuestra clase Export
-use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\EnrolledStudentsExport;
-
 #[Layout('layouts.app')]
 class TeacherAssignmentManager extends Component
 {
     use WithPagination;
+    use AuthorizesRequests;
 
-    // --- PROPIEDADES DEL FORMULARIO ---
+    // --- Filtros Globales (Dashboard) ---
+    public $filterPeriodId = '';
+    public $filterCareerId = '';
+
+    // --- Formulario ---
+    public $academic_period_id = '';
     public $teacher_id = '';
     public $didactic_unit_id = '';
     public $shift_id = '';
@@ -32,354 +37,225 @@ class TeacherAssignmentManager extends Component
     public $max_capacity = 30;
     public $status = 'active';
 
-    // --- PROPIEDADES DE ESTADO ---
+    // --- Selects Cascada del Modal ---
+    public $selectedCareerId = '';
+    public $selectedStudyPlanId = '';
+    public $selectedModuleId = '';
+
+    // --- Colecciones ---
+    public Collection $periods;
+    public Collection $careers;
+    public Collection $teachers;
+    public Collection $shifts;
+
+    // Colecciones Dinámicas
+    public Collection $studyPlans;
+    public Collection $modules;
+    public Collection $units;
+
+    // --- Estado ---
     public ?TeacherAssignment $editingAssignment = null;
     public $isModalOpen = false;
     public $search = '';
 
-    // --- DATOS DEL CONTEXTO ---
-    public ?AcademicPeriod $activePeriod = null;
-    public $teachers = [];
-    public $didacticUnits = [];
-    public $shifts = [];
-
-    // --- [NUEVO] Propiedad para el servicio ---
-    protected TeacherWorkloadService $workloadService;
-
-    /**
-     * [NUEVO] Inyectar el servicio en el constructor.
-     */
-    public function __construct()
-    {
-        $this->workloadService = new TeacherWorkloadService();
-    }
-
-    /**
-     * Hook 'mount': Carga el periodo activo y los dropdowns.
-     */
     public function mount()
     {
-        $this->activePeriod = AcademicPeriod::where('status', 'active')->first();
+        // Carga inicial
+        $this->periods = AcademicPeriod::orderBy('start_date', 'desc')->get();
 
-        if ($this->activePeriod) {
-            $this->loadDropdownData();
-        }
+        // Seleccionar periodo activo por defecto
+        $activePeriod = $this->periods->where('status', 'active')->first();
+        $this->filterPeriodId = $activePeriod ? $activePeriod->id : ($this->periods->first()->id ?? '');
+        $this->academic_period_id = $this->filterPeriodId;
+
+        $this->careers = Career::where('status', 'active')->get();
+        $this->teachers = Teacher::with('user')->where('status', 'active')->get();
+        $this->shifts = Shift::where('status', 'active')->get();
+
+        // Inicializar colecciones vacías
+        $this->studyPlans = collect();
+        $this->modules = collect();
+        $this->units = collect();
     }
 
-    /**
-     * Cargar datos para los dropdowns
-     */
-    private function loadDropdownData()
+    // --- LOGICA CASCADA (Selects) ---
+
+    public function updatedSelectedCareerId($value)
     {
-        // Cargar teachers con manejo de null
-        $teachersList = Teacher::where('status', 'active')
-            ->with('user')
-            ->get();
-
-        $this->teachers = [];
-        foreach ($teachersList as $teacher) {
-            if ($teacher->user) {
-                $this->teachers[$teacher->id] = $teacher->user->name . ' (' . $teacher->code . ')';
-            } else {
-                $this->teachers[$teacher->id] = 'Profesor #' . $teacher->code;
-            }
-        }
-
-        // Cargar unidades didácticas
-        $unitsList = DidacticUnit::where('status', 'active')
-            ->orderBy('semester')
-            ->orderBy('name')
-            ->get();
-
-        $this->didacticUnits = [];
-        foreach ($unitsList as $unit) {
-            $this->didacticUnits[$unit->id] = $unit->name_with_semester; // Usamos el accessor
-        }
-
-        // Cargar turnos
-        $this->shifts = Shift::where('status', 'active')
-            ->orderBy('name')
-            ->pluck('name', 'id')
-            ->toArray();
+        $this->selectedStudyPlanId = '';
+        $this->selectedModuleId = '';
+        $this->didactic_unit_id = '';
+        $this->studyPlans = $value ? StudyPlan::where('career_id', $value)->where('status', 'active')->get() : collect();
+        $this->modules = collect();
+        $this->units = collect();
     }
 
-    /**
-     * Define las reglas de validación.
-     */
-    protected function rules()
+    public function updatedSelectedStudyPlanId($value)
     {
-        $rules = [
+        $this->selectedModuleId = '';
+        $this->didactic_unit_id = '';
+        $this->modules = $value ? Module::where('study_plan_id', $value)->orderBy('module_number')->get() : collect();
+        $this->units = collect();
+    }
+
+    public function updatedSelectedModuleId($value)
+    {
+        $this->didactic_unit_id = '';
+        $this->units = $value ? DidacticUnit::where('module_id', $value)->orderBy('semester')->get() : collect();
+    }
+
+    // --- CRUD ---
+
+    public function rules()
+    {
+        return [
+            'academic_period_id' => 'required|exists:academic_periods,id',
             'teacher_id' => 'required|exists:teachers,id',
             'didactic_unit_id' => 'required|exists:didactic_units,id',
             'shift_id' => 'required|exists:shifts,id',
             'section' => 'required|string|max:5',
-            'max_capacity' => 'required|integer|min:1|max:100',
+            'max_capacity' => 'required|integer|min:1',
             'status' => 'required|in:active,suspended,completed',
-        ];
 
-        // Regla adicional para evitar duplicados
-        if ($this->activePeriod) {
-            $uniqueRule = Rule::unique('teacher_assignments')
-                ->where(function ($query) {
-                    return $query->where('academic_period_id', $this->activePeriod->id)
-                                 ->where('didactic_unit_id', $this->didactic_unit_id)
-                                 ->where('section', $this->section)
-                                 ->where('shift_id', $this->shift_id);
-                });
-
-            if ($this->editingAssignment) {
-                $uniqueRule->ignore($this->editingAssignment->id);
-            }
-
-            $rules['section'] = ['required', 'string', 'max:5', $uniqueRule];
-        }
-
-        return $rules;
-    }
-
-    /**
-     * Mensajes de validación personalizados
-     */
-    protected function messages()
-    {
-        return [
-            'teacher_id.required' => 'Debe seleccionar un docente.',
-            'didactic_unit_id.required' => 'Debe seleccionar una unidad didáctica.',
-            'shift_id.required' => 'Debe seleccionar un turno.',
-            'section.required' => 'La sección es requerida.',
-            'section.unique' => 'Ya existe una asignación para esta unidad, sección y turno en el periodo actual.',
-            'max_capacity.required' => 'La capacidad máxima es requerida.',
-            'max_capacity.min' => 'La capacidad debe ser al menos 1.',
+            // Regla compuesta: No duplicar (Docente + Curso + Periodo + Sección)
+            // Se puede relajar si un docente dicta a dos grupos, pero la sección debe cambiar (A vs B)
         ];
     }
 
-    // --- ACCIONES DEL CRUD ---
-
-    public function openCreateModal()
+    public function create()
     {
-        $this->resetForm();
+        $this->authorize('gestionar-carga-academica');
+        $this->resetInput();
+        // Mantener el periodo filtrado
+        $this->academic_period_id = $this->filterPeriodId;
         $this->isModalOpen = true;
     }
 
-    public function openEditModal(TeacherAssignment $assignment)
+    public function edit(TeacherAssignment $assignment)
     {
+        $this->authorize('gestionar-carga-academica');
         $this->editingAssignment = $assignment;
+
+        // Reconstruir la cascada inversa para que los selects se llenen
+        $unit = $assignment->didacticUnit;
+        $module = $unit->module;
+        $plan = $module->studyPlan;
+
+        $this->selectedCareerId = $plan->career_id;
+        $this->updatedSelectedCareerId($plan->career_id); // Carga planes
+
+        $this->selectedStudyPlanId = $plan->id;
+        $this->updatedSelectedStudyPlanId($plan->id); // Carga módulos
+
+        $this->selectedModuleId = $unit->module_id;
+        $this->updatedSelectedModuleId($unit->module_id); // Carga cursos
+
+        // Datos directos
+        $this->academic_period_id = $assignment->academic_period_id;
         $this->teacher_id = $assignment->teacher_id;
         $this->didactic_unit_id = $assignment->didactic_unit_id;
         $this->shift_id = $assignment->shift_id;
         $this->section = $assignment->section;
         $this->max_capacity = $assignment->max_capacity;
         $this->status = $assignment->status;
+
         $this->isModalOpen = true;
+    }
+
+    public function save()
+    {
+        $this->authorize('gestionar-carga-academica');
+        $validated = $this->validate();
+
+        // Validar duplicidad manualmente para mayor control
+        $exists = TeacherAssignment::where('academic_period_id', $this->academic_period_id)
+            ->where('didactic_unit_id', $this->didactic_unit_id)
+            ->where('section', $this->section)
+            ->where('id', '!=', $this->editingAssignment?->id)
+            ->exists();
+
+        if ($exists) {
+            $this->addError('section', 'Ya existe una sección ' . $this->section . ' para este curso en este periodo.');
+            return;
+        }
+
+        if ($this->editingAssignment) {
+            $this->editingAssignment->update($validated);
+            $msg = 'Carga actualizada.';
+        } else {
+            TeacherAssignment::create($validated);
+            $msg = 'Carga asignada correctamente.';
+        }
+
+        $this->isModalOpen = false;
+        $this->dispatch('swal', ['icon' => 'success', 'title' => 'Éxito', 'text' => $msg]);
+    }
+
+    public function confirmDelete($id)
+    {
+        $this->authorize('gestionar-carga-academica');
+        $this->dispatch('swal:confirm', [
+            'title' => '¿Eliminar Asignación?',
+            'text' => 'Cuidado: Si hay alumnos matriculados, se perderá esa información.',
+            'id' => $id,
+            'method' => 'deleteAssignment'
+        ]);
+    }
+
+    #[On('deleteAssignment')]
+    public function deleteAssignment($id)
+    {
+        try {
+            TeacherAssignment::findOrFail($id)->delete();
+            $this->dispatch('swal', ['icon' => 'success', 'title' => 'Eliminado', 'text' => 'Asignación eliminada.']);
+        } catch (\Exception $e) {
+            $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'No se pudo eliminar. Verifique alumnos matriculados.']);
+        }
     }
 
     public function closeModal()
     {
         $this->isModalOpen = false;
-        $this->resetForm();
     }
 
-    public function resetForm()
+    private function resetInput()
     {
-        $this->reset(['teacher_id', 'didactic_unit_id', 'shift_id', 'section', 'max_capacity', 'status', 'editingAssignment']);
-        $this->resetValidation();
-        
+        $this->editingAssignment = null;
+        $this->selectedCareerId = '';
+        $this->selectedStudyPlanId = '';
+        $this->selectedModuleId = '';
+        $this->didactic_unit_id = '';
+        $this->teacher_id = '';
+        $this->shift_id = '';
         $this->section = 'A';
         $this->max_capacity = 30;
         $this->status = 'active';
+        $this->studyPlans = collect();
+        $this->modules = collect();
+        $this->units = collect();
     }
 
-    /**
-     * [MÉTODO SAVE MODIFICADO]
-     */
-    public function save()
-    {
-        if (!$this->activePeriod) {
-            $this->dispatch('swal', [
-                'icon' => 'error',
-                'title' => 'Error',
-                'text' => 'No hay un periodo académico activo.',
-            ]);
-            return;
-        }
-
-        try {
-            // 1. Validar los datos del formulario (como lo tenías)
-            $validatedData = $this->validate();
-            
-            // --- [NUEVA LÓGICA DE VALIDACIÓN DE CARGA HORARIA] ---
-            $teacher = Teacher::find($validatedData['teacher_id']);
-            $unit = DidacticUnit::find($validatedData['didactic_unit_id']);
-
-            if (!$teacher || !$unit) {
-                $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'El docente o la unidad didáctica no se encontraron.']);
-                return;
-            }
-
-            // Llamamos al servicio para verificar
-            if ($this->workloadService->wouldExceedMaxHours($teacher, $this->activePeriod, $unit, $this->editingAssignment)) {
-                
-                // Si excede, calculamos las horas actuales para mostrar un mensaje claro
-                $currentHours = $this->workloadService->calculateWeeklyHours($teacher, $this->activePeriod);
-                
-                $this->dispatch('swal', [
-                    'icon' => 'error',
-                    'title' => 'Carga Horaria Excedida',
-                    'text' => "No se puede asignar. El docente ya tiene {$currentHours} horas. Añadir este curso ({$unit->weekly_hours}h) excedería el límite de 26 horas.",
-                    'toast' => false,
-                    'position' => 'center',
-                    'timer' => null,
-                    'showConfirmButton' => true,
-                ]);
-                return; // Detener el guardado
-            }
-            // --- [FIN DE LA NUEVA LÓGICA] ---
-
-            
-            // 2. Continuar con la lógica de guardado (como lo tenías)
-            $validatedData['academic_period_id'] = $this->activePeriod->id;
-            
-            if (!$this->editingAssignment) {
-                $validatedData['current_enrolled'] = 0;
-            }
-            
-            if ($this->editingAssignment) {
-                $this->editingAssignment->update($validatedData);
-                $message = 'Asignación actualizada correctamente.';
-            } else {
-                TeacherAssignment::create($validatedData);
-                $message = 'Asignación creada correctamente.';
-            }
-            
-            $this->closeModal();
-            $this->dispatch('swal', [
-                'icon' => 'success',
-                'title' => '¡Éxito!',
-                'text' => $message,
-            ]);
-            
-        } catch (\Exception $e) {
-            $this->dispatch('swal', [
-                'icon' => 'error',
-                'title' => 'Error',
-                'text' => 'Ocurrió un error al guardar la asignación: ' . $e->getMessage(),
-            ]);
-        }
-    }
-
-    public function confirmDelete(int $id)
-    {
-        $this->dispatch('swal:confirm', [
-            'id' => $id,
-            'title' => '¿Eliminar Asignación?',
-            'text' => 'Esto eliminará la sección y sus horarios asociados. Esta acción no se puede deshacer.',
-            'icon' => 'warning',
-            'onConfirmed' => 'deleteAssignment'
-        ]);
-    }
-
-    #[On('deleteAssignment')]
-    public function deleteAssignment(int $id)
-    {
-        try {
-            // $id = is_array($data) ? $data['id'] : $data;
-            
-            $assignment = TeacherAssignment::findOrFail($id);
-            
-            if ($assignment->current_enrolled > 0) {
-                $this->dispatch('swal', [
-                    'icon' => 'error',
-                    'title' => 'No se puede eliminar',
-                    'text' => 'Esta asignación tiene estudiantes matriculados.',
-                ]);
-                return;
-            }
-            
-            if ($assignment->schedules()->exists()) {
-                 // Borramos los horarios primero
-                $assignment->schedules()->delete();
-            }
-            
-            $assignment->delete();
-            
-            $this->dispatch('swal', [
-                'icon' => 'success',
-                'title' => '¡Eliminado!',
-                'text' => 'La asignación ha sido eliminada correctamente.',
-            ]);
-            
-        } catch (\Exception $e) {
-            $this->dispatch('swal', [
-                'icon' => 'error',
-                'title' => 'Error al eliminar',
-                'text' => 'Ocurrió un error inesperado: ' . $e->getMessage(),
-            ]);
-        }
-    }
-
-    /**
-     * Resetear paginación cuando se busca
-     */
-    public function updatedSearch()
-    {
-        $this->resetPage();
-    }
-
-    // --- [NUEVO MÉTODO] ---
-    /**
-     * Exporta la nómina de estudiantes de una sección a Excel.
-     */
-    public function exportEnrolledStudents(TeacherAssignment $assignment)
-    {
-        // Nos aseguramos de que los datos de la asignación estén cargados
-        $assignment->load('didacticUnit');
-        
-        $fileName = 'nomina_' . 
-                    $assignment->didacticUnit->code . 
-                    '_sec_' . $assignment->section . 
-                    '_' . $this->activePeriod->code . 
-                    '.xlsx';
-
-        // Pasamos la asignación a la clase Export
-        return Excel::download(
-            new EnrolledStudentsExport($assignment),
-            $fileName
-        );
-    }
-
-    // --- RENDER ---
     public function render()
     {
-        $assignments = collect();
-        
-        if ($this->activePeriod) {
-            $query = TeacherAssignment::with(['teacher.user', 'didacticUnit.module', 'shift'])
-                ->where('academic_period_id', $this->activePeriod->id);
+        // Filtro Principal
+        $query = TeacherAssignment::with(['teacher.user', 'didacticUnit', 'shift'])
+            ->where('academic_period_id', $this->filterPeriodId);
 
-            if ($this->search) {
-                $searchTerm = '%' . $this->search . '%';
-                
-                $query->where(function($q) use ($searchTerm) {
-                    $q->whereHas('teacher.user', function($subQuery) use ($searchTerm) {
-                        $subQuery->where('name', 'like', $searchTerm);
-                    })
-                    ->orWhereHas('teacher', function($subQuery) use ($searchTerm) {
-                        $subQuery->where('code', 'like', $searchTerm);
-                    })
-                    ->orWhereHas('didacticUnit', function($subQuery) use ($searchTerm) {
-                        $subQuery->where('name', 'like', $searchTerm)
-                                 ->orWhere('code', 'like', $searchTerm);
-                    })
-                    ->orWhere('section', 'like', $searchTerm);
-                });
-            }
-            
-            $assignments = $query->orderBy('created_at', 'desc')
-                                ->paginate(10);
+        // Filtro Búsqueda
+        if ($this->search) {
+            $query->where(function ($q) {
+                $q->whereHas('didacticUnit', fn($sq) => $sq->where('name', 'like', "%{$this->search}%"))
+                    ->orWhereHas('teacher.user', fn($sq) => $sq->where('name', 'like', "%{$this->search}%")->orWhere('lastname', 'like', "%{$this->search}%"));
+            });
+        }
+
+        // Filtro Carrera (Opcional en la tabla)
+        if ($this->filterCareerId) {
+            $query->whereHas('didacticUnit.module.studyPlan', fn($q) => $q->where('career_id', $this->filterCareerId));
         }
 
         return view('livewire.pages.academic-process.teacher-assignments.teacher-assignment-manager', [
-            'assignments' => $assignments,
+            'assignments' => $query->orderBy('didactic_unit_id')->paginate(10)
         ]);
     }
 }
