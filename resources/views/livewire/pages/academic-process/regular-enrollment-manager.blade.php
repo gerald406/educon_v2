@@ -1,139 +1,186 @@
 <div>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Matrícula de Estudiantes Regulares
+            Proceso de Matrícula Regular
         </h2>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
+            <div class="bg-white overflow-visible shadow-xl sm:rounded-lg p-6 min-h-[500px]"> 
                 
-                <div class="mb-6 p-4 bg-gray-50 rounded-lg border relative">
-                    <h3 class="text-md font-bold text-gray-700 mb-2">Buscar Estudiante Regular</h3>
-                    <x-input type="text" class="w-full text-lg" wire:model.live.debounce.300ms="search" placeholder="Ingrese nombre o DNI..." />
-                    
-                    @if($searchResults->count() > 0)
-                        <div class="absolute z-50 w-full bg-white border rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto left-0">
-                            @foreach($searchResults as $student)
-                                <div class="p-3 hover:bg-gray-100 cursor-pointer border-b" wire:click="selectStudent({{ $student->id }})">
-                                    <div class="font-bold">{{ $student->user->name }}</div>
-                                    <div class="text-sm text-gray-600">
-                                        {{ $student->code }} - Semestre Actual: {{ $student->current_semester }}
-                                    </div>
-                                </div>
-                            @endforeach
+                @if(!$selectedStudent)
+                    <div class="max-w-xl mx-auto mt-10">
+                        <div class="text-center mb-8">
+                            <h3 class="text-xl font-bold text-gray-700">Nueva Matrícula</h3>
+                            <p class="text-gray-500 mt-2">Busque al estudiante por DNI o Apellidos.</p>
                         </div>
-                    @endif
-                </div>
 
-                @if($selectedStudent)
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        
-                        <div class="lg:col-span-2">
-                            <div class="bg-blue-50 p-4 rounded-md border border-blue-100 mb-4">
-                                <h4 class="font-bold text-blue-900 text-lg">{{ $selectedStudent->user->name }}</h4>
-                                <p class="text-sm text-blue-800">
-                                    Código: {{ $selectedStudent->code }} <span class="mx-2">|</span> 
-                                    DNI: {{ $selectedStudent->user->document_number }}
-                                </p>
-                                <p class="text-sm text-blue-800 mt-1">
-                                    Programa: <strong>{{ $selectedStudent->career->name }}</strong>
-                                </p>
+                        <div class="relative">
+                            <x-input type="text" 
+                                     class="w-full text-lg p-4 pl-12 border-2 border-indigo-100 focus:border-indigo-500 rounded-xl" 
+                                     wire:model.live.debounce.300ms="search" 
+                                     placeholder="DNI o Nombre..." 
+                                     autofocus />
+                            
+                            <div wire:loading.remove wire:target="search" class="absolute top-4 left-4 text-gray-400">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                            <div wire:loading wire:target="search" class="absolute top-4 left-4 text-indigo-500">
+                                <svg class="animate-spin w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                             </div>
 
-                            <h4 class="font-semibold text-gray-800 mb-3">Rendimiento del Semestre Anterior ({{ $selectedStudent->current_semester }})</h4>
-                            
-                            @if($lastSemesterRecords->count() > 0)
-                                <div class="overflow-x-auto border rounded-md">
-                                    <table class="min-w-full divide-y divide-gray-200 text-sm">
-                                        <thead class="bg-gray-50">
-                                            <tr>
-                                                <th class="px-4 py-2 text-left">Unidad Didáctica</th>
-                                                <th class="px-4 py-2 text-center">Créditos</th>
-                                                <th class="px-4 py-2 text-center">Nota Final</th>
-                                                <th class="px-4 py-2 text-center">Estado</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="bg-white divide-y divide-gray-200">
-                                            @foreach($lastSemesterRecords as $record)
-                                                <tr>
-                                                    <td class="px-4 py-2">{{ $record->didacticUnit->name }}</td>
-                                                    <td class="px-4 py-2 text-center">{{ $record->didacticUnit->credits }}</td>
-                                                    <td class="px-4 py-2 text-center font-bold">{{ number_format($record->final_grade, 0) }}</td>
-                                                    <td class="px-4 py-2 text-center">
-                                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                            {{ $record->course_status == 'approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                                            {{ $record->course_status == 'approved' ? 'Aprobado' : 'Desaprobado' }}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
+                            @if($searchResults->isNotEmpty())
+                                <div class="absolute z-50 w-full bg-white border border-gray-200 rounded-xl shadow-2xl mt-2 overflow-hidden">
+                                    @foreach($searchResults as $result)
+                                        <div wire:click="selectStudent({{ $result->id }})" class="p-4 hover:bg-indigo-50 cursor-pointer border-b last:border-0 transition">
+                                            <div class="flex justify-between items-center">
+                                                <div>
+                                                    <div class="font-bold text-gray-800 text-lg">{{ $result->user->lastname }}, {{ $result->user->name }}</div>
+                                                    <div class="text-sm text-gray-500">
+                                                        <span class="font-semibold text-indigo-600">{{ $result->career->code ?? 'N/A' }}</span> 
+                                                        | Semestre: {{ $result->current_semester }}
+                                                    </div>
+                                                </div>
+                                                <span class="bg-gray-100 text-gray-600 font-mono text-sm px-3 py-1 rounded-full border">
+                                                    {{ $result->user->document_number }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </div>
-                            @else
-                                <p class="text-gray-500 italic text-sm border p-4 rounded bg-gray-50 text-center">
-                                    No se encontraron notas registradas del semestre {{ $selectedStudent->current_semester }}.
-                                </p>
+                            @elseif(strlen($search) > 2)
+                                <div class="absolute z-50 w-full bg-white border border-gray-200 rounded-xl shadow-lg mt-2 p-6 text-center text-gray-500">
+                                    No se encontraron resultados.
+                                </div>
                             @endif
                         </div>
+                    </div>
 
-                        <div class="lg:col-span-1">
-                            <div class="bg-white border rounded-lg shadow-sm p-6 sticky top-6">
-                                <h3 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Procesar Matrícula</h3>
-
-                                <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Semestre a Matricular</label>
-                                    <div class="text-xl font-bold text-indigo-700">
-                                        {{ $nextSemester }}° Semestre
-                                    </div>
-                                    <p class="text-xs text-gray-500">Calculado automáticamente</p>
+                @else
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        
+                        <div class="lg:col-span-1 space-y-6">
+                            <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
+                                <h3 class="font-bold text-gray-900 text-lg mb-1">{{ $selectedStudent->user->name }} {{ $selectedStudent->user->lastname }}</h3>
+                                <p class="text-sm text-indigo-600 font-mono mb-4">{{ $selectedStudent->code }}</p>
+                                
+                                <div class="space-y-2 text-sm text-gray-700">
+                                    <p><span class="font-semibold">Carrera:</span> {{ $selectedStudent->career->name ?? 'N/A' }}</p>
+                                    <p><span class="font-semibold">Semestre:</span> <span class="bg-white px-2 py-0.5 rounded border border-indigo-200">{{ $nextSemester }}°</span></p>
                                 </div>
-
-                                <div class="mb-6">
-                                    <x-label for="voucher" value="Número de Voucher (Pago)" />
-                                    <x-input id="voucher" type="text" class="w-full mt-1" wire:model="voucherNumber" placeholder="Ingrese código de recibo" />
-                                    @error('voucherNumber') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                                </div>
-
-                                <div class="mb-4">
-                                    <x-label for="notes" value="Observaciones" />
-                                    <textarea id="notes" wire:model="notes" class="w-full border-gray-300 rounded-md shadow-sm text-sm" rows="2"></textarea>
-                                </div>
-
-                                <button wire:click="processEnrollment" 
-                                        class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded hover:bg-indigo-700 transition duration-150 flex justify-center items-center"
-                                        wire:loading.attr="disabled">
-                                    <svg wire:loading.remove class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    <span wire:loading.remove>CONFIRMAR MATRÍCULA</span>
-                                    <span wire:loading>Procesando...</span>
-                                </button>
-
-                                <p class="text-xs text-center text-gray-500 mt-4">
-                                    Al confirmar, se generará la Ficha de Matrícula automáticamente.
-                                </p>
+                                <button wire:click="cancelSelection" class="mt-4 text-sm text-red-600 hover:text-red-800 underline">Cambiar</button>
                             </div>
+
+                            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm relative overflow-hidden">
+                                <div class="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
+                                <h4 class="font-bold text-gray-700 mb-4">Validación de Pago</h4>
+                                <div class="space-y-4">
+                                    <div>
+                                        <x-label value="Serie" />
+                                        <select wire:model="voucherSeries" class="w-full border-gray-300 rounded-md text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                            @if($availableSeries && $availableSeries->isNotEmpty())
+                                                @foreach($availableSeries as $s)
+                                                    <option value="{{ $s->series }}">
+                                                        {{ $s->series }} ({{ ucfirst(str_replace('_', ' ', $s->voucher_type)) }})
+                                                    </option>
+                                                @endforeach
+                                            @else
+                                                <option value="">Sin series configuradas</option>
+                                            @endif
+                                        </select>
+                                        <x-input-error for="voucherSeries" />
+                                    </div>
+                                    <div>
+                                        <x-label value="Número" />
+                                        <x-input type="number" wire:model="voucherNumber" class="w-full" placeholder="Ej. 7" />
+                                        <x-input-error for="voucherNumber" />
+                                    </div>
+                                    <div>
+                                        <x-label value="Notas" />
+                                        <textarea wire:model="notes" class="w-full border-gray-300 rounded-md text-sm h-20 placeholder-gray-400"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button wire:click="confirmEnrollment" 
+                                    wire:loading.attr="disabled"
+                                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition transform hover:scale-[1.02] flex justify-center items-center">
+                                <span wire:loading.remove>CONFIRMAR MATRÍCULA</span>
+                                <span wire:loading>Procesando...</span>
+                            </button>
                         </div>
 
-                    </div>
-                @else
-                    <div class="text-center py-10 text-gray-400">
-                        <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                        <p>Busque un estudiante para iniciar el proceso de matrícula regular.</p>
+                        <div class="lg:col-span-2">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Carga Académica Automática</h3>
+
+                            @if($proposalRegular->isEmpty() && $proposalRecovery->isEmpty())
+                                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r shadow-sm">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm text-yellow-700">
+                                                <strong>¡Atención!</strong> El estudiante es apto para matricularse, pero el sistema no encuentra <strong>Secciones (Carga Académica)</strong> programadas para los cursos que le tocan en este periodo.
+                                                <br><br>
+                                                Por favor, asegúrese de haber creado la Carga Académica para el <strong>Semestre {{ $nextSemester }}</strong> de la carrera <strong>{{ $selectedStudent->career->code }}</strong> en el periodo <strong>{{ $activePeriod->code }}</strong>.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if($proposalRecovery->isNotEmpty())
+                                <div class="mb-6 border border-red-200 bg-red-50 rounded-lg overflow-hidden">
+                                    <div class="bg-red-100 px-4 py-2 border-b border-red-200 font-bold text-red-800">
+                                        Cursos a Cargo (Recuperación)
+                                    </div>
+                                    <div class="p-4 space-y-3">
+                                        @foreach($proposalRecovery as $assign)
+                                            <div class="bg-white p-3 rounded border border-red-200 shadow-sm flex justify-between items-center">
+                                                <div>
+                                                    <div class="font-bold text-gray-800">{{ $assign->didacticUnit->name }}</div>
+                                                    <div class="text-xs text-gray-500">Semestre {{ $assign->didacticUnit->semester }}</div>
+                                                </div>
+                                                <div class="text-right text-xs">
+                                                    <div class="font-bold">{{ $assign->shift->name }} - {{ $assign->section }}</div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if($proposalRegular->isNotEmpty())
+                                <div class="border border-gray-200 bg-gray-50 rounded-lg overflow-hidden">
+                                    <div class="bg-gray-100 px-4 py-2 border-b border-gray-200 font-bold text-gray-700">
+                                        Cursos Regulares (Semestre {{ $nextSemester }})
+                                    </div>
+                                    <div class="p-4 space-y-3">
+                                        @foreach($proposalRegular as $assign)
+                                            <div class="bg-white p-3 rounded border border-gray-200 shadow-sm flex justify-between items-center hover:border-indigo-300">
+                                                <div>
+                                                    <div class="font-bold text-gray-800">{{ $assign->didacticUnit->name }}</div>
+                                                    <div class="text-xs text-gray-500">{{ $assign->didacticUnit->code }} | {{ $assign->didacticUnit->credits }} Créditos</div>
+                                                </div>
+                                                <div class="text-right text-xs">
+                                                    <div class="font-bold text-blue-600">{{ $assign->shift->name }} - {{ $assign->section }}</div>
+                                                    <div class="text-gray-500">{{ $assign->teacher->user->lastname ?? 'Por asignar' }}</div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
+                        </div>
                     </div>
                 @endif
 
             </div>
         </div>
     </div>
-
-    <script>
-        document.addEventListener('livewire:initialized', () => {
-            Livewire.on('open-pdf', (event) => {
-                const url = event.url || (Array.isArray(event) && event[0].url);
-                if(url) window.open(url, '_blank');
-            });
-        });
-    </script>
 </div>
