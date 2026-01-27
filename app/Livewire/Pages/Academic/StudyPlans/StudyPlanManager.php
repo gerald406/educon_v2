@@ -5,8 +5,9 @@ namespace App\Livewire\Pages\Academic\StudyPlans;
 use App\Models\Career;
 use App\Models\StudyPlan;
 use Illuminate\Database\QueryException;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Collection;
-use Illuminate\Validation\Rule; // Importante para reglas 'unique' complejas
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -16,8 +17,9 @@ use Livewire\WithPagination;
 class StudyPlanManager extends Component
 {
     use WithPagination;
+    use AuthorizesRequests;
 
-    // --- PROPIEDADES DEL FORMULARIO ---
+    // --- Propiedades ---
     public $career_id = '';
     public $code = '';
     public $name = '';
@@ -26,157 +28,160 @@ class StudyPlanManager extends Component
     public $end_date = null;
     public $total_credits = 0;
     public $total_hours = 0;
+    public $approval_resolution = '';
     public $status = 'active';
 
-    // --- PROPIEDADES DE ESTADO ---
+    // --- Estado ---
     public ?StudyPlan $editingStudyPlan = null;
     public $isModalOpen = false;
     public $search = '';
 
-    // Colección para el dropdown de carreras
     public Collection $careers;
 
-    /**
-     * Hook 'mount': Carga las carreras.
-     */
     public function mount()
     {
-        $this->careers = Career::where('status', 'active')->pluck('name', 'id');
-        // Asignar la primera carrera por defecto
+        $this->careers = Career::where('status', 'active')->orderBy('name')->pluck('name', 'id');
+
+        // Preselección inteligente
         if (!$this->editingStudyPlan && $this->careers->count() > 0) {
             $this->career_id = $this->careers->keys()->first();
         }
     }
 
-    /**
-     * Define las reglas de validación.
-     */
-    protected function rules()
+    public function rules()
     {
         return [
-            'career_id' => 'required|exists:careers,id',
-            'name' => 'required|string|max:100',
-            'version' => 'required|string|max:10',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'total_credits' => 'required|integer|min:1',
-            'total_hours' => 'required|integer|min:1',
-            'status' => 'required|in:active,inactive,obsolete',
-            // Regla avanzada: El 'code' debe ser único para la 'career_id' seleccionada.
+            'career_id' => ['required', 'exists:careers,id'],
             'code' => [
                 'required',
                 'string',
                 'max:20',
+                // El código debe ser único para LA MISMA carrera
                 Rule::unique('study_plans')
-                    ->where(fn ($query) => $query->where('career_id', $this->career_id))
+                    ->where('career_id', $this->career_id)
                     ->ignore($this->editingStudyPlan?->id)
             ],
+            'name' => ['required', 'string', 'max:100'],
+            'version' => ['required', 'string', 'max:10'],
+            'start_date' => ['required', 'date'],
+            'end_date' => ['nullable', 'date', 'after:start_date'],
+            'total_credits' => ['required', 'integer', 'min:1'],
+            'total_hours' => ['required', 'integer', 'min:1'],
+            'approval_resolution' => ['nullable', 'string', 'max:50'],
+            'status' => ['required', 'in:active,inactive,obsolete'],
         ];
     }
 
-    // --- ACCIONES DEL CRUD ---
+    // --- Acciones ---
 
-    public function openCreateModal()
+    public function create()
     {
-        $this->resetForm();
+        $this->authorize('gestionar-estructura-academica');
+        $this->resetInput();
         $this->isModalOpen = true;
     }
 
-    public function openEditModal(StudyPlan $studyPlan)
+    public function edit(StudyPlan $plan)
     {
-        $this->editingStudyPlan = $studyPlan;
-        $this->fill($studyPlan->only(
-            'career_id', 'code', 'name', 'version', 'total_credits', 'total_hours', 'status'
-        ));
-        // Formatear fechas para los inputs type="date"
-        $this->start_date = $studyPlan->start_date->format('Y-m-d');
-        $this->end_date = $studyPlan->end_date?->format('Y-m-d');
-        
+        $this->authorize('gestionar-estructura-academica');
+        $this->editingStudyPlan = $plan;
+
+        $this->career_id = $plan->career_id;
+        $this->code = $plan->code;
+        $this->name = $plan->name;
+        $this->version = $plan->version;
+        $this->start_date = $plan->start_date->format('Y-m-d');
+        $this->end_date = $plan->end_date ? $plan->end_date->format('Y-m-d') : null;
+        $this->total_credits = $plan->total_credits;
+        $this->total_hours = $plan->total_hours;
+        $this->approval_resolution = $plan->approval_resolution;
+        $this->status = $plan->status;
+
+        $this->resetValidation();
         $this->isModalOpen = true;
+    }
+
+    public function save()
+    {
+        $this->authorize('gestionar-estructura-academica');
+        $validated = $this->validate();
+
+        if (empty($validated['end_date'])) {
+            $validated['end_date'] = null;
+        }
+
+        try {
+            if ($this->editingStudyPlan) {
+                $this->editingStudyPlan->update($validated);
+                $msg = 'Plan de estudios actualizado.';
+            } else {
+                StudyPlan::create($validated);
+                $msg = 'Plan de estudios registrado.';
+            }
+
+            $this->isModalOpen = false;
+            $this->dispatch('swal', ['icon' => 'success', 'title' => 'Éxito', 'text' => $msg]);
+        } catch (\Exception $e) {
+            $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'Error: ' . $e->getMessage()]);
+        }
+    }
+
+    public function confirmDelete($id)
+    {
+        $this->authorize('gestionar-estructura-academica');
+        $this->dispatch('swal:confirm', [
+            'title' => '¿Eliminar Plan?',
+            'text' => 'Se eliminarán módulos y unidades asociadas. No reversible.',
+            'id' => $id,
+            'method' => 'deleteStudyPlan'
+        ]);
+    }
+
+    #[On('deleteStudyPlan')]
+    public function deleteStudyPlan($id)
+    {
+        $this->authorize('gestionar-estructura-academica');
+        try {
+            StudyPlan::findOrFail($id)->delete();
+            $this->dispatch('swal', ['icon' => 'success', 'title' => 'Eliminado', 'text' => 'Plan eliminado.']);
+        } catch (QueryException $e) {
+            $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'Tiene registros asociados imposibles de borrar.']);
+        }
     }
 
     public function closeModal()
     {
         $this->isModalOpen = false;
-        $this->resetForm();
-    }
-
-    public function resetForm()
-    {
-        $this->resetExcept('careers'); // No borramos la colección de carreras
         $this->resetValidation();
-        // Re-asignar la carrera por defecto
-        if ($this->careers->count() > 0) {
-            $this->career_id = $this->careers->keys()->first();
-        }
     }
 
-    public function save()
+    private function resetInput()
     {
-        $data = $this->validate();
-        
-        $model = $this->editingStudyPlan ?? new StudyPlan();
-        $model->fill($data);
-        $model->save();
-        
-        $this->closeModal();
-        $this->dispatch('swal', [
-            'icon' => 'success',
-            'title' => '¡Hecho!',
-            'text' => 'Plan de Estudio guardado correctamente.',
-        ]);
+        $this->editingStudyPlan = null;
+        $this->code = '';
+        $this->name = '';
+        $this->version = '';
+        $this->start_date = '';
+        $this->end_date = null;
+        $this->total_credits = 0;
+        $this->total_hours = 0;
+        $this->approval_resolution = '';
+        $this->status = 'active';
     }
 
-    public function confirmDelete(int $id)
-    {
-        $this->dispatch('swal:confirm', [
-            'id' => $id,
-            'title' => '¿Eliminar Plan de Estudio?',
-            'text' => 'Esto eliminará el plan y todos sus módulos y cursos asociados.',
-            'onConfirmed' => 'deleteStudyPlan'
-        ]);
-    }
-
-    #[On('deleteStudyPlan')]
-    public function deleteStudyPlan(int $id)
-    {
-        try {
-            StudyPlan::findOrFail($id)->delete(); // El 'onDelete('cascade')' de la migración borrará los módulos/cursos
-            $this->dispatch('swal', [
-                'icon' => 'success',
-                'title' => '¡Eliminado!',
-                'text' => 'El plan de estudio ha sido eliminado.',
-            ]);
-        } catch (QueryException $e) {
-            $this->dispatch('swal', [
-                'icon' => 'error',
-                'title' => 'Error al eliminar',
-                'text' => 'No se pudo eliminar el plan. Verifique las dependencias.',
-                'toast' => false, 'position' => 'center', 'timer' => null, 'showConfirmButton' => true,
-            ]);
-        }
-    }
-
-    // --- RENDER ---
     public function render()
     {
-        $query = StudyPlan::with('career'); // Carga ansiosa de la relación 'career'
-
-        if ($this->search) {
-            $query->where(function($q) {
-                $q->where('name', 'like', '%' . $this->search . '%')
-                  ->orWhere('code', 'like', '%' . $this->search . '%')
-                  // Permite buscar por el nombre de la carrera
-                  ->orWhereHas('career', function ($subQuery) {
-                      $subQuery->where('name', 'like', '%' . $this->search . '%');
-                  });
+        $query = StudyPlan::with('career')
+            ->when($this->search, function ($q) {
+                $q->where(function ($sub) {
+                    $sub->where('name', 'like', '%' . $this->search . '%')
+                        ->orWhere('code', 'like', '%' . $this->search . '%')
+                    ->orWhereHas('career', fn($c) => $c->where('name', 'like', '%' . $this->search . '%'));
             });
-        }
-        
-        $plans = $query->orderBy('name')->paginate(10);
+            });
 
         return view('livewire.pages.academic.study-plans.study-plan-manager', [
-            'plans' => $plans,
+            'plans' => $query->orderBy('name')->paginate(10)
         ]);
     }
 }
