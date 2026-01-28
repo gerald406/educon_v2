@@ -138,8 +138,7 @@ Route::prefix('academic')->middleware(['auth', 'verified', 'permission:gestionar
 Route::prefix('people')->middleware(['auth', 'verified'])->name('people.')->group(function () {
     Route::get('teachers', TeacherManager::class)->middleware('permission:gestionar-docentes')->name('teachers');
     Route::get('students', StudentManager::class)->middleware('permission:gestionar-estudiantes')->name('students');
-    Route::get('students/{student}/enrollment-form', [StudentReportController::class, 'downloadEnrollmentForm'])
-        ->middleware('permission:gestionar-estudiantes') // Usamos el mismo permiso que para ver la lista
+    Route::get('students/{student}/enrollment-pdf', [StudentReportController::class, 'downloadEnrollmentForm'])
         ->name('students.enrollment-form');
 });
 

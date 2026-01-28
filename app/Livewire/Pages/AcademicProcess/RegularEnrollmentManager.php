@@ -210,7 +210,21 @@ class RegularEnrollmentManager extends Component
                 }
             });
 
-            $this->dispatch('swal', ['icon' => 'success', 'title' => 'Éxito', 'text' => 'Matrícula procesada correctamente.']);
+            $pdfUrl = route('people.students.enrollment-form', ['student' => $this->selectedStudent->id]);
+
+            // Despachar evento Swal con botón de confirmación o cierre automático
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => '¡Matrícula Exitosa!',
+                'text' => 'El estudiante ha sido matriculado. Se abrirá la ficha de matrícula.',
+                'timer' => 2000,
+                'showConfirmButton' => false
+            ]);
+
+            // Despachar evento para abrir PDF en nueva pestaña
+            $this->dispatch('open-pdf', url: $pdfUrl);
+
+            // Resetear formulario
             $this->reset('selectedStudent', 'voucherNumber', 'notes', 'proposalRegular', 'proposalRecovery');
         } catch (\Exception $e) {
             $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => $e->getMessage()]);

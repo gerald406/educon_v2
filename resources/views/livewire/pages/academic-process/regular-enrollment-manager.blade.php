@@ -184,3 +184,19 @@
         </div>
     </div>
 </div>
+
+@script
+<script>
+    Livewire.on('open-pdf', (event) => {
+        // Extraer la URL del objeto event (Livewire 3 pasa los parámetros directos o en [0])
+        const url = event.url || event[0].url;
+        
+        if(url) {
+            // Pequeño retardo para que el usuario vea el SweetAlert primero
+            setTimeout(() => {
+                window.open(url, '_blank');
+            }, 1000);
+        }
+    });
+</script>
+@endscript
