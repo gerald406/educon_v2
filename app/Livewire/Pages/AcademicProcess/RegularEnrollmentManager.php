@@ -9,6 +9,7 @@ use App\Models\Registration;
 use App\Models\Student;
 use App\Models\StudentPayment;
 use App\Services\EnrollmentService;
+use App\Models\VoucherSeries; // <--- IMPORTANTE: Asegúrate de tener esto
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -29,7 +30,6 @@ class RegularEnrollmentManager extends Component
     public Collection $proposalRecovery;
 
     // --- Formulario de Pago ---
-    // Inicializamos como colección vacía para evitar el error "isEmpty() on null"
     public Collection $availableSeries;
     public $voucherSeries = '';
     public $voucherNumber = '';
@@ -37,26 +37,30 @@ class RegularEnrollmentManager extends Component
 
     public function mount()
     {
-        // Inicialización segura de colecciones
+        // Inicialización segura
         $this->searchResults = collect();
         $this->proposalRegular = collect();
         $this->proposalRecovery = collect();
-        $this->availableSeries = collect(); // Evita el error 500 inicial
+        $this->availableSeries = collect();
 
         // 1. Cargar Periodo Activo
         $this->activePeriod = AcademicPeriod::where('status', 'active')->first();
 
-        // 2. Cargar Series de Comprobantes Activas
+        // 2. Cargar Series de Comprobantes Activas (Integración con Tesorería)
         try {
-            $service = app(EnrollmentService::class);
-            $this->availableSeries = $service->getActiveVoucherSeries();
+            // Usamos el servicio O directamente el modelo, ambas formas son válidas.
+            // Aquí lo hacemos directo para asegurar que cargue si el servicio no tiene el método.
+            $this->availableSeries = VoucherSeries::where('status', 'active')
+                ->orderBy('voucher_type')
+                ->orderBy('series')
+                ->get();
 
             // Pre-seleccionar la primera serie si existe (ej. R25)
             if ($this->availableSeries->isNotEmpty()) {
                 $this->voucherSeries = $this->availableSeries->first()->series;
             }
         } catch (\Exception $e) {
-            // Si falla (ej. tabla no existe), se queda como colección vacía y no rompe la vista
+            // Si falla, no rompe la vista
         }
     }
 
@@ -92,6 +96,7 @@ class RegularEnrollmentManager extends Component
         // Validar si ya existe matrícula
         $exists = Enrollment::where('student_id', $this->selectedStudent->id)
             ->where('academic_period_id', $this->activePeriod->id)
+            ->where('status', 'active') // Solo validamos activas, permitimos si la anterior fue anulada
             ->exists();
 
         if ($exists) {
@@ -105,7 +110,7 @@ class RegularEnrollmentManager extends Component
             ? $this->selectedStudent->current_semester
             : 6;
 
-        // Obtener Cursos
+        // Obtener Cursos desde el Servicio
         $service = app(EnrollmentService::class);
         $proposal = $service->getEnrollmentProposal(
             $this->selectedStudent,
@@ -116,12 +121,11 @@ class RegularEnrollmentManager extends Component
         $this->proposalRegular = $proposal['regular'];
         $this->proposalRecovery = $proposal['recovery'];
 
-        // [DIAGNÓSTICO] Si no hay cursos, avisar claramente
         if ($this->proposalRegular->isEmpty() && $this->proposalRecovery->isEmpty()) {
             $this->dispatch('swal', [
                 'icon' => 'warning',
                 'title' => 'Sin Carga Académica',
-                'text' => "El estudiante es apto para el Semestre {$this->nextSemester}, pero NO SE ENCONTRARON SECCIONES (Teacher Assignments) creadas para sus cursos en el periodo {$this->activePeriod->code}. Vaya al módulo 'Carga Académica' y asigne docentes y horarios."
+                'text' => "El estudiante es apto para el Semestre {$this->nextSemester}, pero NO SE ENCONTRARON SECCIONES programadas en el periodo {$this->activePeriod->code}."
             ]);
         }
     }
@@ -134,7 +138,7 @@ class RegularEnrollmentManager extends Component
         ]);
 
         if ($this->proposalRegular->isEmpty() && $this->proposalRecovery->isEmpty()) {
-            $this->dispatch('swal', ['icon' => 'error', 'title' => 'Imposible Matricular', 'text' => 'No hay cursos disponibles para inscribir (Falta programación académica).']);
+            $this->dispatch('swal', ['icon' => 'error', 'title' => 'Imposible Matricular', 'text' => 'No hay cursos disponibles para inscribir.']);
             return;
         }
 
@@ -142,17 +146,15 @@ class RegularEnrollmentManager extends Component
             DB::transaction(function () {
                 $service = app(EnrollmentService::class);
 
-                // A. Validar Voucher
+                // A. Validar Voucher (Serie + Número)
                 $voucher = $service->validateVoucher(
                     $this->voucherSeries,
                     $this->voucherNumber,
                     $this->selectedStudent->user_id
                 );
 
-                // B. Crear Cabecera (Matrícula)
-                // Usamos 'regular' o 'regular_with_recovery'
-                // NOTA: Asegúrate de haber ampliado la columna en BD como te indiqué antes, 
-                // o usa 'regular' si no has podido cambiar la BD.
+                // B. Crear Cabecera
+                // Ajustamos el tipo de matrícula. Si tu BD es varchar(50) usa strings largos.
                 $enrollmentType = $this->proposalRecovery->isNotEmpty() ? 'regular_with_recovery' : 'regular';
 
                 $enrollment = Enrollment::create([
@@ -168,7 +170,7 @@ class RegularEnrollmentManager extends Component
                     'enrollment_date' => now(),
                 ]);
 
-                // C. Vincular Pago (StudentPayment) -> AQUÍ ESTABA EL ERROR
+                // C. Vincular Pago
                 $concept = PaymentConcept::where('code', 'MAT-REG')->first();
 
                 StudentPayment::create([
@@ -178,11 +180,7 @@ class RegularEnrollmentManager extends Component
                     'voucher_id' => $voucher->id,
                     'original_amount' => $concept?->amount ?? 0,
                     'final_amount' => $voucher->total_amount,
-
-                    // --- CORRECCIÓN: AGREGAMOS DUE_DATE ---
-                    'due_date' => now(), // <--- ¡Esto faltaba!
-                    // --------------------------------------
-
+                    'due_date' => now(), // CORRECCIÓN SQL CRÍTICA
                     'payment_date' => now(),
                     'status' => 'paid',
                     'registered_by_user_id' => auth()->id(),
@@ -210,21 +208,20 @@ class RegularEnrollmentManager extends Component
                 }
             });
 
+            // Generar URL del PDF
+            // ASEGÚRATE QUE 'people.students.enrollment-form' EXISTA EN TU WEB.PHP
             $pdfUrl = route('people.students.enrollment-form', ['student' => $this->selectedStudent->id]);
 
-            // Despachar evento Swal con botón de confirmación o cierre automático
             $this->dispatch('swal', [
                 'icon' => 'success',
                 'title' => '¡Matrícula Exitosa!',
-                'text' => 'El estudiante ha sido matriculado. Se abrirá la ficha de matrícula.',
+                'text' => 'Proceso completado. Se abrirá la ficha de matrícula.',
                 'timer' => 2000,
                 'showConfirmButton' => false
             ]);
 
-            // Despachar evento para abrir PDF en nueva pestaña
             $this->dispatch('open-pdf', url: $pdfUrl);
 
-            // Resetear formulario
             $this->reset('selectedStudent', 'voucherNumber', 'notes', 'proposalRegular', 'proposalRecovery');
         } catch (\Exception $e) {
             $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => $e->getMessage()]);
@@ -233,8 +230,8 @@ class RegularEnrollmentManager extends Component
 
     public function cancelSelection()
     {
-        $this->reset('selectedStudent', 'proposalRegular', 'proposalRecovery', 'search');
-        $this->searchResults = collect();
+        $this->reset('selectedStudent', 'proposalRegular', 'proposalRecovery');
+        $this->searchResults = collect(); // Limpiar resultados
     }
 
     public function render()
