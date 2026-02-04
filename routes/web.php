@@ -68,6 +68,7 @@ use App\Livewire\Pages\Communication\AnnouncementManager;
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\CashSessionController;
 use App\Http\Controllers\StudentReportController;
+use App\Livewire\Pages\AcademicProcess\EnrollmentListManager;
 use App\Livewire\Pages\AcademicProcess\EnrollmentReservationManager;
 use App\Livewire\Pages\AcademicProcess\RegularEnrollmentManager;
 use App\Livewire\Pages\AcademicProcess\ReincorporationManager;
@@ -156,6 +157,8 @@ Route::prefix('academic-process')->middleware(['auth', 'verified'])->name('acade
     Route::get('regular-enrollment', RegularEnrollmentManager::class)
         ->middleware('permission:gestionar-matricula-regular')
         ->name('regular-enrollment');
+    Route::get('enrollment-list', EnrollmentListManager::class)
+        ->name('enrollment-list');
 });
 
 // Grupo de Rutas para Evaluación (Docentes y roles superiores)

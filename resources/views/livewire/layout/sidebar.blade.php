@@ -157,6 +157,10 @@
                     @endcan
                     @can('gestionar-matricula-regular')
                         <a href="{{ route('academic-process.regular-enrollment') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('academic-process.regular-enrollment') ? 'text-white' : 'text-gray-400 hover:text-white' }}">Matrícula Regular</a>
+                        <a href="{{ route('academic-process.enrollment-list') }}" 
+                            class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('academic-process.enrollment-list') ? 'text-white' : 'text-gray-400 hover:text-white' }}">
+                            Gestión de Matrículas
+                        </a>
                     @endcan
                     @can('gestionar-reservas-matricula')
                         <a href="{{ route('academic-process.reservations') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('academic-process.reservations') ? 'text-white' : 'text-gray-400 hover:text-white' }}">Reservas de Matrícula</a>

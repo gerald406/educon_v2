@@ -4,12 +4,15 @@ namespace App\Services;
 
 use App\Models\AcademicRecord;
 use App\Models\DidacticUnit;
+use App\Models\Enrollment;
 use App\Models\Student;
+use App\Models\StudentPayment;
 use App\Models\SystemSetting;
 use App\Models\TeacherAssignment;
 use App\Models\Voucher;
 use App\Models\VoucherSeries; // [NUEVO] Importar modelo
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class EnrollmentService
 {
@@ -95,5 +98,45 @@ class EnrollmentService
         }
 
         return $voucher;
+    }
+
+
+    /**
+     * [NUEVO] Elimina una matrícula y libera el voucher asociado.
+     */
+    public function deleteEnrollment(int $enrollmentId): void
+    {
+        $enrollment = Enrollment::findOrFail($enrollmentId);
+
+        // 1. Validar Integridad Académica (No borrar si ya cursó o tiene notas)
+        // (Aquí podrías agregar lógica para verificar si AcademicRecord tiene notas > 0)
+
+        DB::transaction(function () use ($enrollment) {
+            // 2. Recuperar Cupos (Decrementar inscritos)
+            foreach ($enrollment->registrations as $registration) {
+                $registration->teacherAssignment->decrement('current_enrolled');
+            }
+
+            // 3. Eliminar Detalle de Cursos
+            $enrollment->registrations()->delete();
+
+            // 4. Liberar Comprobante (Regla de Negocio Crítica)
+            // Buscamos el pago de MATRÍCULA de este alumno en este periodo
+            $payment = StudentPayment::where('student_id', $enrollment->student_id)
+                ->where('academic_period_id', $enrollment->academic_period_id)
+                ->whereHas('paymentConcept', fn($q) => $q->where('code', 'MAT-REG'))
+                ->first();
+
+            if ($payment) {
+                // Al eliminar el pago, el Voucher (ej. R25-7) queda libre en la tabla 'vouchers'
+                // porque ya no hay un student_payment apuntando a él.
+                $payment->delete();
+            }
+
+            // 5. Eliminar Cabecera
+            $enrollment->delete();
+
+            // Opcional: Revertir semestre del estudiante si fue promovido por error (Lógica compleja, se omite por seguridad)
+        });
     }
 }
