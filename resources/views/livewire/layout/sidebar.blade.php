@@ -76,6 +76,10 @@
                 <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
                     <a href="{{ route('admission.dashboard') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admission.dashboard') ? 'text-white' : 'text-gray-400 hover:text-white' }}">Dashboard</a>
                     <a href="{{ route('admission.applicants') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admission.applicants') ? 'text-white' : 'text-gray-400 hover:text-white' }}">Postulantes</a>
+                    <a href="{{ route('admission.origin-schools') }}" 
+                    class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admission.origin-schools') ? 'text-white' : 'text-gray-400 hover:text-white' }}">
+                    Colegios de Procedencia
+                    </a>
                     <a href="{{ route('admission.fast-grades') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admission.fast-grades') ? 'text-white' : 'text-gray-400 hover:text-white' }}">Registro de Notas</a>
                     
                     <div class="border-t border-gray-700 my-1"></div>

@@ -72,6 +72,7 @@ use App\Livewire\Pages\AcademicProcess\EnrollmentListManager;
 use App\Livewire\Pages\AcademicProcess\EnrollmentReservationManager;
 use App\Livewire\Pages\AcademicProcess\RegularEnrollmentManager;
 use App\Livewire\Pages\AcademicProcess\ReincorporationManager;
+use App\Livewire\Pages\Admission\OriginSchoolManager;
 use App\Livewire\Pages\Security\RoleManager;
 use App\Livewire\Pages\Security\UserManager;
 
@@ -231,6 +232,9 @@ Route::prefix('admission')->middleware(['auth', 'verified', 'permission:gestiona
     Route::get('ficha/{applicant}', [AdmissionDocumentController::class, 'ficha'])->name('ficha');
     Route::get('dashboard', AdmissionDashboard::class)->name('dashboard');
     Route::get('fast-grades', FastGradeEntry::class)->name('fast-grades');
+
+    Route::get('origin-schools', OriginSchoolManager::class)
+        ->name('origin-schools');
 });
 
 
