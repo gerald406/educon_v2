@@ -67,11 +67,14 @@ use App\Livewire\Pages\Communication\AnnouncementManager;
 
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\CashSessionController;
+use App\Http\Controllers\ExamReportController;
 use App\Http\Controllers\StudentReportController;
 use App\Livewire\Pages\AcademicProcess\EnrollmentListManager;
 use App\Livewire\Pages\AcademicProcess\EnrollmentReservationManager;
 use App\Livewire\Pages\AcademicProcess\RegularEnrollmentManager;
 use App\Livewire\Pages\AcademicProcess\ReincorporationManager;
+use App\Livewire\Pages\Admission\Exam\DistributionManager;
+use App\Livewire\Pages\Admission\Exam\InfrastructureManager;
 use App\Livewire\Pages\Admission\OriginSchoolManager;
 use App\Livewire\Pages\Security\RoleManager;
 use App\Livewire\Pages\Security\UserManager;
@@ -235,6 +238,27 @@ Route::prefix('admission')->middleware(['auth', 'verified', 'permission:gestiona
 
     Route::get('origin-schools', OriginSchoolManager::class)
         ->name('origin-schools');
+
+    // --- GRUPO: LOGÍSTICA DE EXAMEN ---
+    Route::prefix('exam')->name('exam.')->group(function () {
+
+        // 1. Infraestructura (Pabellones y Aulas)
+        Route::get('infrastructure', InfrastructureManager::class)
+            ->name('infrastructure');
+
+        // 2. Distribución (Algoritmo y Asignación)
+        Route::get('distribution', DistributionManager::class)
+            ->name('distribution');
+
+        // 3. Reportes (Lista de Puerta PDF)
+        Route::get('classroom/{classroom}/door-list', [\App\Http\Controllers\ExamReportController::class, 'doorList'])
+            ->name('door-list');
+    });
+});
+
+Route::prefix('admission/exam')->middleware(['auth', 'verified'])->group(function () {
+    // ... Rutas de los managers ...
+    Route::get('classroom/{classroom}/door-list', [ExamReportController::class, 'doorList'])->name('exam.door-list');
 });
 
 

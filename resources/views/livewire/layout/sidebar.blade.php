@@ -87,6 +87,20 @@
                     <a href="{{ route('admission.offerings') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admission.offerings') ? 'text-white' : 'text-gray-400 hover:text-white' }}">Config. Vacantes</a>
                     <a href="{{ route('admission.modalities') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admission.modalities') ? 'text-white' : 'text-gray-400 hover:text-white' }}">Modalidades</a>
                     <a href="{{ route('admission.financial-entities') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admission.financial-entities') ? 'text-white' : 'text-gray-400 hover:text-white' }}">Bancos / Cajas</a>
+
+                    <div class="border-t border-gray-700 my-1"></div>
+                    <div class="px-3 py-1 text-xs text-gray-500 uppercase font-semibold">Logística Examen</div>
+
+                    <a href="{{ route('admission.exam.infrastructure') }}" 
+                    class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admission.exam.infrastructure') ? 'text-white' : 'text-gray-400 hover:text-white' }}">
+                    Infraestructura
+                    </a>
+                    
+                    <a href="{{ route('admission.exam.distribution') }}" 
+                    class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admission.exam.distribution') ? 'text-white' : 'text-gray-400 hover:text-white' }}">
+                    Distribución de Aulas
+                    </a>
+
                 </div>
             </div>
         @endcan
