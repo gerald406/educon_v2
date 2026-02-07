@@ -248,11 +248,37 @@ class StudentManager extends Component
     public function deleteStudent($id)
     {
         try {
-            $student = Student::with('user')->findOrFail($id);
-            $student->user->delete();
-            $this->dispatch('swal', ['icon' => 'success', 'title' => 'Eliminado', 'text' => 'Registro eliminado.']);
+            $student = Student::findOrFail($id);
+
+            // 1. Validación de seguridad: No borrar si tiene historial académico (Matrículas)
+            // Asumiendo que tienes el modelo Enrollment importado
+            $hasEnrollments = \App\Models\Enrollment::where('student_id', $student->id)->exists();
+
+            if ($hasEnrollments) {
+                $this->dispatch('swal', [
+                    'icon' => 'error',
+                    'title' => 'No permitido',
+                    'text' => 'El estudiante tiene matrículas registradas. No se puede eliminar.'
+                ]);
+                return;
+            }
+
+            DB::transaction(function () use ($student) {
+                // 2. Guardamos el usuario asociado antes de borrar al estudiante
+                $user = $student->user;
+
+                // 3. Borramos PRIMERO al estudiante (El hijo)
+                $student->delete();
+
+                // 4. Borramos DESPUÉS al usuario (El padre) si existe
+                if ($user) {
+                    $user->delete();
+                }
+            });
+
+            $this->dispatch('swal', ['icon' => 'success', 'title' => 'Eliminado', 'text' => 'Estudiante y usuario eliminados correctamente.']);
         } catch (\Exception $e) {
-            $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'No se pudo eliminar.']);
+            $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'Error técnico: ' . $e->getMessage()]);
         }
     }
 

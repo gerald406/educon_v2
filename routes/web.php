@@ -251,15 +251,12 @@ Route::prefix('admission')->middleware(['auth', 'verified', 'permission:gestiona
             ->name('distribution');
 
         // 3. Reportes (Lista de Puerta PDF)
-        Route::get('classroom/{classroom}/door-list', [\App\Http\Controllers\ExamReportController::class, 'doorList'])
+        Route::get('classroom/{classroom}/door-list', [ExamReportController::class, 'doorList'])
             ->name('door-list');
     });
 });
 
-Route::prefix('admission/exam')->middleware(['auth', 'verified'])->group(function () {
-    // ... Rutas de los managers ...
-    Route::get('classroom/{classroom}/door-list', [ExamReportController::class, 'doorList'])->name('exam.door-list');
-});
+
 
 
 // [NUEVO GRUPO] Grupo de Rutas para Estudiantes

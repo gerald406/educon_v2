@@ -160,4 +160,61 @@
             <x-button class="ml-3" wire:click="save" wire:loading.attr="disabled">Guardar</x-button>
         </x-slot>
     </x-dialog-modal>
+   @script
+    <script>
+        // Escucha el evento de confirmación
+        Livewire.on('swal:confirm', (event) => {
+            
+            // 1. CORRECCIÓN CRÍTICA: Normalizar los datos
+            // Livewire 3 a veces envía los datos como objeto directo o dentro de un array [0]
+            let data = event;
+            if (Array.isArray(event) && event.length > 0) {
+                data = event[0];
+            }
+            
+            // Si data llega envuelto en otro objeto 'detail' (común en eventos de navegador)
+            if (data.detail) {
+                data = data.detail;
+            }
+
+            // Validar que tengamos los datos necesarios
+            if (!data.method || !data.id) {
+                console.error('Error: Faltan datos para el borrado (id o method)', data);
+                return;
+            }
+
+            // 2. Mostrar Alerta
+            Swal.fire({
+                title: data.title || '¿Estás seguro?',
+                text: data.text || "Esta acción no se puede deshacer",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // 3. Enviar la orden al servidor
+                    // Usamos { id: ... } para asegurar que PHP mapee el argumento $id correctamente
+                    Livewire.dispatch(data.method, { id: data.id });
+                }
+            });
+        });
+
+        // Escuchar mensajes de éxito/error generales
+        Livewire.on('swal', (event) => {
+            let data = event;
+            if (Array.isArray(event)) data = event[0];
+            
+            Swal.fire({
+                icon: data.icon,
+                title: data.title,
+                text: data.text,
+                showConfirmButton: false,
+                timer: 2000
+            });
+        });
+    </script>
+    @endscript
 </div>

@@ -99,12 +99,9 @@
         </table>
 
         <table>
-            <tr><td colspan="2" class="section-header">II. DATOS ACADÉMICOS</td></tr>
+            <tr><td colspan="2" class="section-header">II. COELGIO DE PROCEDENCIA</td></tr>
             <tr><td class="label">Colegio Procedencia:</td><td>{{ $applicant->originSchool->name ?? '-' }}</td></tr>
             <tr><td class="label">Año Egreso:</td><td>{{ $applicant->school_graduation_year }}</td></tr>
-            <tr><td class="label">Programa Estudios:</td><td>{{ $applicant->admissionOffering->career->name ?? '-' }}</td></tr>
-            <tr><td class="label">Turno:</td><td>{{ $applicant->admissionOffering->shift->name ?? '-' }}</td></tr>
-            <tr><td class="label">Modalidad:</td><td>{{ $applicant->admissionModality->name ?? '-' }}</td></tr>
         </table>
     </div>
 
@@ -119,9 +116,14 @@
     @endif
     
     <div style="clear:both;"></div>
-
     <table>
-         <tr><td colspan="2" class="section-header">III. DATOS DE PAGO</td></tr>
+        <tr><td colspan="2" class="section-header">III. DATOS DE POSTULACIÓN</td></tr>
+        <tr><td class="label">Programa Estudios:</td><td>{{ $applicant->admissionOffering->career->name ?? '-' }}</td></tr>
+        <tr><td class="label">Turno:</td><td>{{ $applicant->admissionOffering->shift->name ?? '-' }}</td></tr>
+        <tr><td class="label">Modalidad:</td><td>{{ $applicant->admissionModality->name ?? '-' }}</td></tr>
+    </table>
+    <table>
+         <tr><td colspan="2" class="section-header">IV. DATOS DE PAGO</td></tr>
          <tr><td class="label">Entidad Financiera:</td><td>{{ $applicant->financialEntity->name ?? '-' }}</td></tr>
          <tr><td class="label">Código Operación:</td><td>{{ $applicant->payment_operation_code }}</td></tr>
     </table>

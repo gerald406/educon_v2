@@ -12,20 +12,25 @@ use App\Models\Shift;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
 class DistributionManager extends Component
 {
+    use WithPagination;
+
     // --- FILTROS ---
     public $filterModality = '';
     public $filterCareer = '';
     public $filterShift = '';
 
-    // --- ESTADO ---
-    public $unassignedCount = 0;
-    public $distributedCount = 0;
+    // --- SELECCIÓN MANUAL ---
+    public $selectedApplicants = [];
+    public $selectAll = false;
+    public $targetClassroom = '';
 
-    // --- METRICAS ---
+    // --- ESTADO ---
+    public $distributedCount = 0;
     public $totalCapacity = 0;
     public $usedCapacity = 0;
 
@@ -34,47 +39,122 @@ class DistributionManager extends Component
         $this->refreshStats();
     }
 
+    public function updatedFilterModality()
+    {
+        $this->resetPage();
+        $this->selectedApplicants = [];
+        $this->selectAll = false;
+    }
+    public function updatedFilterCareer()
+    {
+        $this->resetPage();
+        $this->selectedApplicants = [];
+        $this->selectAll = false;
+    }
+    public function updatedFilterShift()
+    {
+        $this->resetPage();
+        $this->selectedApplicants = [];
+        $this->selectAll = false;
+    }
+
     public function refreshStats()
     {
-        // 1. Contar postulantes sin aula (Aptos/Registrados)
-        $query = Applicant::where('application_status', 'registered')
+        $this->distributedCount = ExamClassroomAssignment::count();
+        $this->totalCapacity = ExamClassroom::where('is_active', true)->sum('capacity');
+        $this->usedCapacity = $this->distributedCount;
+    }
+
+    // --- LÓGICA DE SELECCIÓN ---
+    public function updatedSelectAll($value)
+    {
+        if ($value) {
+            // Selecciona todos los IDs de la PÁGINA ACTUAL
+            $this->selectedApplicants = $this->getApplicantsQuery()
+                ->paginate(10)
+                ->pluck('id')
+                ->map(fn($id) => (string) $id)
+                ->toArray();
+        } else {
+            $this->selectedApplicants = [];
+        }
+    }
+
+    private function getApplicantsQuery()
+    {
+        // [CORRECCIÓN CRÍTICA]
+        // 1. Buscamos 'registrado' en español.
+        // 2. Agregamos ->has('user') para evitar error 500 si se borró el usuario.
+
+        $query = Applicant::with(['user', 'admissionOffering.career', 'admissionModality'])
+            ->has('user')
+            ->where('application_status', 'registrado') // <--- CAMBIO AQUÍ
             ->whereDoesntHave('examAssignment');
 
         if ($this->filterModality) $query->where('admission_modality_id', $this->filterModality);
+
         if ($this->filterCareer) {
             $query->whereHas('admissionOffering', fn($q) => $q->where('career_id', $this->filterCareer));
         }
+
         if ($this->filterShift) {
             $query->whereHas('admissionOffering', fn($q) => $q->where('shift_id', $this->filterShift));
         }
 
-        $this->unassignedCount = $query->count();
+        return $query;
+    }
 
-        // 2. Contar distribuidos
-        $this->distributedCount = ExamClassroomAssignment::count();
+    // --- ACCIÓN: ASIGNACIÓN MANUAL ---
+    public function assignManual()
+    {
+        $this->validate([
+            'targetClassroom' => 'required|exists:exam_classrooms,id',
+            'selectedApplicants' => 'required|array|min:1'
+        ], [
+            'targetClassroom.required' => 'Debe seleccionar un aula destino.',
+            'selectedApplicants.required' => 'Debe marcar al menos un postulante.'
+        ]);
 
-        // 3. Capacidad de Aulas
-        $this->totalCapacity = ExamClassroom::where('is_active', true)->sum('capacity');
-        $this->usedCapacity = $this->distributedCount; // Asumiendo 1 a 1
+        $classroom = ExamClassroom::withCount('assignments')->find($this->targetClassroom);
+        $availableSlots = $classroom->capacity - $classroom->assignments_count;
+        $countToAssign = count($this->selectedApplicants);
+
+        if ($countToAssign > $availableSlots) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Espacio Insuficiente',
+                'text' => "Intenta asignar $countToAssign postulantes, pero el aula solo tiene $availableSlots espacios libres."
+            ]);
+            return;
+        }
+
+        DB::transaction(function () use ($classroom) {
+            foreach ($this->selectedApplicants as $applicantId) {
+                // Verificar doble asignación por seguridad
+                $exists = ExamClassroomAssignment::where('applicant_id', $applicantId)->exists();
+                if (!$exists) {
+                    ExamClassroomAssignment::create([
+                        'exam_classroom_id' => $classroom->id,
+                        'applicant_id' => $applicantId,
+                        'assigned_at' => now(),
+                    ]);
+                }
+            }
+        });
+
+        $this->selectedApplicants = [];
+        $this->selectAll = false;
+        $this->targetClassroom = '';
+        $this->refreshStats();
+
+        $this->dispatch('swal', ['icon' => 'success', 'title' => 'Asignados', 'text' => 'Postulantes distribuidos correctamente.']);
     }
 
     // --- ACCIÓN: DISTRIBUCIÓN AUTOMÁTICA ---
     public function autoDistribute()
     {
-        // 1. Obtener postulantes filtrados
-        $query = Applicant::where('application_status', 'registered')
-            ->whereDoesntHave('examAssignment');
-
-        // Aplicar los mismos filtros de la vista
-        if ($this->filterModality) $query->where('admission_modality_id', $this->filterModality);
-        if ($this->filterCareer) {
-            $query->whereHas('admissionOffering', fn($q) => $q->where('career_id', $this->filterCareer));
-        }
-        if ($this->filterShift) {
-            $query->whereHas('admissionOffering', fn($q) => $q->where('shift_id', $this->filterShift));
-        }
-
-        $applicants = $query->get();
+        // 1. Obtener postulantes filtrados usando la misma lógica
+        $applicants = $this->getApplicantsQuery()->get();
 
         if ($applicants->isEmpty()) {
             $this->dispatch('swal', ['icon' => 'warning', 'title' => 'Sin postulantes', 'text' => 'No hay postulantes pendientes con estos filtros.']);
@@ -97,13 +177,12 @@ class DistributionManager extends Component
             return;
         }
 
-        // 3. Algoritmo de Distribución (Balanceado)
-        $applicants = $applicants->shuffle(); // Aleatorio
+        // 3. Algoritmo
+        $applicants = $applicants->shuffle();
         $assignedCount = 0;
 
         DB::transaction(function () use ($applicants, $classrooms, &$assignedCount) {
             foreach ($applicants as $applicant) {
-                // Reordenar: siempre elegir el aula con MÁS espacio libre actual
                 $classrooms = $classrooms->sortByDesc('available_slots')->values();
                 $bestRoom = $classrooms->first();
 
@@ -124,7 +203,6 @@ class DistributionManager extends Component
         $this->dispatch('swal', ['icon' => 'success', 'title' => 'Proceso Terminado', 'text' => "Se distribuyeron {$assignedCount} postulantes."]);
     }
 
-    // --- ACCIÓN: RESETEAR ---
     public function resetDistribution()
     {
         ExamClassroomAssignment::truncate();
@@ -132,21 +210,36 @@ class DistributionManager extends Component
         $this->dispatch('swal', ['icon' => 'success', 'title' => 'Reseteado', 'text' => 'Todas las asignaciones han sido eliminadas.']);
     }
 
-    // --- RENDER ---
     public function render()
     {
-        // Datos para los selects
         $modalities = AdmissionModality::where('is_active', true)->get();
         $careers = Career::where('status', 'active')->get();
         $shifts = Shift::all();
 
-        // Datos para las tarjetas de aulas (Panel inferior)
-        $classrooms = ExamClassroom::with('pavilion')
+        // Aulas para el select manual (solo las que tienen espacio)
+        $availableClassrooms = ExamClassroom::with('pavilion')
+            ->where('is_active', true)
+            ->withCount('assignments')
+            ->get()
+            ->filter(fn($c) => ($c->capacity - $c->assignments_count) > 0);
+
+        // Listado paginado
+        $applicants = $this->getApplicantsQuery()->paginate(10);
+
+        // Estado general de aulas
+        $classroomsStatus = ExamClassroom::with('pavilion')
             ->withCount('assignments')
             ->orderBy('exam_pavilion_id')
             ->orderBy('room_number')
             ->get();
 
-        return view('livewire.pages.admission.exam.distribution-manager', compact('modalities', 'careers', 'shifts', 'classrooms'));
+        return view('livewire.pages.admission.exam.distribution-manager', [
+            'modalities' => $modalities,
+            'careers' => $careers,
+            'shifts' => $shifts,
+            'applicants' => $applicants,
+            'availableClassrooms' => $availableClassrooms,
+            'classroomsStatus' => $classroomsStatus
+        ]);
     }
 }
