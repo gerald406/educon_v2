@@ -5,14 +5,11 @@ namespace App\Livewire\Pages\AcademicProcess\TeacherAssignments;
 use App\Models\AcademicPeriod;
 use App\Models\Career;
 use App\Models\DidacticUnit;
-use App\Models\Module;
 use App\Models\Shift;
-use App\Models\StudyPlan;
 use App\Models\Teacher;
 use App\Models\TeacherAssignment;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Collection;
-use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -24,9 +21,10 @@ class TeacherAssignmentManager extends Component
     use WithPagination;
     use AuthorizesRequests;
 
-    // --- Filtros Globales (Dashboard) ---
+    // --- Filtros Globales (Tabla) ---
     public $filterPeriodId = '';
     public $filterCareerId = '';
+    public $search = '';
 
     // --- Formulario ---
     public $academic_period_id = '';
@@ -34,77 +32,120 @@ class TeacherAssignmentManager extends Component
     public $didactic_unit_id = '';
     public $shift_id = '';
     public $section = 'A';
-    public $max_capacity = 30;
-    public $status = 'active';
+    public $max_capacity = 45; // [REQUERIMIENTO] Default 45
+    public $status = 'active'; // [REQUERIMIENTO] Default Active
 
-    // --- Selects Cascada del Modal ---
-    public $selectedCareerId = '';
-    public $selectedStudyPlanId = '';
-    public $selectedModuleId = '';
+    // --- Buscadores Predictivos ---
+    public $selectedCareerId = ''; // Filtro previo para cursos
 
-    // --- Colecciones ---
+    // Buscador Curso
+    public $searchUnit = '';
+    public $unitResults = [];
+    public $selectedUnitName = ''; // Para mostrar en el input
+
+    // Buscador Docente
+    public $searchTeacher = '';
+    public $teacherResults = [];
+    public $selectedTeacherName = ''; // Para mostrar en el input
+
+    // --- Colecciones Estáticas ---
     public Collection $periods;
     public Collection $careers;
-    public Collection $teachers;
     public Collection $shifts;
-
-    // Colecciones Dinámicas
-    public Collection $studyPlans;
-    public Collection $modules;
-    public Collection $units;
 
     // --- Estado ---
     public ?TeacherAssignment $editingAssignment = null;
     public $isModalOpen = false;
-    public $search = '';
 
     public function mount()
     {
-        // Carga inicial
         $this->periods = AcademicPeriod::orderBy('start_date', 'desc')->get();
 
-        // Seleccionar periodo activo por defecto
+        // Periodo activo por defecto
         $activePeriod = $this->periods->where('status', 'active')->first();
         $this->filterPeriodId = $activePeriod ? $activePeriod->id : ($this->periods->first()->id ?? '');
         $this->academic_period_id = $this->filterPeriodId;
 
         $this->careers = Career::where('status', 'active')->get();
-        $this->teachers = Teacher::with('user')->where('status', 'active')->get();
         $this->shifts = Shift::where('status', 'active')->get();
-
-        // Inicializar colecciones vacías
-        $this->studyPlans = collect();
-        $this->modules = collect();
-        $this->units = collect();
     }
 
-    // --- LOGICA CASCADA (Selects) ---
+    // ==========================================
+    // LÓGICA DE BUSCADORES
+    // ==========================================
 
-    public function updatedSelectedCareerId($value)
+    // 1. Buscador de Cursos (Filtrado por Carrera)
+    public function updatedSelectedCareerId()
     {
-        $this->selectedStudyPlanId = '';
-        $this->selectedModuleId = '';
-        $this->didactic_unit_id = '';
-        $this->studyPlans = $value ? StudyPlan::where('career_id', $value)->where('status', 'active')->get() : collect();
-        $this->modules = collect();
-        $this->units = collect();
+        $this->resetUnitSearch(); // Limpiar curso si cambia la carrera
     }
 
-    public function updatedSelectedStudyPlanId($value)
+    public function updatedSearchUnit($value)
     {
-        $this->selectedModuleId = '';
-        $this->didactic_unit_id = '';
-        $this->modules = $value ? Module::where('study_plan_id', $value)->orderBy('module_number')->get() : collect();
-        $this->units = collect();
+        if (strlen($value) < 2) {
+            $this->unitResults = [];
+            return;
+        }
+
+        // Buscar unidades didácticas que coincidan con el nombre
+        // Y opcionalmente que pertenezcan a la carrera seleccionada
+        $query = DidacticUnit::with(['module.studyPlan'])
+            ->where('name', 'like', '%' . $value . '%');
+
+        if ($this->selectedCareerId) {
+            $query->whereHas('module.studyPlan', function ($q) {
+                $q->where('career_id', $this->selectedCareerId);
+            });
+        }
+
+        $this->unitResults = $query->take(10)->get();
     }
 
-    public function updatedSelectedModuleId($value)
+    public function selectUnit($id, $name, $module, $plan)
+    {
+        $this->didactic_unit_id = $id;
+        $this->searchUnit = $name; // Texto visual
+        $this->selectedUnitName = "$name ($module - $plan)"; // Detalle visual (opcional)
+        $this->unitResults = [];
+    }
+
+    private function resetUnitSearch()
     {
         $this->didactic_unit_id = '';
-        $this->units = $value ? DidacticUnit::where('module_id', $value)->orderBy('semester')->get() : collect();
+        $this->searchUnit = '';
+        $this->selectedUnitName = '';
+        $this->unitResults = [];
     }
 
-    // --- CRUD ---
+    // 2. Buscador de Docentes
+    public function updatedSearchTeacher($value)
+    {
+        if (strlen($value) < 2) {
+            $this->teacherResults = [];
+            return;
+        }
+
+        $this->teacherResults = Teacher::with('user')
+            ->whereHas('user', function ($q) use ($value) {
+                $q->where('name', 'like', '%' . $value . '%')
+                    ->orWhere('lastname', 'like', '%' . $value . '%')
+                    ->orWhere('document_number', 'like', '%' . $value . '%');
+            })
+            ->where('status', 'active')
+            ->take(5)
+            ->get();
+    }
+
+    public function selectTeacher($id, $name)
+    {
+        $this->teacher_id = $id;
+        $this->searchTeacher = $name;
+        $this->teacherResults = [];
+    }
+
+    // ==========================================
+    // CRUD
+    // ==========================================
 
     public function rules()
     {
@@ -116,9 +157,6 @@ class TeacherAssignmentManager extends Component
             'section' => 'required|string|max:5',
             'max_capacity' => 'required|integer|min:1',
             'status' => 'required|in:active,suspended,completed',
-
-            // Regla compuesta: No duplicar (Docente + Curso + Periodo + Sección)
-            // Se puede relajar si un docente dicta a dos grupos, pero la sección debe cambiar (A vs B)
         ];
     }
 
@@ -126,8 +164,7 @@ class TeacherAssignmentManager extends Component
     {
         $this->authorize('gestionar-carga-academica');
         $this->resetInput();
-        // Mantener el periodo filtrado
-        $this->academic_period_id = $this->filterPeriodId;
+        $this->academic_period_id = $this->filterPeriodId; // Mantener periodo actual
         $this->isModalOpen = true;
     }
 
@@ -136,28 +173,24 @@ class TeacherAssignmentManager extends Component
         $this->authorize('gestionar-carga-academica');
         $this->editingAssignment = $assignment;
 
-        // Reconstruir la cascada inversa para que los selects se llenen
-        $unit = $assignment->didacticUnit;
-        $module = $unit->module;
-        $plan = $module->studyPlan;
-
-        $this->selectedCareerId = $plan->career_id;
-        $this->updatedSelectedCareerId($plan->career_id); // Carga planes
-
-        $this->selectedStudyPlanId = $plan->id;
-        $this->updatedSelectedStudyPlanId($plan->id); // Carga módulos
-
-        $this->selectedModuleId = $unit->module_id;
-        $this->updatedSelectedModuleId($unit->module_id); // Carga cursos
-
-        // Datos directos
+        // Cargar datos directos
         $this->academic_period_id = $assignment->academic_period_id;
-        $this->teacher_id = $assignment->teacher_id;
-        $this->didactic_unit_id = $assignment->didactic_unit_id;
         $this->shift_id = $assignment->shift_id;
         $this->section = $assignment->section;
         $this->max_capacity = $assignment->max_capacity;
         $this->status = $assignment->status;
+
+        // Cargar datos de relaciones para los buscadores
+        // 1. Curso
+        $unit = $assignment->didacticUnit;
+        $this->selectedCareerId = $unit->module->studyPlan->career_id; // Setear carrera
+        $this->didactic_unit_id = $unit->id;
+        $this->searchUnit = $unit->name; // Nombre en el input
+
+        // 2. Docente
+        $teacherUser = $assignment->teacher->user;
+        $this->teacher_id = $assignment->teacher_id;
+        $this->searchTeacher = $teacherUser->name . ' ' . $teacherUser->lastname;
 
         $this->isModalOpen = true;
     }
@@ -167,7 +200,7 @@ class TeacherAssignmentManager extends Component
         $this->authorize('gestionar-carga-academica');
         $validated = $this->validate();
 
-        // Validar duplicidad manualmente para mayor control
+        // Validación de duplicidad (Curso + Sección + Periodo)
         $exists = TeacherAssignment::where('academic_period_id', $this->academic_period_id)
             ->where('didactic_unit_id', $this->didactic_unit_id)
             ->where('section', $this->section)
@@ -175,13 +208,13 @@ class TeacherAssignmentManager extends Component
             ->exists();
 
         if ($exists) {
-            $this->addError('section', 'Ya existe una sección ' . $this->section . ' para este curso en este periodo.');
+            $this->addError('section', "Ya existe la sección {$this->section} para este curso.");
             return;
         }
 
         if ($this->editingAssignment) {
             $this->editingAssignment->update($validated);
-            $msg = 'Carga actualizada.';
+            $msg = 'Carga actualizada correctamente.';
         } else {
             TeacherAssignment::create($validated);
             $msg = 'Carga asignada correctamente.';
@@ -196,9 +229,11 @@ class TeacherAssignmentManager extends Component
         $this->authorize('gestionar-carga-academica');
         $this->dispatch('swal:confirm', [
             'title' => '¿Eliminar Asignación?',
-            'text' => 'Cuidado: Si hay alumnos matriculados, se perderá esa información.',
+            'text' => 'Se eliminará la carga académica del docente.',
+            'icon' => 'warning',
+            'confirmButtonText' => 'Sí, eliminar',
             'id' => $id,
-            'method' => 'deleteAssignment'
+            'onConfirmed' => 'deleteAssignment'
         ]);
     }
 
@@ -207,41 +242,41 @@ class TeacherAssignmentManager extends Component
     {
         try {
             TeacherAssignment::findOrFail($id)->delete();
-            $this->dispatch('swal', ['icon' => 'success', 'title' => 'Eliminado', 'text' => 'Asignación eliminada.']);
+            $this->dispatch('swal', ['icon' => 'success', 'title' => 'Eliminado', 'text' => 'Registro eliminado.']);
         } catch (\Exception $e) {
-            $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'No se pudo eliminar. Verifique alumnos matriculados.']);
+            $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'No se puede eliminar (posiblemente tenga alumnos matriculados).']);
         }
     }
 
     public function closeModal()
     {
         $this->isModalOpen = false;
+        $this->resetInput();
     }
 
     private function resetInput()
     {
         $this->editingAssignment = null;
+
+        // Reset Buscadores
         $this->selectedCareerId = '';
-        $this->selectedStudyPlanId = '';
-        $this->selectedModuleId = '';
-        $this->didactic_unit_id = '';
+        $this->resetUnitSearch();
         $this->teacher_id = '';
+        $this->searchTeacher = '';
+        $this->teacherResults = [];
+
+        // Reset Formulario
         $this->shift_id = '';
         $this->section = 'A';
-        $this->max_capacity = 30;
-        $this->status = 'active';
-        $this->studyPlans = collect();
-        $this->modules = collect();
-        $this->units = collect();
+        $this->max_capacity = 45; // [REQUERIMIENTO]
+        $this->status = 'active'; // [REQUERIMIENTO]
     }
 
     public function render()
     {
-        // Filtro Principal
         $query = TeacherAssignment::with(['teacher.user', 'didacticUnit', 'shift'])
             ->where('academic_period_id', $this->filterPeriodId);
 
-        // Filtro Búsqueda
         if ($this->search) {
             $query->where(function ($q) {
                 $q->whereHas('didacticUnit', fn($sq) => $sq->where('name', 'like', "%{$this->search}%"))
@@ -249,13 +284,12 @@ class TeacherAssignmentManager extends Component
             });
         }
 
-        // Filtro Carrera (Opcional en la tabla)
         if ($this->filterCareerId) {
             $query->whereHas('didacticUnit.module.studyPlan', fn($q) => $q->where('career_id', $this->filterCareerId));
         }
 
         return view('livewire.pages.academic-process.teacher-assignments.teacher-assignment-manager', [
-            'assignments' => $query->orderBy('didactic_unit_id')->paginate(10)
+            'assignments' => $query->orderBy('id', 'desc')->paginate(10)
         ]);
     }
 }

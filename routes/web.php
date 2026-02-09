@@ -68,6 +68,7 @@ use App\Livewire\Pages\Communication\AnnouncementManager;
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\CashSessionController;
 use App\Http\Controllers\ExamReportController;
+use App\Http\Controllers\ScheduleReportController;
 use App\Http\Controllers\StudentReportController;
 use App\Livewire\Pages\AcademicProcess\EnrollmentListManager;
 use App\Livewire\Pages\AcademicProcess\EnrollmentReservationManager;
@@ -152,7 +153,15 @@ Route::prefix('people')->middleware(['auth', 'verified'])->name('people.')->grou
 Route::prefix('academic-process')->middleware(['auth', 'verified'])->name('academic-process.')->group(function () {
     Route::get('academic-periods', AcademicPeriodManager::class)->middleware('permission:gestionar-periodos')->name('academic-periods');
     Route::get('teacher-assignments', TeacherAssignmentManager::class)->middleware('permission:gestionar-carga-academica')->name('teacher-assignments');
+
     Route::get('schedules', ScheduleManager::class)->middleware('permission:gestionar-horarios')->name('schedules');
+
+    /* Route::get('schedules/export', [ScheduleReportController::class, 'download'])
+        ->name('schedules.export'); */
+
+    Route::get('schedules/export', [ScheduleReportController::class, 'downloadPDF'])
+        ->name('schedules.export');
+
     Route::get('syllabus-approval', SyllabusApproval::class)->middleware('permission:aprobar-silabos')->name('syllabus-approval');
     Route::get('reservations', EnrollmentReservationManager::class)
         ->middleware('permission:gestionar-reservas-matricula')
