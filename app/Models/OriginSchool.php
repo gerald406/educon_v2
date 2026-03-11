@@ -16,6 +16,7 @@ class OriginSchool extends Model
         'name',
         'management_type',
         'ubigeo_code',
+        'd_niv_mod',
         'address',
     ];
 

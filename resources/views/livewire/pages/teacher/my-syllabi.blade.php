@@ -15,11 +15,11 @@
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium">Curso Asignado</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium">Sección</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium">Estado del Sílabo</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium">Archivo</th>
-                                        <th class="px-6 py-3 text-right text-xs font-medium">Acciones</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Curso Asignado</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sección</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avance</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
@@ -27,106 +27,81 @@
                                         @php
                                             $syllabus = $assignment->syllabus;
                                             $status = $syllabus?->status ?? 'draft';
-                                            $file_url = $syllabus?->file_url ?? null;
+                                            // Lógica simple para calcular avance (opcional)
+                                            $hasContent = $syllabus && $syllabus->sumilla; 
                                         @endphp
                                         <tr>
-                                            <td class="px-6 py-4">{{ $assignment->didacticUnit->name }}</td>
-                                            <td class="px-6 py-4">{{ $assignment->section }}</td>
+                                            <td class="px-6 py-4">
+                                                <div class="font-bold text-gray-900">{{ $assignment->didacticUnit->name }}</div>
+                                                <div class="text-xs text-gray-500">{{ $assignment->didacticUnit->module->name }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-500">
+                                                {{ $assignment->section }} - {{ $assignment->shift->name ?? '' }}
+                                            </td>
                                             <td class="px-6 py-4">
                                                 <span @class([
                                                     'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
-                                                    'bg-gray-100 text-gray-800' => $status == 'draft' && !$file_url,
-                                                    'bg-yellow-100 text-yellow-800' => $status == 'pending_approval',
+                                                    'bg-gray-100 text-gray-800' => $status == 'draft',
+                                                    'bg-yellow-100 text-yellow-800' => $status == 'submitted',
                                                     'bg-green-100 text-green-800' => $status == 'approved',
                                                     'bg-red-100 text-red-800' => $status == 'observed',
                                                 ])>
-                                                    @if(!$file_url) No subido @else {{ $status }} @endif
+                                                    @switch($status)
+                                                        @case('draft') Borrador @break
+                                                        @case('submitted') En Revisión @break
+                                                        @case('approved') Aprobado @break
+                                                        @case('observed') Observado @break
+                                                        @default Sin Iniciar
+                                                    @endswitch
                                                 </span>
                                             </td>
-                                            <td class="px-6 py-4">
-                                                @if($file_url)
-                                                    <a href="{{ asset('storage/' . $file_url) }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">
-                                                        Ver PDF (v{{ $syllabus->version }})
-                                                    </a>
+                                            <td class="px-6 py-4 text-sm text-gray-500">
+                                                @if($hasContent)
+                                                    <span class="text-green-600">En progreso</span>
                                                 @else
-                                                    N/A
+                                                    <span class="text-gray-400">--</span>
                                                 @endif
                                             </td>
-                                            <td class="px-6 py-4 text-right">
-                                                @if($status != 'approved')
-                                                    <x-button wire:click="openSyllabusModal({{ $assignment->id }})">
-                                                        {{ $file_url ? 'Actualizar PDF' : 'Subir PDF' }}
-                                                    </x-button>
-                                                @else
-                                                    <span class="text-sm text-gray-500">Aprobado</span>
-                                                @endif
+                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                {{-- BOTÓN: Ir al Editor --}}
+                                                <a href="{{ route('teacher.my-syllabi.edit', $assignment->id) }}" 
+                                                   class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring focus:ring-indigo-300 disabled:opacity-25 transition">
+                                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                                    Gestionar
+                                                </a>
                                             </td>
-                                            @if($status == 'observed' && $syllabus->observation_notes)
+                                        </tr>
+                                        
+                                        {{-- Mostrar observación si existe --}}
+                                        @if($status == 'observed' && $syllabus->observation_notes)
                                             <tr class="bg-red-50">
-                                                <td class="px-6 py-3 text-right text-sm font-semibold text-red-700">
-                                                    Observación:
-                                                </td>
-                                                <td colspan="4" class="px-6 py-3 text-sm text-red-700">
-                                                    {{ $syllabus->observation_notes }}
+                                                <td colspan="5" class="px-6 py-3 text-sm text-red-700">
+                                                    <strong>Observación del Coordinador:</strong> {{ $syllabus->observation_notes }}
                                                 </td>
                                             </tr>
                                         @endif
-                                        </tr>
+
                                     @empty
                                         <tr>
-                                            <td colspan="5" class="px-6 py-4 text-center">No tiene cursos asignados en este periodo.</td>
+                                            <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                                                No tienes cursos asignados en este periodo académico.
+                                            </td>
                                         </tr>
                                     @endforelse
                                 </tbody>
                             </table>
                         </div>
                     @else
-                        <p class="text-center text-red-500">No hay un periodo académico activo.</p>
+                        <div class="text-center py-10">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">No hay un Periodo Académico Activo</h3>
+                            <p class="mt-1 text-sm text-gray-500">Contacte al administrador del sistema.</p>
+                        </div>
                     @endif
                 </div>
             </div>
         </div>
     </div>
 
-    <x-dialog-modal wire:model.live="isModalOpen">
-        <x-slot name="title">
-            Gestionar Sílabo para: {{ $selectedAssignment?->didacticUnit->name }} (Sec. {{ $selectedAssignment?->section }})
-        </x-slot>
-
-        <x-slot name="content">
-            <div class="space-y-4">
-                @if ($currentSyllabus?->file_url)
-                    <div class="p-4 bg-gray-100 rounded-md">
-                        <p class="font-semibold">Archivo actual:</p>
-                        <a href="{{ asset('storage/' . $currentSyllabus->file_url) }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">
-                            Ver PDF (v{{ $currentSyllabus->version }})
-                        </a>
-                        <x-danger-button wire:click="deleteSyllabus" class="ml-4">
-                            Eliminar archivo
-                        </x-danger-button>
-                        <p class="text-sm text-gray-600 mt-2">Para reemplazar, simplemente suba uno nuevo.</p>
-                    </div>
-                @endif
-                
-                <div>
-                    <x-label for="pdfUpload" value="{{ $currentSyllabus?->file_url ? 'Reemplazar Sílabo (PDF)' : 'Subir Sílabo (PDF)' }}" />
-                    <x-input id="pdfUpload" type="file" class="mt-1 block w-full" wire:model="pdfUpload" accept=".pdf" />
-                    <x-input-error for="pdfUpload" class="mt-2" />
-                    
-                    <div wire:loading wire:target="pdfUpload" class="mt-2 text-sm text-gray-500">
-                        Cargando archivo...
-                    </div>
-                </div>
-            </div>
-        </x-slot>
-
-        <x-slot name="footer">
-            <x-secondary-button wire:click="closeModal">
-                Cancelar
-            </x-secondary-button>
-            <x-button class="ms-3" wire:click="saveSyllabus" wire:loading.attr="disabled">
-                Subir y Enviar a Revisión
-            </x-button>
-        </x-slot>
-    </x-dialog-modal>
+    {{-- ELIMINAMOS EL MODAL DE SUBIDA DE PDF PORQUE YA NO SE USA --}}
 </div>

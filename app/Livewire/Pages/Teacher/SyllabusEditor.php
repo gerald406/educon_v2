@@ -1,0 +1,621 @@
+<?php
+
+namespace App\Livewire\Pages\Teacher;
+
+use App\Models\Syllabus;
+use App\Models\SyllabusIndicator;
+use App\Models\SyllabusUnit;
+use App\Models\TeacherAssignment;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+
+#[Layout('layouts.app')]
+class SyllabusEditor extends Component
+{
+    public TeacherAssignment $assignment;
+    public Syllabus $syllabus;
+
+    public $activeTab = 'general';
+    public $confirmingSubmission = false;
+
+    // --- DATOS GENERALES ---
+    public $study_program;
+    public $study_plan;
+    public $module_name;
+    public $course_name;
+    public $credits_info;
+    public $total_hours;
+    public $weekly_hours_info;
+    public $period_name;
+    public $academic_cycle;
+    public $date_range;
+    public $shift_name;
+    public $teacher_name;
+    public $teacher_email;
+
+    // --- CONTENIDO DEL SÍLABO ---
+    public $sumilla;
+    public $unit_competence;
+    public $course_capacity;
+    public $employability_content;
+    public $methodology;
+    public $environments;
+    public $resources;
+    public $evaluation_system;
+    public $bibliography;
+    public $web_sources;
+
+    // --- ESTRUCTURAS COMPLEJAS ---
+    public $indicators;
+    public $total_weeks_programmed = 0;
+
+    // ✅ LISTENERS para sincronización con CKEditor
+    protected $listeners = [
+        'updateSumilla' => 'handleSumillaUpdate',
+        'updateUnitCompetence' => 'handleUnitCompetenceUpdate',
+        'updateCourseCapacity' => 'handleCourseCapacityUpdate',
+        'updateEmployability' => 'handleEmployabilityUpdate',
+        'updateMethodology' => 'handleMethodologyUpdate',
+        'updateEnvironments' => 'handleEnvironmentsUpdate',
+        'updateResources' => 'handleResourcesUpdate',
+        'updateEvaluation' => 'handleEvaluationUpdate',
+        'updateBibliography' => 'handleBibliographyUpdate',
+        'updateWebSources' => 'handleWebSourcesUpdate',
+    ];
+
+    // REGLAS DE VALIDACIÓN
+    protected $rules = [
+        'indicators.*.units.*.name' => 'nullable|string',
+        'indicators.*.units.*.content' => 'nullable|string',
+        'indicators.*.units.*.learning_outcome' => 'nullable|string',
+        'indicators.*.units.*.evaluation_instrument' => 'nullable|string',
+        'teacher_email' => 'required|email',
+        'sumilla' => 'nullable',
+        'unit_competence' => 'nullable',
+        'course_capacity' => 'nullable',
+        'methodology' => 'nullable',
+        'resources' => 'nullable',
+        'evaluation_system' => 'nullable',
+        'bibliography' => 'nullable',
+        'web_sources' => 'nullable',
+        'employability_content' => 'nullable'
+    ];
+
+    // ========================================
+    // HANDLERS para recibir datos de CKEditor
+    // ========================================
+
+    public function handleSumillaUpdate($content)
+    {
+        $this->sumilla = $content;
+    }
+
+    public function handleUnitCompetenceUpdate($content)
+    {
+        $this->unit_competence = $content;
+    }
+
+    public function handleCourseCapacityUpdate($content)
+    {
+        $this->course_capacity = $content;
+    }
+
+    public function handleEmployabilityUpdate($content)
+    {
+        $this->employability_content = $content;
+    }
+
+    public function handleMethodologyUpdate($content)
+    {
+        $this->methodology = $content;
+    }
+
+    public function handleEnvironmentsUpdate($content)
+    {
+        $this->environments = $content;
+    }
+
+    public function handleResourcesUpdate($content)
+    {
+        $this->resources = $content;
+    }
+
+    public function handleEvaluationUpdate($content)
+    {
+        $this->evaluation_system = $content;
+    }
+
+    public function handleBibliographyUpdate($content)
+    {
+        $this->bibliography = $content;
+    }
+
+    public function handleWebSourcesUpdate($content)
+    {
+        $this->web_sources = $content;
+    }
+
+    // ========================================
+    // INICIALIZACIÓN
+    // ========================================
+
+    public function mount(TeacherAssignment $assignment)
+    {
+        if ($assignment->teacher_id !== auth()->user()->teacher->id) {
+            abort(403, 'Acceso denegado.');
+        }
+
+        $this->assignment = $assignment->load([
+            'didacticUnit.module.studyPlan.career',
+            'academicPeriod',
+            'teacher.user',
+            'shift'
+        ]);
+
+        $this->syllabus = Syllabus::firstOrCreate(
+            ['teacher_assignment_id' => $assignment->id],
+            ['status' => 'draft', 'version' => '1.0']
+        );
+
+        $this->loadGeneralData();
+
+        // Carga de campos de texto con valores por defecto
+        $this->sumilla = $this->syllabus->sumilla ?? '';
+        $this->unit_competence = $this->syllabus->unit_competence ?? '';
+        $this->course_capacity = $this->syllabus->course_capacity ?? '';
+
+        // Empleabilidad
+        $storedEmployability = $this->syllabus->employability_competencies;
+        $this->employability_content = is_array($storedEmployability) ? ($storedEmployability[0] ?? '') : ($storedEmployability ?? '');
+
+        $this->methodology = $this->syllabus->methodology ?? '';
+        $this->environments = $this->syllabus->environments ?? '';
+        $this->resources = $this->syllabus->resources ?? '';
+        $this->evaluation_system = $this->syllabus->evaluation_system ?? '';
+
+        if (empty($this->evaluation_system)) {
+            $this->evaluation_system = '<ul><li>El sistema de calificación es vigesimal...</li></ul>';
+        }
+
+        $this->bibliography = $this->syllabus->bibliography ?? '';
+        $this->web_sources = $this->syllabus->web_sources ?? '';
+        $this->teacher_email = $this->assignment->teacher->user->email;
+
+        $this->loadIndicatorsWithUnits();
+    }
+
+    private function loadGeneralData()
+    {
+        $unit = $this->assignment->didacticUnit;
+        $plan = $unit->module->studyPlan;
+        $this->study_program = $plan->career->name;
+        $this->study_plan    = $plan->name;
+        $this->module_name   = $unit->module->name;
+        $this->course_name   = $unit->name;
+        $this->credits_info  = "{$unit->credits} Créditos";
+        $this->total_hours   = $unit->total_hours;
+        $calculatedWeekly = ($unit->weekly_hours > 0) ? $unit->weekly_hours : ($unit->total_hours / 16);
+        $this->weekly_hours_info = "{$calculatedWeekly} horas semanales";
+        $this->period_name   = $this->assignment->academicPeriod->name;
+        $this->academic_cycle = $unit->semester;
+        $start = \Carbon\Carbon::parse($this->assignment->academicPeriod->start_date)->format('d/m/Y');
+        $end   = \Carbon\Carbon::parse($this->assignment->academicPeriod->end_date)->format('d/m/Y');
+        $this->date_range = "{$start} – {$end} (18 semanas)";
+        $this->shift_name    = $this->assignment->shift->name ?? 'No asignado';
+        $this->teacher_name  = $this->assignment->teacher->user->lastname . ' ' . $this->assignment->teacher->user->name;
+    }
+
+    /**
+     * ✅ MANTENER COMO COLLECTION (NO usar toArray())
+     */
+    public function loadIndicatorsWithUnits()
+    {
+        $this->indicators = $this->syllabus->indicators()
+            ->with(['units' => function ($q) {
+                $q->orderBy('session_number');
+            }])
+            ->orderBy('sort_order')
+            ->get(); // ← SIN ->toArray()
+
+        $this->calculateTotalWeeks();
+    }
+
+    /**
+     * ✅ Trabajar con Collection
+     */
+    public function calculateTotalWeeks()
+    {
+        $this->total_weeks_programmed = $this->indicators->sum(function ($indicator) {
+            return $indicator->units->count();
+        });
+    }
+
+    // ========================================
+    // LÓGICA DE PROGRAMACIÓN (TAB VI)
+    // ========================================
+
+    public function addSession($indicatorId)
+    {
+        $indicator = SyllabusIndicator::find($indicatorId);
+        if (!$indicator) return;
+
+        $nextSessionNumber = $this->total_weeks_programmed + 1;
+
+        if ($nextSessionNumber > 18) {
+            $this->dispatch('swal', ['icon' => 'warning', 'title' => 'Límite alcanzado', 'text' => 'Ya has programado las 18 semanas.']);
+            return;
+        }
+
+        $indicator->units()->create([
+            'session_number' => $nextSessionNumber,
+            'name' => 'Nueva Sesión',
+            'content' => '',
+            'learning_outcome' => '',
+            'evaluation_instrument' => 'Lista de Cotejo',
+        ]);
+
+        $this->loadIndicatorsWithUnits();
+    }
+
+    public function removeSession($unitId)
+    {
+        SyllabusUnit::find($unitId)?->delete();
+        $this->reorderSessions();
+        $this->loadIndicatorsWithUnits();
+    }
+
+    private function reorderSessions()
+    {
+        $allUnits = SyllabusUnit::whereHas('indicator', function ($q) {
+            $q->where('syllabus_id', $this->syllabus->id);
+        })->orderBy('id')->get();
+
+        foreach ($allUnits as $index => $unit) {
+            $unit->update(['session_number' => $index + 1]);
+        }
+    }
+
+    // ========================================
+    // MÉTODOS DE GUARDADO
+    // ========================================
+
+    public function saveGeneral()
+    {
+        $this->dispatch('swal', ['icon' => 'success', 'title' => 'Correcto', 'text' => 'Datos validados.']);
+    }
+
+    /**
+     * ✅ Guardar Sumilla
+     */
+    public function saveSumilla()
+    {
+        try {
+            $this->syllabus->update(['sumilla' => $this->sumilla]);
+            $this->syllabus->refresh();
+
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => 'Guardado',
+                'text' => 'Sumilla actualizada correctamente.'
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'No se pudo guardar: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * ✅ Guardar Competencias
+     */
+    public function saveCompetencies()
+    {
+        try {
+            $this->syllabus->update(['unit_competence' => $this->unit_competence]);
+            $this->syllabus->refresh();
+
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => 'Guardado',
+                'text' => 'Competencias actualizadas.'
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'No se pudo guardar: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // TAB IV
+    public function addIndicator()
+    {
+        $newIndicator = $this->syllabus->indicators()->create([
+            'description' => 'Nuevo indicador',
+            'sort_order' => $this->indicators->count() + 1
+        ]);
+
+        $this->loadIndicatorsWithUnits();
+    }
+
+    public function removeIndicator($id)
+    {
+        SyllabusIndicator::find($id)?->delete();
+        $this->loadIndicatorsWithUnits();
+    }
+
+    /**
+     * ✅ Guardar Capacidad e Indicadores
+     */
+    public function saveCapacityAndIndicators()
+    {
+        try {
+            // 1. Guardar la capacidad del curso
+            $this->syllabus->update(['course_capacity' => $this->course_capacity]);
+
+            // 2. Guardar cada indicador (trabajando con Collection)
+            foreach ($this->indicators as $indicator) {
+                if ($indicator->id && isset($indicator->description)) {
+                    SyllabusIndicator::where('id', $indicator->id)->update([
+                        'description' => $indicator->description
+                    ]);
+                }
+            }
+
+            $this->syllabus->refresh();
+            $this->loadIndicatorsWithUnits();
+
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => 'Guardado',
+                'text' => 'Capacidad e indicadores guardados correctamente.'
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'No se pudo guardar: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function saveEmployability()
+    {
+        try {
+            $this->syllabus->update([
+                'employability_competencies' => [$this->employability_content]
+            ]);
+            $this->syllabus->refresh();
+
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => 'Guardado',
+                'text' => 'Empleabilidad actualizada.'
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'No se pudo guardar: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * ✅ Guardar Programación (trabajando con Collection)
+     */
+    public function saveProgramming()
+    {
+        try {
+            foreach ($this->indicators as $indicator) {
+                if ($indicator->units && $indicator->units->count() > 0) {
+                    foreach ($indicator->units as $unit) {
+                        if ($unit->id) {
+                            SyllabusUnit::where('id', $unit->id)->update([
+                                'name' => $unit->name ?? '',
+                                'content' => $unit->content ?? '',
+                                'learning_outcome' => $unit->learning_outcome ?? '',
+                                'evaluation_instrument' => $unit->evaluation_instrument ?? '',
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            $this->loadIndicatorsWithUnits();
+
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => 'Programación Guardada',
+                'text' => 'Todas las sesiones han sido registradas correctamente.'
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'No se pudo guardar: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * ✅ NUEVO MÉTODO: Actualizar campos individuales de las sesiones en tiempo real
+     */
+    public function updateUnitField($unitId, $fieldName, $value)
+    {
+        try {
+            // Validar que el campo es permitido (seguridad)
+            $allowedFields = ['name', 'content', 'learning_outcome', 'evaluation_instrument'];
+
+            if (!in_array($fieldName, $allowedFields)) {
+                throw new \Exception('Campo no permitido');
+            }
+
+            // Actualizar directamente en la base de datos
+            $updated = SyllabusUnit::where('id', $unitId)->update([
+                $fieldName => $value
+            ]);
+
+            if ($updated) {
+                // Recargar los indicadores para reflejar los cambios
+                $this->loadIndicatorsWithUnits();
+            }
+        } catch (\Exception $e) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'No se pudo actualizar: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * ✅ NUEVO: Actualizar descripción de indicador individual
+     */
+    public function updateIndicatorDescription($indicatorId, $description)
+    {
+        try {
+            $updated = SyllabusIndicator::where('id', $indicatorId)->update([
+                'description' => $description
+            ]);
+
+            if ($updated) {
+                $this->loadIndicatorsWithUnits();
+            }
+            
+        } catch (\Exception $e) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'No se pudo actualizar: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function saveMethodology()
+    {
+        try {
+            $this->syllabus->update(['methodology' => $this->methodology]);
+            $this->syllabus->refresh();
+
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => 'Guardado',
+                'text' => 'Metodología actualizada.'
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'No se pudo guardar: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function saveResources()
+    {
+        try {
+            $this->syllabus->update([
+                'environments' => $this->environments,
+                'resources' => $this->resources
+            ]);
+            $this->syllabus->refresh();
+
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => 'Guardado',
+                'text' => 'Recursos actualizados.'
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'No se pudo guardar: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function saveEvaluation()
+    {
+        try {
+            $this->syllabus->update(['evaluation_system' => $this->evaluation_system]);
+            $this->syllabus->refresh();
+
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => 'Guardado',
+                'text' => 'Evaluación actualizada.'
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'No se pudo guardar: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function saveSources()
+    {
+        try {
+            $this->syllabus->update([
+                'bibliography' => $this->bibliography,
+                'web_sources' => $this->web_sources
+            ]);
+            $this->syllabus->refresh();
+
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => 'Guardado',
+                'text' => 'Fuentes actualizadas.'
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'No se pudo guardar: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function confirmSubmit()
+    {
+        if (
+            empty(trim(strip_tags($this->sumilla))) ||
+            empty(trim(strip_tags($this->methodology))) ||
+            empty(trim(strip_tags($this->evaluation_system))) ||
+            $this->total_weeks_programmed == 0
+        ) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Sílabo Incompleto',
+                'text' => 'Debe completar la Sumilla, Metodología, Evaluación y programar al menos una sesión antes de enviar a aprobación.'
+            ]);
+
+            return;
+        }
+
+        $this->confirmingSubmission = true;
+    }
+
+    public function submitSyllabus()
+    {
+        $this->syllabus->update([
+            'status' => 'submitted',
+            'submitted_at' => now()
+        ]);
+
+        $this->confirmingSubmission = false;
+        session()->flash('flash.banner', '¡Sílabo enviado correctamente!');
+
+        return redirect()->route('teacher.my-syllabi');
+    }
+
+    public function render()
+    {
+        return view('livewire.pages.teacher.syllabus-editor');
+    }
+}

@@ -70,6 +70,7 @@ use App\Http\Controllers\CashSessionController;
 use App\Http\Controllers\ExamReportController;
 use App\Http\Controllers\ScheduleReportController;
 use App\Http\Controllers\StudentReportController;
+use App\Http\Controllers\Teacher\SyllabusPdfController;
 use App\Livewire\Pages\AcademicProcess\EnrollmentListManager;
 use App\Livewire\Pages\AcademicProcess\EnrollmentReservationManager;
 use App\Livewire\Pages\AcademicProcess\RegularEnrollmentManager;
@@ -79,6 +80,7 @@ use App\Livewire\Pages\Admission\Exam\InfrastructureManager;
 use App\Livewire\Pages\Admission\OriginSchoolManager;
 use App\Livewire\Pages\Security\RoleManager;
 use App\Livewire\Pages\Security\UserManager;
+use App\Livewire\Pages\Teacher\SyllabusEditor;
 
 /*
 |--------------------------------------------------------------------------
@@ -215,6 +217,11 @@ Route::prefix('certification')->middleware(['auth', 'verified', 'permission:gest
 // [MODIFICADO] Añadido middleware de rol
 Route::prefix('teacher')->middleware(['auth', 'verified', 'role:Docente|Coordinador|Administrador'])->name('teacher.')->group(function () {
     Route::get('my-syllabi', MySyllabi::class)->name('my-syllabi');
+    Route::get('my-syllabi/{assignment}/edit', SyllabusEditor::class)
+        ->name('my-syllabi.edit');
+    Route::get('syllabus/{syllabus}/pdf', [SyllabusPdfController::class, 'download'])
+        ->name('syllabus.pdf');
+
     Route::get('activities', ActivityManager::class)->middleware('permission:gestionar-actividades')->name('activities');
     Route::get('submissions', SubmissionReview::class)->middleware('permission:revisar-entregas')->name('submissions');
     Route::get('attendance-report', AttendanceReport::class)->middleware('permission:ver-reporte-asistencia')->name('attendance-report');

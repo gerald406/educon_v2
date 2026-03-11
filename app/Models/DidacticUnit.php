@@ -74,4 +74,12 @@ class DidacticUnit extends Model
             get: fn () => "(Sem {$this->semester}) - {$this->name}",
         );
     }
+
+    /**
+     * Historial de sílabos dictados en esta unidad didáctica.
+     */
+    public function syllabi()
+    {
+        return $this->hasManyThrough(Syllabus::class, TeacherAssignment::class);
+    }
 }
