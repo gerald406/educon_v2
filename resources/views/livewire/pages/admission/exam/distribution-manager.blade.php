@@ -156,12 +156,18 @@
                                         <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                                         Lista de Puerta
                                     </a>
-                                    {{-- 
-                                    <a href="#" class="flex items-center justify-center px-3 py-2 bg-indigo-50 text-indigo-700 rounded text-xs hover:bg-indigo-100 transition">
-                                        <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                                        Hoja Calificación
-                                    </a> 
-                                    --}}
+                                    <a href="{{ route('admission.exam.answer-sheets', $room->id) }}"
+                                    target="_blank"
+                                    class="flex items-center justify-center px-3 py-2 bg-indigo-50
+                                            text-indigo-700 rounded text-xs hover:bg-indigo-100 transition">
+                                        <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0
+                                                    00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2
+                                                    2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                                        </svg>
+                                        Hoja de Respuestas
+                                    </a>
                                 </div>
                             @else
                                 <div class="text-center py-2 text-xs text-gray-400 italic">Sin asignaciones</div>

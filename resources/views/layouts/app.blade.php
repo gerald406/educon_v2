@@ -120,5 +120,7 @@
                 });
             });
         </script>
+        {{-- Stack para scripts adicionales (Chart.js, etc.) --}}
+        @stack('scripts')
     </body>
 </html>

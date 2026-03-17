@@ -282,6 +282,10 @@ Route::prefix('admission')->middleware(['auth', 'verified', 'permission:gestiona
         // 3. Reportes (Lista de Puerta PDF)
         Route::get('classroom/{classroom}/door-list', [ExamReportController::class, 'doorList'])
             ->name('door-list');
+
+        // AÑADIR dentro del grupo exam
+        Route::get('classroom/{classroom}/answer-sheets', [ExamReportController::class, 'answerSheets'])
+            ->name('answer-sheets');
     });
 });
 
