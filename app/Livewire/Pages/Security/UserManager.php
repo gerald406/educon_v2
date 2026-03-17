@@ -48,11 +48,14 @@ class UserManager extends Component
         return in_array('Coordinador', $this->selectedRoles);
     }
 
+    // CAMBIO en mount()
     public function mount()
     {
-        $this->roles = Role::orderBy('name')->get();
+        // Roles exclusivos de staff administrativo
+        $this->roles = Role::orderBy('name')
+            ->whereNotIn('name', ['Docente', 'Estudiante', 'Externo'])
+            ->get();
 
-        // Carreras activas para el selector
         $this->careers = Career::where('status', 'active')
             ->orderBy('name')
             ->get();
@@ -87,6 +90,20 @@ class UserManager extends Component
 
     public function save()
     {
+        // AÑADIR al inicio de save(), antes de $rules
+        $rolesProhibidos = array_intersect(
+            $this->selectedRoles,
+            ['Docente', 'Estudiante', 'Externo']
+        );
+
+        if (!empty($rolesProhibidos)) {
+            $this->dispatch('swal', [
+                'icon'  => 'error',
+                'title' => 'Rol no permitido',
+                'text'  => 'Los roles Docente y Estudiante se gestionan desde sus módulos específicos.',
+            ]);
+            return;
+        }
         // Reglas base
         $rules = [
             'name'          => 'required|string|max:255',

@@ -195,6 +195,60 @@
                         </select>
                     </div>
                 </div>
+
+                {{-- SECCIÓN COORDINADOR --}}
+                <div class="md:col-span-2 border-t pt-4 mt-2">
+                    <div class="flex items-center gap-3 mb-3">
+                        <label class="flex items-center gap-2 cursor-pointer select-none">
+                            <input
+                                type="checkbox"
+                                wire:model.live="is_coordinator"
+                                class="rounded border-gray-300 text-purple-600
+                                    focus:ring-purple-500 w-4 h-4">
+                            <span class="font-semibold text-gray-800">
+                                Este docente también es Coordinador de Programa
+                            </span>
+                        </label>
+                    </div>
+
+                    @if($is_coordinator)
+                        <div class="border border-purple-200 bg-purple-50 rounded-lg p-4">
+                            <div class="flex items-center gap-2 mb-2">
+                                <svg class="w-5 h-5 text-purple-600" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5
+                                            S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18
+                                            7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477
+                                            14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13
+                                            C19.832 18.477 18.247 18 16.5 18c-1.746
+                                            0-3.332.477-4.5 1.253"/>
+                                </svg>
+                                <x-label value="Carrera que Coordinará *"
+                                        class="text-purple-800 font-bold" />
+                            </div>
+
+                            <select wire:model="selectedCareerId"
+                                    class="w-full border-purple-300 focus:border-purple-500
+                                        focus:ring-purple-500 rounded-md shadow-sm text-sm">
+                                <option value="">-- Seleccionar Carrera --</option>
+                                @foreach($careers as $career)
+                                    <option value="{{ $career->id }}">
+                                        {{ $career->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <x-input-error for="selectedCareerId" class="mt-1" />
+
+                            <p class="text-xs text-purple-600 mt-2">
+                                ⚠️ Se asignarán automáticamente los roles
+                                <strong>Docente</strong> y <strong>Coordinador</strong>.
+                                Si la carrera ya tiene coordinador, será reemplazado.
+                            </p>
+                        </div>
+                    @endif
+                </div>
             </div>
         </x-slot>
         <x-slot name="footer">
@@ -202,4 +256,26 @@
             <x-button class="ml-3" wire:click="save" wire:loading.attr="disabled">Guardar</x-button>
         </x-slot>
     </x-dialog-modal>
+
+    @script
+<script>
+    // Listener para confirmación de eliminación de docente
+    Livewire.on('confirm-delete-teacher', (event) => {
+        Swal.fire({
+            title: '¿Eliminar Docente?',
+            text: 'Se eliminará el perfil docente y el acceso al sistema.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $wire.deleteTeacher(event.id);
+            }
+        });
+    });
+</script>
+@endscript
 </div>
