@@ -3,48 +3,67 @@
 namespace App\Livewire\Pages\AcademicProcess;
 
 use App\Models\AcademicPeriod;
-use App\Models\AcademicRecord;
-use App\Models\DidacticUnit;
 use App\Models\Enrollment;
+use App\Models\PaymentConcept;
 use App\Models\Registration;
 use App\Models\Student;
-use App\Models\TeacherAssignment;
-use App\Models\Voucher;
+use App\Models\StudentPayment;
+use App\Services\EnrollmentService;
+use App\Models\VoucherSeries; // <--- IMPORTANTE: Asegúrate de tener esto
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
 class RegularEnrollmentManager extends Component
 {
-    use WithPagination;
-
-    // --- BÚSQUEDA ---
+    // --- Búsqueda ---
     public $search = '';
     public Collection $searchResults;
     public ?Student $selectedStudent = null;
 
-    // --- DATOS ACADÉMICOS (VISUALIZACIÓN) ---
-    public Collection $lastSemesterRecords; // Notas del ciclo anterior
+    // --- Estado Académico ---
+    public $activePeriod;
     public $nextSemester = 1;
+    public Collection $proposalRegular;
+    public Collection $proposalRecovery;
 
-    // --- FORMULARIO ---
+    // --- Formulario de Pago ---
+    public Collection $availableSeries;
+    public $voucherSeries = '';
     public $voucherNumber = '';
     public $notes = '';
 
-    // --- ESTADO ---
-    public $activePeriod;
-
     public function mount()
     {
+        // Inicialización segura
         $this->searchResults = collect();
-        $this->lastSemesterRecords = collect();
+        $this->proposalRegular = collect();
+        $this->proposalRecovery = collect();
+        $this->availableSeries = collect();
+
+        // 1. Cargar Periodo Activo
         $this->activePeriod = AcademicPeriod::where('status', 'active')->first();
+
+        // 2. Cargar Series de Comprobantes Activas (Integración con Tesorería)
+        try {
+            // Usamos el servicio O directamente el modelo, ambas formas son válidas.
+            // Aquí lo hacemos directo para asegurar que cargue si el servicio no tiene el método.
+            $this->availableSeries = VoucherSeries::where('status', 'active')
+                ->orderBy('voucher_type')
+                ->orderBy('series')
+                ->get();
+
+            // Pre-seleccionar la primera serie si existe (ej. R25)
+            if ($this->availableSeries->isNotEmpty()) {
+                $this->voucherSeries = $this->availableSeries->first()->series;
+            }
+        } catch (\Exception $e) {
+            // Si falla, no rompe la vista
+        }
     }
 
-    // --- BÚSQUEDA ---
     public function updatedSearch($value)
     {
         if (strlen($value) < 3) {
@@ -52,141 +71,167 @@ class RegularEnrollmentManager extends Component
             return;
         }
 
-        // Buscar estudiantes Regulares o Irregulares (aptos para matrícula)
         $this->searchResults = Student::with('user', 'career')
-            ->whereIn('academic_status', ['regular', 'irregular'])
-            ->where(function ($q) use ($value) {
-                $q->whereHas('user', fn($u) => $u->where('name', 'like', '%' . $value . '%')
-                    ->orWhere('document_number', 'like', '%' . $value . '%'))
-                    ->orWhere('code', 'like', '%' . $value . '%');
+            ->whereHas('user', function ($q) use ($value) {
+                $q->where('document_number', 'like', "%$value%")
+                    ->orWhere('name', 'like', "%$value%")
+                    ->orWhere('lastname', 'like', "%$value%");
             })
-            ->take(5)
-            ->get();
+            ->take(5)->get();
     }
 
-    public function selectStudent(Student $student)
+    public function selectStudent($studentId)
     {
-        $this->selectedStudent = $student;
-        $this->search = $student->user->name;
+        $this->reset('voucherNumber', 'notes');
+
+        $this->selectedStudent = Student::with('user', 'career', 'studyPlan')->find($studentId);
+        $this->search = '';
         $this->searchResults = collect();
-        $this->voucherNumber = '';
-
-        // 1. Calcular el siguiente semestre
-        // Si está en 1ro, pasa a 2do.
-        $this->nextSemester = $student->current_semester + 1;
-        if ($this->nextSemester > 6) $this->nextSemester = 6; // Tope (ajustar según carrera)
-
-        // 2. Cargar historial del semestre ANTERIOR (el que acaba de cursar)
-        // Buscamos notas donde la unidad didáctica pertenezca al semestre actual del estudiante
-        $this->lastSemesterRecords = AcademicRecord::with('didacticUnit')
-            ->where('student_id', $student->id)
-            ->whereHas('didacticUnit', fn($q) => $q->where('semester', $student->current_semester))
-            ->get();
-    }
-
-    // --- PROCESO DE MATRÍCULA ---
-    public function processEnrollment()
-    {
-        $this->validate([
-            'voucherNumber' => 'required|string',
-            'selectedStudent' => 'required'
-        ]);
 
         if (!$this->activePeriod) {
-            $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'No hay periodo activo.']);
+            $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'No hay periodo académico activo (ej. 2025-I).']);
             return;
         }
 
-        // 1. Validar si ya está matriculado en este periodo
-        $existingEnrollment = Enrollment::where('student_id', $this->selectedStudent->id)
+        // Validar si ya existe matrícula
+        $exists = Enrollment::where('student_id', $this->selectedStudent->id)
             ->where('academic_period_id', $this->activePeriod->id)
-            ->where('status', 'active')
+            ->where('status', 'active') // Solo validamos activas, permitimos si la anterior fue anulada
             ->exists();
 
-        if ($existingEnrollment) {
-            $this->dispatch('swal', ['icon' => 'warning', 'title' => 'Ya matriculado', 'text' => 'Este estudiante ya tiene matrícula en el periodo actual.']);
+        if ($exists) {
+            $this->dispatch('swal', ['icon' => 'warning', 'title' => 'Ya Matriculado', 'text' => 'El estudiante ya está matriculado en este periodo.']);
+            $this->selectedStudent = null;
             return;
         }
 
-        // 2. Validar Voucher
-        $voucher = Voucher::where('number', $this->voucherNumber)
-            ->where('client_id', $this->selectedStudent->user_id)
-            ->where('status', 'issued')
-            ->first();
+        // Calcular Semestre
+        $this->nextSemester = ($this->selectedStudent->current_semester < 6)
+            ? $this->selectedStudent->current_semester
+            : 6;
 
-        if (!$voucher) {
-            $this->dispatch('swal', ['icon' => 'error', 'title' => 'Voucher no válido', 'text' => 'Comprobante no encontrado o no pertenece al estudiante.']);
+        // Obtener Cursos desde el Servicio
+        $service = app(EnrollmentService::class);
+        $proposal = $service->getEnrollmentProposal(
+            $this->selectedStudent,
+            $this->nextSemester,
+            $this->activePeriod->id
+        );
+
+        $this->proposalRegular = $proposal['regular'];
+        $this->proposalRecovery = $proposal['recovery'];
+
+        if ($this->proposalRegular->isEmpty() && $this->proposalRecovery->isEmpty()) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Sin Carga Académica',
+                'text' => "El estudiante es apto para el Semestre {$this->nextSemester}, pero NO SE ENCONTRARON SECCIONES programadas en el periodo {$this->activePeriod->code}."
+            ]);
+        }
+    }
+
+    public function confirmEnrollment()
+    {
+        $this->validate([
+            'voucherSeries' => 'required|string',
+            'voucherNumber' => 'required|numeric',
+        ]);
+
+        if ($this->proposalRegular->isEmpty() && $this->proposalRecovery->isEmpty()) {
+            $this->dispatch('swal', ['icon' => 'error', 'title' => 'Imposible Matricular', 'text' => 'No hay cursos disponibles para inscribir.']);
             return;
         }
 
         try {
-            DB::transaction(function () use ($voucher) {
+            DB::transaction(function () {
+                $service = app(EnrollmentService::class);
 
-                // A. Crear la Matrícula
+                // A. Validar Voucher (Serie + Número)
+                $voucher = $service->validateVoucher(
+                    $this->voucherSeries,
+                    $this->voucherNumber,
+                    $this->selectedStudent->user_id
+                );
+
+                // B. Crear Cabecera
+                // Ajustamos el tipo de matrícula. Si tu BD es varchar(50) usa strings largos.
+                $enrollmentType = $this->proposalRecovery->isNotEmpty() ? 'regular_with_recovery' : 'regular';
+
                 $enrollment = Enrollment::create([
                     'student_id' => $this->selectedStudent->id,
                     'academic_period_id' => $this->activePeriod->id,
                     'semester_enrolled' => $this->nextSemester,
-                    'enrollment_type' => 'continuing', // Regular / Continuidad
-                    'payment_status' => 'paid',
+                    'enrollment_type' => $enrollmentType,
                     'status' => 'active',
-                    'notes' => "Matrícula Regular Semestre {$this->nextSemester}. Voucher: {$voucher->series}-{$voucher->number}. " . $this->notes,
+                    'payment_status' => 'paid',
                     'amount_paid' => $voucher->total_amount,
+                    'notes' => "Pago: {$this->voucherSeries}-{$this->voucherNumber}. " . $this->notes,
+                    'registered_by_user_id' => auth()->id(),
                     'enrollment_date' => now(),
                 ]);
 
-                // B. Actualizar Estudiante (Sube de Semestre)
-                $this->selectedStudent->update([
-                    'current_semester' => $this->nextSemester,
-                    // Podríamos recalcular si es regular o irregular basado en las notas cargadas, 
-                    // pero por ahora lo mantenemos o el secretario lo cambiaría manualmente si fuera necesario.
+                // C. Vincular Pago
+                $concept = PaymentConcept::where('code', 'MAT-REG')->first();
+
+                StudentPayment::create([
+                    'student_id' => $this->selectedStudent->id,
+                    'payment_concept_id' => $concept?->id,
+                    'academic_period_id' => $this->activePeriod->id,
+                    'voucher_id' => $voucher->id,
+                    'original_amount' => $concept?->amount ?? 0,
+                    'final_amount' => $voucher->total_amount,
+                    'due_date' => now(), // CORRECCIÓN SQL CRÍTICA
+                    'payment_date' => now(),
+                    'status' => 'paid',
+                    'registered_by_user_id' => auth()->id(),
+                    'notes' => 'Pago automático Matrícula Regular.',
                 ]);
 
-                // C. Inscribir Cursos del Nuevo Semestre
-                // 1. Obtener módulos del plan
-                $moduleIds = \App\Models\Module::where('study_plan_id', $this->selectedStudent->study_plan_id)->pluck('id');
+                // D. Inscribir Cursos
+                $allAssignments = $this->proposalRegular->merge($this->proposalRecovery);
 
-                // 2. Unidades del semestre que le toca
-                $unitsIds = DidacticUnit::whereIn('module_id', $moduleIds)
-                    ->where('semester', $this->nextSemester)
-                    ->pluck('id');
-
-                // 3. Buscar secciones abiertas (Turno y Periodo)
-                // OJO: Aquí asumimos un turno por defecto (ej. Mañana). 
-                // Si la carrera tiene turnos fijos, habría que buscar el turno del estudiante o pedirlo.
-                // Por simplicidad, buscamos cualquier sección activa del curso en el periodo.
-                $assignments = TeacherAssignment::whereIn('didactic_unit_id', $unitsIds)
-                    ->where('academic_period_id', $this->activePeriod->id)
-                    ->where('status', 'active')
-                    ->get()
-                    ->unique('didactic_unit_id');
-
-                foreach ($assignments as $assignment) {
+                foreach ($allAssignments as $assignment) {
                     Registration::create([
                         'enrollment_id' => $enrollment->id,
                         'teacher_assignment_id' => $assignment->id,
                         'status' => 'enrolled',
-                        'registration_type' => 'mandatory'
+                        'registration_type' => 'mandatory',
+                        'registration_date' => now(),
                     ]);
 
                     $assignment->increment('current_enrolled');
                 }
+
+                // E. Actualizar Estudiante
+                if ($this->selectedStudent->current_semester < $this->nextSemester) {
+                    $this->selectedStudent->update(['current_semester' => $this->nextSemester]);
+                }
             });
 
-            // D. Generar PDF y Resetear
-            $pdfUrl = route('people.students.enrollment-form', $this->selectedStudent->id);
+            // Generar URL del PDF
+            // ASEGÚRATE QUE 'people.students.enrollment-form' EXISTA EN TU WEB.PHP
+            $pdfUrl = route('people.students.enrollment-form', ['student' => $this->selectedStudent->id]);
 
             $this->dispatch('swal', [
                 'icon' => 'success',
                 'title' => '¡Matrícula Exitosa!',
-                'text' => "Estudiante matriculado en {$this->nextSemester}° Semestre. Abriendo ficha..."
+                'text' => 'Proceso completado. Se abrirá la ficha de matrícula.',
+                'timer' => 2000,
+                'showConfirmButton' => false
             ]);
 
             $this->dispatch('open-pdf', url: $pdfUrl);
-            $this->reset('selectedStudent', 'search', 'lastSemesterRecords', 'voucherNumber');
+
+            $this->reset('selectedStudent', 'voucherNumber', 'notes', 'proposalRegular', 'proposalRecovery');
         } catch (\Exception $e) {
             $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => $e->getMessage()]);
         }
+    }
+
+    public function cancelSelection()
+    {
+        $this->reset('selectedStudent', 'proposalRegular', 'proposalRecovery');
+        $this->searchResults = collect(); // Limpiar resultados
     }
 
     public function render()

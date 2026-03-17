@@ -614,9 +614,54 @@ class ApplicantManager extends Component
         $this->dispatch('swal', ['icon' => 'success', 'title' => '¡Bienvenido!', 'text' => 'El postulante ahora es un estudiante. Se ha generado su deuda de matrícula.']);
     }
 
+    // [NUEVO] Confirmación de Eliminación
+    public function confirmDelete($id)
+    {
+        $this->dispatch('swal:confirm', [
+            'id' => $id,
+            'title' => '¿Eliminar Postulante?',
+            'text' => 'Esta acción enviará al postulante a la papelera. No se borrará el usuario del sistema.',
+            'onConfirmed' => 'deleteApplicant'
+        ]);
+    }
+
+    // [NUEVO] Ejecutar Eliminación
+    #[On('deleteApplicant')]
+    public function deleteApplicant($id)
+    {
+        $applicant = Applicant::find($id);
+
+        if ($applicant) {
+            // [CORRECCIÓN]
+            // Antes tenías algo como: Student::where('applicant_id', $applicant->id)...
+            // CAMBIA A: Buscar por 'user_id', que es el enlace real entre Postulante y Estudiante.
+            $isStudent = \App\Models\Student::where('user_id', $applicant->user_id)->exists();
+
+            // Validamos si ya ingresó o si ya existe como estudiante
+            if ($applicant->application_status === 'approved' || $isStudent) {
+                $this->dispatch('swal', [
+                    'icon' => 'error',
+                    'title' => 'No permitido',
+                    'text' => 'No se puede eliminar un postulante que ya es estudiante o ha ingresado.'
+                ]);
+                return;
+            }
+
+            // Si pasa la validación, eliminamos (Soft Delete)
+            $applicant->delete();
+
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => 'Eliminado',
+                'text' => 'Postulante eliminado correctamente.'
+            ]);
+        }
+    }
+
     public function render()
     {
-        $query = Applicant::with(['user', 'admissionOffering.career', 'admissionModality']);
+        $query = Applicant::with(['user', 'admissionOffering.career', 'admissionModality'])
+            ->has('user'); // Evita el error 500 de usuarios nulos
 
         if ($this->search) {
             $query->whereHas('user', function ($q) {
@@ -625,6 +670,9 @@ class ApplicantManager extends Component
                     ->orWhere('document_number', 'like', '%' . $this->search . '%');
             });
         }
+
+        // Ordenar por fecha de creación descendente (los nuevos primero)
+        $query->orderBy('created_at', 'desc');
 
         return view('livewire.pages.admission.applicant-manager', [
             'applicants' => $query->paginate(10)

@@ -166,4 +166,31 @@ class User extends Authenticatable
     {
         return $this->hasOne(Applicant::class);
     }
+
+    // AÑADIR en User.php junto a las demás relaciones
+
+    /**
+     * Obtiene la asignación de coordinación del usuario.
+     * Un coordinador solo coordina UNA carrera.
+     */
+    public function careerCoordinator(): HasOne
+    {
+        return $this->hasOne(CareerCoordinator::class);
+    }
+
+    /**
+     * Determina si el usuario es coordinador activo de alguna carrera.
+     */
+    public function isCoordinator(): bool
+    {
+        return $this->careerCoordinator()->where('is_active', true)->exists();
+    }
+
+    /**
+     * Obtiene la carrera que coordina este usuario (si aplica).
+     */
+    public function coordinatedCareer(): ?Career
+    {
+        return $this->careerCoordinator?->career ?? null;
+    }
 }

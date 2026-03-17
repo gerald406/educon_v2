@@ -76,6 +76,10 @@
                 <div x-show="open" class="mt-1 space-y-1 ml-6" x-collapse>
                     <a href="{{ route('admission.dashboard') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admission.dashboard') ? 'text-white' : 'text-gray-400 hover:text-white' }}">Dashboard</a>
                     <a href="{{ route('admission.applicants') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admission.applicants') ? 'text-white' : 'text-gray-400 hover:text-white' }}">Postulantes</a>
+                    <a href="{{ route('admission.origin-schools') }}" 
+                    class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admission.origin-schools') ? 'text-white' : 'text-gray-400 hover:text-white' }}">
+                    Colegios de Procedencia
+                    </a>
                     <a href="{{ route('admission.fast-grades') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admission.fast-grades') ? 'text-white' : 'text-gray-400 hover:text-white' }}">Registro de Notas</a>
                     
                     <div class="border-t border-gray-700 my-1"></div>
@@ -83,6 +87,20 @@
                     <a href="{{ route('admission.offerings') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admission.offerings') ? 'text-white' : 'text-gray-400 hover:text-white' }}">Config. Vacantes</a>
                     <a href="{{ route('admission.modalities') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admission.modalities') ? 'text-white' : 'text-gray-400 hover:text-white' }}">Modalidades</a>
                     <a href="{{ route('admission.financial-entities') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admission.financial-entities') ? 'text-white' : 'text-gray-400 hover:text-white' }}">Bancos / Cajas</a>
+
+                    <div class="border-t border-gray-700 my-1"></div>
+                    <div class="px-3 py-1 text-xs text-gray-500 uppercase font-semibold">Logística Examen</div>
+
+                    <a href="{{ route('admission.exam.infrastructure') }}" 
+                    class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admission.exam.infrastructure') ? 'text-white' : 'text-gray-400 hover:text-white' }}">
+                    Infraestructura
+                    </a>
+                    
+                    <a href="{{ route('admission.exam.distribution') }}" 
+                    class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admission.exam.distribution') ? 'text-white' : 'text-gray-400 hover:text-white' }}">
+                    Distribución de Aulas
+                    </a>
+
                 </div>
             </div>
         @endcan
@@ -157,6 +175,10 @@
                     @endcan
                     @can('gestionar-matricula-regular')
                         <a href="{{ route('academic-process.regular-enrollment') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('academic-process.regular-enrollment') ? 'text-white' : 'text-gray-400 hover:text-white' }}">Matrícula Regular</a>
+                        <a href="{{ route('academic-process.enrollment-list') }}" 
+                            class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('academic-process.enrollment-list') ? 'text-white' : 'text-gray-400 hover:text-white' }}">
+                            Gestión de Matrículas
+                        </a>
                     @endcan
                     @can('gestionar-reservas-matricula')
                         <a href="{{ route('academic-process.reservations') }}" class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('academic-process.reservations') ? 'text-white' : 'text-gray-400 hover:text-white' }}">Reservas de Matrícula</a>

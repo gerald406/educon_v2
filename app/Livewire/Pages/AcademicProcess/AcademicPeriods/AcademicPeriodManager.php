@@ -4,8 +4,8 @@ namespace App\Livewire\Pages\AcademicProcess\AcademicPeriods;
 
 use App\Models\AcademicPeriod;
 use App\Models\AcademicYear;
-use Illuminate\Database\QueryException;
-use Illuminate\Support\Collection;
+use App\Models\Institution;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
@@ -16,201 +16,182 @@ use Livewire\WithPagination;
 class AcademicPeriodManager extends Component
 {
     use WithPagination;
+    use AuthorizesRequests;
 
-    // --- PROPIEDADES DEL FORMULARIO ---
+    // --- Formulario ---
     public $academic_year_id = '';
-    public $code = '';
+    public $code = ''; // Ej. 2025-I
     public $name = '';
+
+    // Fechas Principales
     public $start_date = '';
     public $end_date = '';
+
+    // Fechas Procesos
     public $enrollment_start_date = '';
     public $enrollment_end_date = '';
     public $classes_start_date = '';
     public $classes_end_date = '';
-    // [NUEVAS PROPIEDADES]
-    public $grade_entry_start_date = '';
-    public $grade_entry_end_date = '';
+    public $grade_entry_start_date = ''; // Nuevo según migración
+    public $grade_entry_end_date = '';   // Nuevo según migración
 
     public $status = 'planned';
 
-    // --- PROPIEDADES DE ESTADO ---
+    // --- Estado ---
     public ?AcademicPeriod $editingPeriod = null;
     public $isModalOpen = false;
     public $search = '';
 
-    // Colección para el dropdown de Años Académicos
-    public Collection $academicYears;
-    public $institution_id;
-
-    /**
-     * Hook 'mount': Carga los Años Académicos activos.
-     */
     public function mount()
     {
-        // Asumimos que trabajamos con la primera institución
-        $this->institution_id = \App\Models\Institution::first()->id;
-        
-        $this->academicYears = AcademicYear::where('institution_id', $this->institution_id)
-                                ->whereIn('status', ['active', 'planned'])
-                                ->orderBy('year', 'desc')
-                                ->pluck('name', 'id');
-
-        // Asignar el primer año académico por defecto
-        if (!$this->editingPeriod && $this->academicYears->count() > 0) {
-            $this->academic_year_id = $this->academicYears->keys()->first();
-        }
+        // Opcional: Cargar año actual por defecto
     }
 
-    /**
-     * Define las reglas de validación.
-     */
-    protected function rules()
+    public function rules()
     {
+        // Obtenemos ID de la institución del usuario actual (o la primera activa)
+        $institutionId = Institution::where('status', 'active')->value('id');
+
         return [
             'academic_year_id' => 'required|exists:academic_years,id',
-            'name' => 'required|string|max:100',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'enrollment_start_date' => 'required|date',
-            'enrollment_end_date' => 'required|date|after_or_equal:enrollment_start_date',
-            'classes_start_date' => 'required|date',
-            'classes_end_date' => 'required|date|after_or_equal:classes_start_date',
-            // [NUEVAS REGLAS]
-            'grade_entry_start_date' => 'nullable|date',
-            'grade_entry_end_date' => 'nullable|date|after_or_equal:grade_entry_start_date',
-
-            'status' => 'required|in:planned,active,closed',
-            // Regla: El 'code' debe ser único para esta 'institution_id'
             'code' => [
                 'required',
                 'string',
                 'max:20',
-                Rule::unique('academic_periods')
-                    ->where(fn ($query) => $query->where('institution_id', $this->institution_id))
-                    ->ignore($this->editingPeriod?->id)
+                // El código (2025-I) debe ser único por institución
+                Rule::unique('academic_periods')->where('institution_id', $institutionId)->ignore($this->editingPeriod?->id)
             ],
+            'name' => 'required|string|max:100',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+
+            // Validaciones lógicas de cronograma
+            'enrollment_start_date' => 'required|date',
+            'enrollment_end_date' => 'required|date|after_or_equal:enrollment_start_date',
+
+            'classes_start_date' => 'required|date',
+            'classes_end_date' => 'required|date|after:classes_start_date',
+
+            'grade_entry_start_date' => 'nullable|date',
+            'grade_entry_end_date' => 'nullable|date|after_or_equal:grade_entry_start_date',
+
+            'status' => 'required|in:planned,active,closed',
         ];
     }
 
-    // --- ACCIONES DEL CRUD ---
-
-    public function openCreateModal()
+    public function create()
     {
-        $this->resetForm();
+        $this->authorize('gestionar-periodos');
+        $this->resetInput();
         $this->isModalOpen = true;
     }
 
-    public function openEditModal(AcademicPeriod $period)
+    public function edit(AcademicPeriod $period)
     {
+        $this->authorize('gestionar-periodos');
         $this->editingPeriod = $period;
-        $this->fill($period->only(
-            'academic_year_id', 'code', 'name', 'status'
-        ));
-        // Formatear fechas
+
+        $this->academic_year_id = $period->academic_year_id;
+        $this->code = $period->code;
+        $this->name = $period->name;
+
+        // Formatear fechas para input date
         $this->start_date = $period->start_date->format('Y-m-d');
         $this->end_date = $period->end_date->format('Y-m-d');
         $this->enrollment_start_date = $period->enrollment_start_date->format('Y-m-d');
         $this->enrollment_end_date = $period->enrollment_end_date->format('Y-m-d');
         $this->classes_start_date = $period->classes_start_date->format('Y-m-d');
         $this->classes_end_date = $period->classes_end_date->format('Y-m-d');
-        // [NUEVO] Formatear fechas de notas (usamos datetime-local)
-        $this->grade_entry_start_date = $period->grade_entry_start_date?->format('Y-m-d\TH:i');
-        $this->grade_entry_end_date = $period->grade_entry_end_date?->format('Y-m-d\TH:i');
+
+        $this->grade_entry_start_date = $period->grade_entry_start_date?->format('Y-m-d');
+        $this->grade_entry_end_date = $period->grade_entry_end_date?->format('Y-m-d');
+
+        $this->status = $period->status;
+
+        $this->resetValidation();
         $this->isModalOpen = true;
+    }
+
+    public function save()
+    {
+        $this->authorize('gestionar-periodos');
+        $validated = $this->validate();
+
+        // Inyectar institución ID
+        $institutionId = Institution::where('status', 'active')->value('id');
+        $validated['institution_id'] = $institutionId;
+
+        // Si se activa este periodo, opcionalmente podríamos desactivar otros,
+        // pero en IEST a veces hay solapamiento de recuperaciones, así que lo dejamos manual.
+
+        if ($this->editingPeriod) {
+            $this->editingPeriod->update($validated);
+            $msg = 'Periodo actualizado.';
+        } else {
+            AcademicPeriod::create($validated);
+            $msg = 'Periodo creado.';
+        }
+
+        $this->isModalOpen = false;
+        $this->dispatch('swal', ['icon' => 'success', 'title' => 'Éxito', 'text' => $msg]);
+    }
+
+    public function confirmDelete($id)
+    {
+        $this->authorize('gestionar-periodos');
+        $this->dispatch('swal:confirm', [
+            'title' => '¿Eliminar Periodo?',
+            'text' => 'No podrá eliminarlo si ya tiene matrículas o notas registradas.',
+            'id' => $id,
+            'method' => 'deletePeriod'
+        ]);
+    }
+
+    #[On('deletePeriod')]
+    public function deletePeriod($id)
+    {
+        try {
+            AcademicPeriod::findOrFail($id)->delete();
+            $this->dispatch('swal', ['icon' => 'success', 'title' => 'Eliminado', 'text' => 'Periodo eliminado.']);
+        } catch (\Exception $e) {
+            $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'Tiene registros asociados.']);
+        }
     }
 
     public function closeModal()
     {
         $this->isModalOpen = false;
-        $this->resetForm();
     }
 
-    public function resetForm()
+    private function resetInput()
     {
-        $this->resetExcept('academicYears', 'institution_id');
-        $this->resetValidation();
-        // Re-asignar el año por defecto
-        if ($this->academicYears->count() > 0) {
-            $this->academic_year_id = $this->academicYears->keys()->first();
-        }
+        $this->editingPeriod = null;
+        $this->code = '';
+        $this->name = '';
+        $this->status = 'planned';
+        $this->start_date = '';
+        $this->end_date = '';
+        $this->enrollment_start_date = '';
+        $this->enrollment_end_date = '';
+        $this->classes_start_date = '';
+        $this->classes_end_date = '';
+        $this->grade_entry_start_date = '';
+        $this->grade_entry_end_date = '';
     }
 
-    public function save()
-    {
-        $data = $this->validate();
-        $data['institution_id'] = $this->institution_id;
-        // [NUEVO] Convertir vacíos a null
-        $data['grade_entry_start_date'] = $data['grade_entry_start_date'] === '' ? null : $data['grade_entry_start_date'];
-        $data['grade_entry_end_date'] = $data['grade_entry_end_date'] === '' ? null : $data['grade_entry_end_date'];
-        
-        $model = $this->editingPeriod ?? new AcademicPeriod();
-        
-        // Lógica para asegurar un solo periodo activo
-        if ($data['status'] == 'active') {
-            AcademicPeriod::where('institution_id', $this->institution_id)
-                        ->where('id', '!=', $model->id)
-                        ->update(['status' => 'planned']);
-        }
-        
-        $model->fill($data);
-        $model->save();
-        
-        $this->closeModal();
-        $this->dispatch('swal', [
-            'icon' => 'success',
-            'title' => '¡Hecho!',
-            'text' => 'Periodo Académico guardado correctamente.',
-        ]);
-    }
-
-    public function confirmDelete(int $id)
-    {
-        $this->dispatch('swal:confirm', [
-            'id' => $id,
-            'title' => '¿Eliminar Periodo?',
-            'text' => 'Esto eliminará el periodo y toda su carga académica asociada.',
-            'onConfirmed' => 'deletePeriod'
-        ]);
-    }
-
-    #[On('deletePeriod')]
-    public function deletePeriod(int $id)
-    {
-        try {
-            AcademicPeriod::findOrFail($id)->delete();
-            $this->dispatch('swal', [
-                'icon' => 'success',
-                'title' => '¡Eliminado!',
-                'text' => 'El periodo académico ha sido eliminado.',
-            ]);
-        } catch (QueryException $e) {
-            $this->dispatch('swal', [
-                'icon' => 'error',
-                'title' => 'Error al eliminar',
-                'text' => 'No se puede eliminar, tiene carga académica o matrículas asociadas.',
-                'toast' => false, 'position' => 'center', 'timer' => null, 'showConfirmButton' => true,
-            ]);
-        }
-    }
-    
-
-    // --- RENDER ---
     public function render()
     {
-        $query = AcademicPeriod::with('academicYear')
-                    ->where('institution_id', $this->institution_id);
+        $years = AcademicYear::orderBy('year', 'desc')->get();
 
-        if ($this->search) {
-            $query->where(function($q) {
-                $q->where('name', 'like', '%' . $this->search . '%')
-                ->orWhere('code', 'like', '%' . $this->search . '%');
+        $query = AcademicPeriod::with('academicYear')
+            ->when($this->search, function ($q) {
+                $q->where('name', 'like', "%{$this->search}%")
+                    ->orWhere('code', 'like', "%{$this->search}%");
             });
-        }
-        
-        $periods = $query->orderBy('start_date', 'desc')->paginate(10);
 
         return view('livewire.pages.academic-process.academic-periods.academic-period-manager', [
-            'periods' => $periods,
+            'periods' => $query->orderBy('start_date', 'desc')->paginate(10),
+            'years' => $years
         ]);
     }
 }

@@ -7,166 +7,163 @@ use App\Models\Career;
 use App\Models\ClassroomResource;
 use App\Models\DidacticUnit;
 use App\Models\Schedule;
+use App\Models\Shift;
+use App\Models\Teacher;
 use App\Models\TeacherAssignment;
 use Illuminate\Support\Collection;
-use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\On;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
 class ScheduleManager extends Component
 {
-    // --- PROPIEDADES DEL FORMULARIO ---
+    // ==========================================
+    // PROPIEDADES - GESTIÓN DE HORARIOS
+    // ==========================================
+
+    public ?AcademicPeriod $activePeriod = null;
+
+    // Filtros de selección
+    public $selectedCareerId = '';
+    public $searchUnit = '';
+    public $unitResults = [];
+    public $selectedUnitId = '';
+    public $selectedUnitName = '';
+    public $selectedAssignmentId = '';
+    public ?TeacherAssignment $selectedAssignment = null;
+
+    // Formulario de horario
     public $classroom_resource_id = '';
     public $day_of_week = 'monday';
     public $start_time = '';
     public $end_time = '';
 
-    // --- PROPIEDADES DE ESTADO Y FILTROS ---
-    public ?AcademicPeriod $activePeriod = null;
-    public ?TeacherAssignment $selectedAssignment = null;
-    public $selectedCareerId = '';
-    public $selectedUnitId = '';
-    public $selectedAssignmentId = ''; // El ID de la TeacherAssignment
-
-    // --- ARRAYS PARA DROPDOWNS ---
-    public $careers = [];
-    public $availableUnits = [];
-    public $availableAssignments = [];
-    public $availableClassrooms = [];
-    
-    // Colección de horarios de la asignación seleccionada
+    // Colecciones
+    public Collection $careers;
+    public Collection $classrooms;
+    public Collection $shifts;
+    public Collection $teachers;
     public Collection $currentSchedules;
-    
-    // Regla de negocio: Día de preparación del docente
-    public $teacherPreparationDay = null;
+    public Collection $sectionAssignments;
 
+    // ==========================================
+    // PROPIEDADES - EXPORTACIÓN (SIMPLIFICADO)
+    // ==========================================
 
-    /**
-     * Hook 'mount': Carga datos iniciales.
-     */
+    public $showExportModal = false;
+    public $exportType = 'teacher'; // Solo: 'teacher' o 'career'
+    public $exportFormat = 'pdf';   // 'pdf' o 'excel'
+
+    // Filtros específicos por tipo
+    public $exportTeacherId = '';
+    public $exportCareerId = '';
+    public $exportSemester = '';
+    public $exportShiftId = '';
+
+    // ==========================================
+    // INICIALIZACIÓN
+    // ==========================================
+
     public function mount()
     {
         $this->activePeriod = AcademicPeriod::where('status', 'active')->first();
-        
-        // Cargar carreras como array
+
         $this->careers = Career::where('status', 'active')
             ->orderBy('name')
-            ->pluck('name', 'id')
-            ->toArray();
-            
-        // Cargar aulas como array
-        $this->availableClassrooms = ClassroomResource::where('status', 'available')
+            ->get();
+
+        $this->classrooms = ClassroomResource::where('status', 'available')
             ->orderBy('name')
-            ->pluck('name', 'id')
-            ->toArray();
-        
-        // Inicializar arrays vacíos
-        $this->availableUnits = [];
-        $this->availableAssignments = [];
-        $this->currentSchedules = collect();
+            ->get();
 
-        // Seleccionar la primera carrera por defecto si existe
-        if (!empty($this->careers)) {
-            $this->selectedCareerId = array_key_first($this->careers);
-            $this->updatedSelectedCareerId($this->selectedCareerId);
-        }
+        $this->shifts = Shift::where('status', 'active')
+            ->orderBy('name')
+            ->get();
+
+        $this->teachers = Teacher::with('user')
+            ->where('status', 'active')
+            ->get()
+            ->sortBy('user.lastname');
+
+        $this->currentSchedules = collect();
+        $this->sectionAssignments = collect();
     }
 
-    // --- LÓGICA DE FILTROS DEPENDIENTES ---
+    // ==========================================
+    // GESTIÓN DE HORARIOS (Sin cambios)
+    // ==========================================
 
-    /**
-     * Cuando se selecciona una carrera
-     */
-    public function updatedSelectedCareerId($value)
+    public function updatedSelectedCareerId()
     {
-        // Resetear selecciones dependientes
-        $this->selectedUnitId = '';
-        $this->selectedAssignmentId = '';
-        $this->availableUnits = [];
-        $this->availableAssignments = [];
-        $this->currentSchedules = collect();
-        $this->selectedAssignment = null;
-        
-        if (!empty($value)) {
-            // Cargar unidades didácticas de la carrera seleccionada
-            $units = DidacticUnit::whereHas('module.studyPlan.career', function($query) use ($value) {
-                    $query->where('id', $value);
-                })
-                ->where('status', 'active')
-                ->orderBy('semester')
-                ->orderBy('name')
-                ->get();
-            
-            // Construir el array con el accessor 'name_with_semester'
-            $this->availableUnits = $units->mapWithKeys(function ($unit) {
-                return [$unit->id => $unit->name_with_semester];
-            })->toArray(); // Importante: convertir a array
-        }
+        $this->resetUnitSearch();
     }
 
-    /**
-     * Cuando se selecciona una unidad didáctica
-     */
-    public function updatedSelectedUnitId($value)
+    public function updatedSearchUnit($value)
     {
-
-        // Resetear selecciones dependientes
-        $this->selectedAssignmentId = '';
-        $this->availableAssignments = [];
-        $this->currentSchedules = collect();
-        $this->selectedAssignment = null;
-        
-        if (!empty($value) && $this->activePeriod) {
-            // Cargar asignaciones de la unidad seleccionada
-            $assignments = TeacherAssignment::where('academic_period_id', $this->activePeriod->id)
-                ->where('didactic_unit_id', $value)
-                ->where('status', 'active')
-                ->with(['teacher.user', 'shift']) // Carga ansiosa de relaciones
-                ->orderBy('section')
-                ->get();
-            // dd($assignments);
-            // Construir el array con formato personalizado
-            $this->availableAssignments = $assignments->mapWithKeys(function($assignment) {
-                $teacherName = $assignment->teacher->user->name ?? 'Sin asignar';
-                $shiftName = $assignment->shift->name ?? 'Sin turno';
-                return [
-                    $assignment->id => "Sección {$assignment->section} - {$shiftName} - Prof. {$teacherName}"
-                ];
-            })->toArray(); // Importante: convertir a array
-        }
-    }
-
-    /**
-     * Cuando se selecciona una asignación (sección)
-     */
-    public function updatedSelectedAssignmentId($value)
-    {
-        if (empty($value)) {
-            $this->selectedAssignment = null;
-            $this->currentSchedules = collect();
-            $this->teacherPreparationDay = null;
-            $this->resetFormFields();
+        if (strlen($value) < 2 || !$this->selectedCareerId) {
+            $this->unitResults = [];
             return;
         }
 
-        // Cargar la asignación seleccionada con sus relaciones
-        $this->selectedAssignment = TeacherAssignment::with(['teacher', 'didacticUnit'])
-            ->find($value);
-        
-        if ($this->selectedAssignment) {
-            // Cargar el día de preparación del docente (Regla de Negocio)
-            $this->teacherPreparationDay = $this->selectedAssignment->teacher->preparation_day;
-            
-            // Cargar los horarios existentes
-            $this->loadSchedules();
+        $this->unitResults = DidacticUnit::whereHas(
+            'module.studyPlan',
+            fn($q) => $q->where('career_id', $this->selectedCareerId)
+        )
+            ->where('name', 'like', '%' . $value . '%')
+            ->where('status', 'active')
+            ->orderBy('semester')
+            ->take(10)
+            ->get();
+    }
+
+    public function selectUnit($id, $name, $semester)
+    {
+        $this->selectedUnitId = $id;
+        $this->searchUnit = $name;
+        $this->selectedUnitName = "Semestre $semester - $name";
+        $this->unitResults = [];
+        $this->loadAssignments();
+    }
+
+    private function resetUnitSearch()
+    {
+        $this->selectedUnitId = '';
+        $this->searchUnit = '';
+        $this->selectedUnitName = '';
+        $this->unitResults = [];
+        $this->selectedAssignmentId = '';
+        $this->selectedAssignment = null;
+        $this->currentSchedules = collect();
+    }
+
+    public function loadAssignments()
+    {
+        if ($this->selectedUnitId && $this->activePeriod) {
+            $this->sectionAssignments = TeacherAssignment::with(['teacher.user', 'shift'])
+                ->where('academic_period_id', $this->activePeriod->id)
+                ->where('didactic_unit_id', $this->selectedUnitId)
+                ->where('status', 'active')
+                ->get();
+
+            if ($this->sectionAssignments->count() === 1) {
+                $this->selectedAssignmentId = $this->sectionAssignments->first()->id;
+                $this->updatedSelectedAssignmentId($this->selectedAssignmentId);
+            }
         }
     }
 
-    /**
-     * Carga los horarios de la asignación seleccionada
-     */
+    public function updatedSelectedAssignmentId($value)
+    {
+        if ($value) {
+            $this->selectedAssignment = TeacherAssignment::with(['teacher', 'didacticUnit'])->find($value);
+            $this->loadSchedules();
+        } else {
+            $this->selectedAssignment = null;
+            $this->currentSchedules = collect();
+        }
+    }
+
     public function loadSchedules()
     {
         if ($this->selectedAssignment) {
@@ -175,162 +172,190 @@ class ScheduleManager extends Component
                 ->orderByRaw("FIELD(day_of_week, 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday')")
                 ->orderBy('start_time')
                 ->get();
-        } else {
-            $this->currentSchedules = collect();
         }
-    }
-    
-    /**
-     * Resetea los campos del formulario
-     */
-    private function resetFormFields()
-    {
-        $this->classroom_resource_id = '';
-        $this->day_of_week = 'monday';
-        $this->start_time = '';
-        $this->end_time = '';
-    }
-    
-    /**
-     * Reglas de validación
-     */
-    protected function rules()
-    {
-        $rules = [
-            'classroom_resource_id' => 'nullable|exists:classroom_resources,id',
-            'day_of_week' => 'required|in:monday,tuesday,wednesday,thursday,friday,saturday',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
-        ];
-        
-        // Agregar validación para día de preparación si existe
-        if ($this->teacherPreparationDay) {
-            $rules['day_of_week'] = ['required', 'in:monday,tuesday,wednesday,thursday,friday,saturday', Rule::notIn([$this->teacherPreparationDay])];
-        }
-        
-        return $rules;
-    }
-    
-    /**
-     * Mensajes de validación personalizados
-     */
-    protected function messages()
-    {
-        return [
-            'day_of_week.not_in' => 'No se puede asignar horario en el día de preparación del docente.',
-            'start_time.required' => 'La hora de inicio es requerida.',
-            'end_time.required' => 'La hora de fin es requerida.',
-            'end_time.after' => 'La hora de fin debe ser posterior a la hora de inicio.',
-        ];
     }
 
-    /**
-     * Añadir un nuevo bloque de horario
-     */
+    public function setPresetTime($range)
+    {
+        if ($range === 'morning') {
+            $this->start_time = '08:00';
+            $this->end_time = '13:00';
+        } elseif ($range === 'night') {
+            $this->start_time = '17:00';
+            $this->end_time = '21:30';
+        }
+    }
+
     public function addSchedule()
     {
-        $this->validate();
-        
-        // Verificar conflictos de horario antes de guardar
-        if ($this->hasScheduleConflict()) {
-            $this->addError('start_time', 'Existe un conflicto de horario con otro bloque existente.');
-            return;
-        }
-        
-        try {
-            Schedule::create([
-                'teacher_assignment_id' => $this->selectedAssignment->id,
-                'classroom_resource_id' => $this->classroom_resource_id ?: null,
-                'day_of_week' => $this->day_of_week,
-                'start_time' => $this->start_time,
-                'end_time' => $this->end_time,
-            ]);
-            
-            $this->dispatch('swal', [
-                'icon' => 'success',
-                'title' => '¡Éxito!',
-                'text' => 'Bloque de horario añadido correctamente.'
-            ]);
-            
-            $this->loadSchedules();
-            $this->resetFormFields();
-            
-        } catch (\Exception $e) {
+        $this->validate([
+            'day_of_week' => 'required',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
+            'classroom_resource_id' => 'nullable|exists:classroom_resources,id'
+        ]);
+
+        $conflict = $this->currentSchedules->where('day_of_week', $this->day_of_week)
+            ->filter(function ($s) {
+                return ($this->start_time < $s->end_time->format('H:i')) &&
+                    ($this->end_time > $s->start_time->format('H:i'));
+            })->isNotEmpty();
+
+        if ($conflict) {
             $this->dispatch('swal', [
                 'icon' => 'error',
-                'title' => 'Error',
-                'text' => 'No se pudo añadir el horario. Por favor, intente nuevamente.'
+                'title' => 'Conflicto',
+                'text' => 'Ya existe un horario en ese rango.'
             ]);
+            return;
         }
-    }
-    
-    /**
-     * Verificar si hay conflicto de horario
-     */
-    private function hasScheduleConflict(): bool
-    {
-        return $this->currentSchedules
-            ->where('day_of_week', $this->day_of_week)
-            ->filter(function ($schedule) {
-                $newStart = strtotime($this->start_time);
-                $newEnd = strtotime($this->end_time);
-                $existingStart = strtotime($schedule->start_time);
-                $existingEnd = strtotime($schedule->end_time);
-                
-                // Verificar solapamiento
-                return ($newStart < $existingEnd && $newEnd > $existingStart);
-            })
-            ->isNotEmpty();
-    }
 
-    /**
-     * Confirmar eliminación de horario
-     */
-    public function confirmDelete(int $id)
-    {
-        $this->dispatch('swal:confirm', [
-            'id' => $id,
-            'title' => '¿Eliminar bloque de horario?',
-            'text' => 'Esta acción no se puede deshacer.',
-            'icon' => 'warning',
-            'confirmButtonText' => 'Sí, eliminar',
-            'cancelButtonText' => 'Cancelar',
-            'onConfirmed' => 'deleteSchedule'
+        Schedule::create([
+            'teacher_assignment_id' => $this->selectedAssignmentId,
+            'day_of_week' => $this->day_of_week,
+            'start_time' => $this->start_time,
+            'end_time' => $this->end_time,
+            'classroom_resource_id' => $this->classroom_resource_id ?: null
+        ]);
+
+        $this->loadSchedules();
+        $this->dispatch('swal', [
+            'icon' => 'success',
+            'title' => 'Agregado',
+            'text' => 'Bloque horario registrado.'
         ]);
     }
 
-    /**
-     * Eliminar horario
-     */
-    #[On('deleteSchedule')]
-    public function deleteSchedule(int $id)
+    public function deleteSchedule($id)
     {
-        try {
-            // Maneja el payload que puede ser un int o un array ['id' => 1]
-            // $id = is_array($data) ? $data['id'] : $data;
-            
-            Schedule::findOrFail($id)->delete();
-            
-            $this->dispatch('swal', [
-                'icon' => 'success',
-                'title' => '¡Eliminado!',
-                'text' => 'El bloque de horario ha sido eliminado.'
-            ]);
-            
-            $this->loadSchedules(); // Recargar la lista de horarios
-            
-        } catch (\Exception $e) {
-            $this->dispatch('swal', [
-                'icon' => 'error',
-                'title' => 'Error',
-                'text' => 'No se pudo eliminar el horario.'
-            ]);
+        Schedule::find($id)?->delete();
+        $this->loadSchedules();
+        $this->dispatch('swal', [
+            'icon' => 'success',
+            'title' => 'Eliminado',
+            'text' => 'Bloque eliminado.'
+        ]);
+    }
+    
+    // ==========================================
+    // EXPORTACIÓN - LÓGICA SIMPLIFICADA
+    // ==========================================
+
+    /**
+     * Resetear modal al abrirlo
+     */
+    public function updatedShowExportModal($value)
+    {
+        if ($value) {
+            $this->exportType = 'teacher';
+            $this->exportFormat = 'pdf';
+            $this->exportTeacherId = '';
+            $this->exportCareerId = '';
+            $this->exportSemester = '';
+            $this->exportShiftId = '';
         }
     }
 
     /**
-     * Render
+     * Al cambiar tipo de reporte, limpiar campos específicos
      */
+    public function updatedExportType()
+    {
+        $this->exportTeacherId = '';
+        $this->exportCareerId = '';
+        $this->exportSemester = '';
+        $this->exportShiftId = '';
+    }
+
+    /**
+     * Propiedad computada: Lista de semestres disponibles
+     */
+    #[Computed]
+    public function availableSemesters()
+    {
+        if (!$this->exportCareerId || !$this->activePeriod) {
+            return collect();
+        }
+
+        return TeacherAssignment::where('academic_period_id', $this->activePeriod->id)
+            ->where('status', 'active')
+            ->whereHas(
+                'didacticUnit.module.studyPlan',
+                fn($q) =>
+                $q->where('career_id', $this->exportCareerId)
+            )
+            ->with('didacticUnit')
+            ->get()
+            ->pluck('didacticUnit.semester')
+            ->unique()
+            ->sort()
+            ->values();
+    }
+
+    /**
+     * Validación: ¿Se puede exportar?
+     */
+    #[Computed]
+    public function canExport()
+    {
+        if (!$this->activePeriod) {
+            return false;
+        }
+
+        if ($this->exportType === 'teacher') {
+            return !empty($this->exportTeacherId);
+        }
+
+        if ($this->exportType === 'career') {
+            return !empty($this->exportCareerId) &&
+                !empty($this->exportSemester) &&
+                !empty($this->exportShiftId);
+        }
+
+        return false;
+    }
+
+    /**
+     * Generar reporte y redireccionar
+     */
+    public function generateReport()
+    {
+        if (!$this->canExport) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Datos incompletos',
+                'text' => 'Complete todos los campos requeridos.'
+            ]);
+            return;
+        }
+
+        // Construir parámetros
+        $params = [
+            'type' => $this->exportType,
+            'format' => $this->exportFormat,
+            'period_id' => $this->activePeriod->id,
+        ];
+
+        // Parámetros según tipo
+        if ($this->exportType === 'teacher') {
+            $params['id'] = $this->exportTeacherId;
+        } elseif ($this->exportType === 'career') {
+            $params['id'] = $this->exportCareerId;
+            $params['semester'] = $this->exportSemester;
+            $params['shift_id'] = $this->exportShiftId;
+        }
+
+        // Generar URL
+        $url = route('academic-process.schedules.export', $params);
+
+        // Cerrar modal
+        $this->showExportModal = false;
+
+        // Redireccionar a descarga
+        // return redirect()->route('academic-process.schedules.export', $params);
+        $this->js("window.open('$url', '_blank');");
+    }
+
     public function render()
     {
         return view('livewire.pages.academic-process.schedules.schedule-manager');

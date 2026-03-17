@@ -67,12 +67,23 @@ use App\Livewire\Pages\Communication\AnnouncementManager;
 
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\CashSessionController;
+use App\Http\Controllers\ExamReportController;
+use App\Http\Controllers\ScheduleReportController;
 use App\Http\Controllers\StudentReportController;
+use App\Http\Controllers\Teacher\LearningSessionPdfController;
+use App\Http\Controllers\Teacher\SyllabusPdfController;
+use App\Livewire\Pages\AcademicProcess\EnrollmentListManager;
 use App\Livewire\Pages\AcademicProcess\EnrollmentReservationManager;
 use App\Livewire\Pages\AcademicProcess\RegularEnrollmentManager;
 use App\Livewire\Pages\AcademicProcess\ReincorporationManager;
+use App\Livewire\Pages\Admission\Exam\DistributionManager;
+use App\Livewire\Pages\Admission\Exam\InfrastructureManager;
+use App\Livewire\Pages\Admission\OriginSchoolManager;
 use App\Livewire\Pages\Security\RoleManager;
 use App\Livewire\Pages\Security\UserManager;
+use App\Livewire\Pages\Teacher\LearningSessionEditor;
+use App\Livewire\Pages\Teacher\LearningSessionList;
+use App\Livewire\Pages\Teacher\SyllabusEditor;
 
 /*
 |--------------------------------------------------------------------------
@@ -138,8 +149,7 @@ Route::prefix('academic')->middleware(['auth', 'verified', 'permission:gestionar
 Route::prefix('people')->middleware(['auth', 'verified'])->name('people.')->group(function () {
     Route::get('teachers', TeacherManager::class)->middleware('permission:gestionar-docentes')->name('teachers');
     Route::get('students', StudentManager::class)->middleware('permission:gestionar-estudiantes')->name('students');
-    Route::get('students/{student}/enrollment-form', [StudentReportController::class, 'downloadEnrollmentForm'])
-        ->middleware('permission:gestionar-estudiantes') // Usamos el mismo permiso que para ver la lista
+    Route::get('students/{student}/enrollment-pdf', [StudentReportController::class, 'downloadEnrollmentForm'])
         ->name('students.enrollment-form');
 });
 
@@ -148,7 +158,15 @@ Route::prefix('people')->middleware(['auth', 'verified'])->name('people.')->grou
 Route::prefix('academic-process')->middleware(['auth', 'verified'])->name('academic-process.')->group(function () {
     Route::get('academic-periods', AcademicPeriodManager::class)->middleware('permission:gestionar-periodos')->name('academic-periods');
     Route::get('teacher-assignments', TeacherAssignmentManager::class)->middleware('permission:gestionar-carga-academica')->name('teacher-assignments');
+
     Route::get('schedules', ScheduleManager::class)->middleware('permission:gestionar-horarios')->name('schedules');
+
+    /* Route::get('schedules/export', [ScheduleReportController::class, 'download'])
+        ->name('schedules.export'); */
+
+    Route::get('schedules/export', [ScheduleReportController::class, 'downloadPDF'])
+        ->name('schedules.export');
+
     Route::get('syllabus-approval', SyllabusApproval::class)->middleware('permission:aprobar-silabos')->name('syllabus-approval');
     Route::get('reservations', EnrollmentReservationManager::class)
         ->middleware('permission:gestionar-reservas-matricula')
@@ -157,6 +175,8 @@ Route::prefix('academic-process')->middleware(['auth', 'verified'])->name('acade
     Route::get('regular-enrollment', RegularEnrollmentManager::class)
         ->middleware('permission:gestionar-matricula-regular')
         ->name('regular-enrollment');
+    Route::get('enrollment-list', EnrollmentListManager::class)
+        ->name('enrollment-list');
 });
 
 // Grupo de Rutas para Evaluación (Docentes y roles superiores)
@@ -200,6 +220,21 @@ Route::prefix('certification')->middleware(['auth', 'verified', 'permission:gest
 // [MODIFICADO] Añadido middleware de rol
 Route::prefix('teacher')->middleware(['auth', 'verified', 'role:Docente|Coordinador|Administrador'])->name('teacher.')->group(function () {
     Route::get('my-syllabi', MySyllabi::class)->name('my-syllabi');
+    Route::get('my-syllabi/{assignment}/edit', SyllabusEditor::class)
+        ->name('my-syllabi.edit');
+    Route::get('syllabus/{syllabus}/pdf', [SyllabusPdfController::class, 'download'])
+        ->name('syllabus.pdf');
+    // Sesiones de Aprendizaje
+    // DESPUÉS (correcto)
+    Route::get('my-syllabi/{syllabus}/sessions', LearningSessionList::class)
+        ->name('sessions.list');
+
+    Route::get('my-syllabi/{syllabus}/sessions/{unit}/edit', LearningSessionEditor::class)
+        ->name('sessions.edit');
+
+    Route::get('my-syllabi/{syllabus}/sessions/{unit}/pdf', [LearningSessionPdfController::class, 'download'])
+        ->name('sessions.pdf');
+
     Route::get('activities', ActivityManager::class)->middleware('permission:gestionar-actividades')->name('activities');
     Route::get('submissions', SubmissionReview::class)->middleware('permission:revisar-entregas')->name('submissions');
     Route::get('attendance-report', AttendanceReport::class)->middleware('permission:ver-reporte-asistencia')->name('attendance-report');
@@ -229,7 +264,32 @@ Route::prefix('admission')->middleware(['auth', 'verified', 'permission:gestiona
     Route::get('ficha/{applicant}', [AdmissionDocumentController::class, 'ficha'])->name('ficha');
     Route::get('dashboard', AdmissionDashboard::class)->name('dashboard');
     Route::get('fast-grades', FastGradeEntry::class)->name('fast-grades');
+
+    Route::get('origin-schools', OriginSchoolManager::class)
+        ->name('origin-schools');
+
+    // --- GRUPO: LOGÍSTICA DE EXAMEN ---
+    Route::prefix('exam')->name('exam.')->group(function () {
+
+        // 1. Infraestructura (Pabellones y Aulas)
+        Route::get('infrastructure', InfrastructureManager::class)
+            ->name('infrastructure');
+
+        // 2. Distribución (Algoritmo y Asignación)
+        Route::get('distribution', DistributionManager::class)
+            ->name('distribution');
+
+        // 3. Reportes (Lista de Puerta PDF)
+        Route::get('classroom/{classroom}/door-list', [ExamReportController::class, 'doorList'])
+            ->name('door-list');
+
+        // AÑADIR dentro del grupo exam
+        Route::get('classroom/{classroom}/answer-sheets', [ExamReportController::class, 'answerSheets'])
+            ->name('answer-sheets');
+    });
 });
+
+
 
 
 // [NUEVO GRUPO] Grupo de Rutas para Estudiantes

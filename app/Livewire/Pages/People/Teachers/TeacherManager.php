@@ -2,10 +2,13 @@
 
 namespace App\Livewire\Pages\People\Teachers;
 
+use App\Models\Career;
+use App\Models\CareerCoordinator;
 use App\Models\Institution;
 use App\Models\Teacher;
 use App\Models\User;
-use Illuminate\Database\QueryException as DatabaseQueryException;
+use App\Services\PersonDataService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -18,222 +21,386 @@ use Livewire\WithPagination;
 class TeacherManager extends Component
 {
     use WithPagination;
+    use AuthorizesRequests;
 
-    // --- PROPIEDADES DEL FORMULARIO (ANIDADAS) ---
-    public $user = [
-        'name' => '',
-        'email' => '',
-        'password' => '',
-    ];
-    
-    public $teacher = [
-        'code' => '',
-        'academic_degree' => '',
-        'specialty' => '',
-        'contract_type' => 'contracted',
-        'preparation_day' => null,
-        'status' => 'active',
-    ];
+    // --- Datos de Usuario (Cuenta) ---
+    public $searchDni        = '';
+    public $document_number  = '';
+    public $name             = '';
+    public $paternal_surname = '';
+    public $maternal_surname = '';
+    public $email            = '';
+    public $is_new_user      = true;
 
-    // --- PROPIEDADES DE ESTADO ---
-    public ?User $editingUser = null;
-    public ?Teacher $editingTeacher = null;
-    public $isModalOpen = false;
-    public $search = '';
-    public $institution_id;
+    // --- Datos de Perfil (Docente) ---
+    public $institution_id   = '';
+    public $code             = '';
+    public $academic_degree  = '';
+    public $specialty        = '';
+    public $contract_type    = 'contracted';
+    public $hire_date        = '';
+    public $preparation_day  = 'monday';
+    public $status           = 'active';
 
-    /**
-     * Hook 'mount': Carga la institución principal.
-     */
-    public function mount()
+    // --- Coordinador ---
+    public bool $is_coordinator      = false;
+    public $selectedCareerId         = null;
+
+    // --- Estado ---
+    public ?Teacher $editingTeacher  = null;
+    public ?User    $editingUser     = null;
+    public bool     $isModalOpen     = false;
+    public $search                   = '';
+
+    // --- Catálogos ---
+    public $careers = [];
+
+    protected function personService()
     {
-        $this->institution_id = Institution::first()->id;
+        return new PersonDataService();
     }
 
-    /**
-     * Define las reglas de validación.
-     */
-    protected function rules()
+    public function mount()
     {
-        // Reglas base
+        $inst = Institution::where('status', 'active')->first();
+        $this->institution_id = $inst?->id;
+
+        $this->careers = Career::where('status', 'active')
+            ->orderBy('name')
+            ->get();
+    }
+
+    public function rules()
+    {
+        $userId    = $this->editingUser    ? $this->editingUser->id    : null;
+        $teacherId = $this->editingTeacher ? $this->editingTeacher->id : null;
+
         $rules = [
-            'user.name' => 'required|string|max:255',
-            'teacher.code' => [
+            'document_number'  => [
                 'required',
-                'string',
-                'max:20',
-                Rule::unique('teachers', 'code')->where(fn ($query) => $query->where('institution_id', $this->institution_id))
-                    ->ignore($this->editingTeacher?->id)
+                'digits:8',
+                Rule::unique('users', 'document_number')->ignore($userId)
             ],
-            'teacher.academic_degree' => 'nullable|string|max:100',
-            'teacher.specialty' => 'nullable|string|max:150',
-            'teacher.contract_type' => 'required|in:permanent,contracted,hourly',
-            'teacher.preparation_day' => 'nullable|in:monday,tuesday,wednesday,thursday,friday,saturday',
-            'teacher.status' => 'required|in:active,leave,terminated',
+            'name'             => 'required|string|max:255',
+            'paternal_surname' => 'required|string|max:255',
+            'maternal_surname' => 'required|string|max:255',
+            'email'            => [
+                'required',
+                'email',
+                Rule::unique('users', 'email')->ignore($userId)
+            ],
+            'institution_id'   => 'required|exists:institutions,id',
+            'code'             => [
+                'required',
+                'max:20',
+                Rule::unique('teachers', 'code')->ignore($teacherId)
+            ],
+            'contract_type'    => 'required|in:permanent,contracted,hourly',
+            'status'           => 'required|in:active,leave,terminated',
         ];
 
-        // Reglas dinámicas para email y password
-        if ($this->editingUser) {
-            $rules['user.email'] = 'required|email|max:255|unique:users,email,' . $this->editingUser->id;
-            $rules['user.password'] = 'nullable|min:8';
-        } else {
-            $rules['user.email'] = 'required|email|max:255|unique:users,email';
-            $rules['user.password'] = 'required|min:8';
+        // Si marcó como coordinador, la carrera es obligatoria
+        if ($this->is_coordinator) {
+            $rules['selectedCareerId'] = 'required|exists:careers,id';
         }
 
         return $rules;
     }
 
-    // --- ACCIONES DEL CRUD ---
-
-    public function openCreateModal()
+    public function messages()
     {
-        $this->resetForm();
+        return [
+            'selectedCareerId.required' => 'Debes seleccionar una carrera para el Coordinador.',
+            'selectedCareerId.exists'   => 'La carrera seleccionada no es válida.',
+        ];
+    }
+
+    // ============================================
+    // BÚSQUEDA POR DNI
+    // ============================================
+
+    public function searchPersonByDni()
+    {
+        $this->validate(['searchDni' => 'required|digits:8']);
+        $this->document_number = $this->searchDni;
+
+        $user = User::where('document_number', $this->searchDni)->first();
+
+        if ($user) {
+            $this->fillUserData($user);
+            $this->is_new_user = false;
+
+            // Si ya es coordinador, cargar su carrera
+            $coordinator = CareerCoordinator::where('user_id', $user->id)
+                ->where('is_active', true)->first();
+            if ($coordinator) {
+                $this->is_coordinator    = true;
+                $this->selectedCareerId  = $coordinator->career_id;
+            }
+
+            $this->dispatch('swal', [
+                'icon'  => 'info',
+                'title' => 'Encontrado',
+                'text'  => 'El usuario ya existe en el sistema.'
+            ]);
+        } else {
+            $apiData = $this->personService()->search($this->searchDni);
+
+            if ($apiData) {
+                $this->name             = $apiData['nombres'];
+                $this->paternal_surname = $apiData['apellido_paterno'];
+                $this->maternal_surname = $apiData['apellido_materno'];
+                $this->email            = '';
+                $this->is_new_user      = true;
+                $this->editingUser      = null;
+
+                $this->dispatch('swal', [
+                    'icon'  => 'success',
+                    'title' => 'Encontrado',
+                    'text'  => 'Datos recuperados de RENIEC/API.'
+                ]);
+            } else {
+                $this->name             = '';
+                $this->paternal_surname = '';
+                $this->maternal_surname = '';
+                $this->is_new_user      = true;
+                $this->editingUser      = null;
+
+                $this->dispatch('swal', [
+                    'icon'  => 'warning',
+                    'title' => 'No encontrado',
+                    'text'  => 'DNI no encontrado. Ingrese los datos manualmente.'
+                ]);
+            }
+        }
+    }
+
+    public function fillUserData(User $user)
+    {
+        $this->editingUser     = $user;
+        $this->document_number = $user->document_number;
+        $this->name            = $user->name;
+        $parts                 = explode(' ', $user->lastname ?? '');
+        $this->paternal_surname = $parts[0] ?? '';
+        $this->maternal_surname = isset($parts[1])
+            ? implode(' ', array_slice($parts, 1))
+            : '';
+        $this->email = $user->email;
+    }
+
+    // ============================================
+    // CRUD
+    // ============================================
+
+    public function create()
+    {
+        $this->authorize('gestionar-docentes');
+        $this->resetInput();
         $this->isModalOpen = true;
     }
 
-    public function openEditModal(User $user)
+    public function edit(Teacher $teacher)
     {
-        $this->editingUser = $user;
-        $this->editingTeacher = $user->teacher; 
+        $this->authorize('gestionar-docentes');
+        $this->editingTeacher = $teacher;
 
-        $this->user['name'] = $user->name;
-        $this->user['email'] = $user->email;
-        $this->user['password'] = ''; 
+        $this->fillUserData($teacher->user);
+        $this->searchDni = $this->document_number;
 
-        $this->teacher = $user->teacher->only(
-            'code', 'academic_degree', 'specialty', 
-            'contract_type', 'preparation_day', 'status'
-        );
-        
+        // Perfil docente
+        $this->institution_id  = $teacher->institution_id;
+        $this->code            = $teacher->code;
+        $this->academic_degree = $teacher->academic_degree;
+        $this->specialty       = $teacher->specialty;
+        $this->contract_type   = $teacher->contract_type;
+        $this->hire_date       = $teacher->hire_date;
+        $this->preparation_day = $teacher->preparation_day;
+        $this->status          = $teacher->status;
+
+        // Cargar estado de coordinador
+        $coordinator = CareerCoordinator::where('user_id', $teacher->user_id)
+            ->where('is_active', true)
+            ->first();
+
+        $this->is_coordinator   = (bool) $coordinator;
+        $this->selectedCareerId = $coordinator?->career_id;
+
+        $this->resetValidation();
         $this->isModalOpen = true;
+    }
+
+    public function save()
+    {
+        $this->authorize('gestionar-docentes');
+        $this->validate();
+
+        DB::transaction(function () {
+            // 1. Crear o actualizar usuario
+            $fullLastname = trim($this->paternal_surname . ' ' . $this->maternal_surname);
+
+            $userData = [
+                'name'            => $this->name,
+                'lastname'        => $fullLastname,
+                'document_number' => $this->document_number,
+                'email'           => $this->email,
+            ];
+
+            if (!$this->editingUser) {
+                // Contraseña inicial = DNI
+                $userData['password'] = Hash::make($this->document_number);
+            }
+
+            $user = User::updateOrCreate(
+                ['id' => $this->editingUser?->id],
+                $userData
+            );
+
+            // 2. Asignar rol Docente (siempre)
+            if (!$user->hasRole('Docente')) {
+                $user->assignRole('Docente');
+            }
+
+            // 3. Gestionar rol Coordinador
+            if ($this->is_coordinator) {
+                // Asignar rol Coordinador si no lo tiene
+                if (!$user->hasRole('Coordinador')) {
+                    $user->assignRole('Coordinador');
+                }
+
+                // Desactivar coordinador anterior de esa carrera
+                CareerCoordinator::where('career_id', $this->selectedCareerId)
+                    ->where('user_id', '!=', $user->id)
+                    ->where('is_active', true)
+                    ->update(['is_active' => false]);
+
+                // Crear o actualizar asignación
+                CareerCoordinator::updateOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'career_id'     => $this->selectedCareerId,
+                        'is_active'     => true,
+                        'assigned_date' => now()->toDateString(),
+                    ]
+                );
+            } else {
+                // Quitar rol Coordinador si lo tenía
+                if ($user->hasRole('Coordinador')) {
+                    $user->removeRole('Coordinador');
+                }
+
+                // Desactivar asignación de coordinador
+                CareerCoordinator::where('user_id', $user->id)
+                    ->update(['is_active' => false]);
+            }
+
+            // 4. Crear o actualizar perfil docente
+            Teacher::updateOrCreate(
+                ['id' => $this->editingTeacher?->id],
+                [
+                    'user_id'        => $user->id,
+                    'institution_id' => $this->institution_id,
+                    'code'           => $this->code,
+                    'academic_degree' => $this->academic_degree,
+                    'specialty'      => $this->specialty,
+                    'contract_type'  => $this->contract_type,
+                    'hire_date'      => $this->hire_date ?: null,
+                    'preparation_day' => $this->preparation_day ?: null,
+                    'status'         => $this->status,
+                ]
+            );
+        });
+
+        $this->isModalOpen = false;
+        $msg = $this->editingTeacher
+            ? 'Docente actualizado correctamente.'
+            : 'Docente registrado. Contraseña inicial: DNI del docente.';
+
+        $this->dispatch('swal', [
+            'icon'  => 'success',
+            'title' => 'Éxito',
+            'text'  => $msg
+        ]);
+
+        $this->resetInput();
+    }
+
+    public function confirmDelete($id)
+    {
+        $this->authorize('gestionar-docentes');
+        $this->dispatch('confirm-delete-teacher', id: $id);
+    }
+
+    #[On('deleteTeacher')]
+    public function deleteTeacher($id)
+    {
+        try {
+            $teacher = Teacher::with('user')->findOrFail($id);
+
+            DB::transaction(function () use ($teacher) {
+                // Desactivar coordinador si existe
+                CareerCoordinator::where('user_id', $teacher->user_id)
+                    ->update(['is_active' => false]);
+
+                // Eliminar usuario (cascada lógica elimina teacher por SoftDelete)
+                $teacher->user->delete();
+            });
+
+            $this->dispatch('swal', [
+                'icon'  => 'success',
+                'title' => 'Eliminado',
+                'text'  => 'Docente eliminado correctamente.'
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatch('swal', [
+                'icon'  => 'error',
+                'title' => 'Error',
+                'text'  => 'No se puede eliminar este docente.'
+            ]);
+        }
     }
 
     public function closeModal()
     {
         $this->isModalOpen = false;
-        $this->resetForm();
+        $this->resetInput();
     }
 
-    public function resetForm()
+    private function resetInput()
     {
-        $this->reset('user', 'teacher', 'editingUser', 'editingTeacher');
-        $this->resetValidation();
+        $this->editingTeacher   = null;
+        $this->editingUser      = null;
+        $this->searchDni        = '';
+        $this->document_number  = '';
+        $this->name             = '';
+        $this->paternal_surname = '';
+        $this->maternal_surname = '';
+        $this->email            = '';
+        $this->code             = '';
+        $this->academic_degree  = '';
+        $this->specialty        = '';
+        $this->contract_type    = 'contracted';
+        $this->hire_date        = '';
+        $this->preparation_day  = 'monday';
+        $this->status           = 'active';
+        $this->is_coordinator   = false;
+        $this->selectedCareerId = null;
+        $this->resetErrorBag();
     }
 
-    /**
-     * [MÉTODO SAVE CORREGIDO]
-     */
-    public function save()
-    {
-        $data = $this->validate();
-
-        try {
-            DB::transaction(function () use ($data) {
-                // 1. Preparar datos del Usuario
-                $userData = [
-                    'name' => $data['user']['name'],
-                    'email' => $data['user']['email'],
-                    // [CORREGIDO] Eliminamos 'user_type'
-                ];
-                if (!empty($data['user']['password'])) {
-                    $userData['password'] = Hash::make($data['user']['password']);
-                }
-
-                // 2. Crear o Actualizar Usuario
-                $user = $this->editingUser ?? new User();
-                $user->fill($userData);
-                $user->save();
-                
-                // [NUEVO] Asignar el rol de Docente
-                // (syncRoles se asegura de que solo tenga este rol,
-                // si quisiéramos que también sea Coordinador, lo haríamos en otro lado)
-                if (!$this->editingUser) {
-                     $user->assignRole('Docente');
-                }
-                
-                // 3. Preparar datos del Docente
-                $teacherData = $data['teacher'];
-                $teacherData['user_id'] = $user->id;
-                $teacherData['institution_id'] = $this->institution_id;
-
-                // 4. Crear o Actualizar Docente
-                $teacher = $this->editingTeacher ?? new Teacher();
-                $teacher->fill($teacherData);
-                $teacher->save();
-            });
-
-            $this->closeModal();
-            $this->dispatch('swal', [
-                'icon' => 'success',
-                'title' => '¡Hecho!',
-                'text' => 'Docente guardado correctamente.',
-            ]);
-
-        } catch (\Exception $e) {
-            $this->dispatch('swal', [
-                'icon' => 'error',
-                'title' => 'Error al guardar',
-                'text' => $e->getMessage(),
-            ]);
-        }
-    }
-
-    public function confirmDelete(int $userId)
-    {
-        $this->dispatch('swal:confirm', [
-            'id' => $userId,
-            'title' => '¿Eliminar Docente?',
-            'text' => 'Esto eliminará al usuario y su perfil de docente. Esta acción no se puede deshacer.',
-            'onConfirmed' => 'deleteTeacher'
-        ]);
-    }
-
-    #[On('deleteTeacher')]
-    public function deleteTeacher(int $id)
-    {
-        try {
-            User::findOrFail($id)->delete();
-            $this->dispatch('swal', [
-                'icon' => 'success',
-                'title' => '¡Eliminado!',
-                'text' => 'El docente ha sido eliminado.',
-            ]);
-        } catch (DatabaseQueryException $e) {
-            $this->dispatch('swal', [
-                'icon' => 'error',
-                'title' => 'Error al eliminar',
-                'text' => 'No se puede eliminar, es probable que esté asociado a carga académica.',
-                'toast' => false, 'position' => 'center', 'timer' => null, 'showConfirmButton' => true,
-            ]);
-        }
-    }
-
-    /**
-     * [MÉTODO RENDER CORREGIDO]
-     */
     public function render()
     {
-        $query = User::query()
-            // [CORREGIDO] Buscamos por ROL, no por 'user_type'
-            ->role('Docente') 
-            ->whereHas('teacher', fn($q) => $q->where('institution_id', $this->institution_id))
-            ->with('teacher');
-
-        if ($this->search) {
-            $query->where(function($q) {
-                $q->where('name', 'like', '%' . $this->search . '%')
-                    ->orWhere('email', 'like', '%' . $this->search . '%')
-                    ->orWhereHas('teacher', function ($subQuery) {
-                        $subQuery->where('code', 'like', '%' . $this->search . '%');
-                    });
+        $query = Teacher::with(['user', 'user.careerCoordinator.career'])
+            ->when($this->search, function ($q) {
+                $q->whereHas('user', function ($uq) {
+                    $uq->where('name', 'like', "%{$this->search}%")
+                        ->orWhere('lastname', 'like', "%{$this->search}%")
+                        ->orWhere('document_number', 'like', "%{$this->search}%");
+                });
             });
-        }
-        
-        $users = $query->orderBy('name')->paginate(10);
 
         return view('livewire.pages.people.teachers.teacher-manager', [
-            'users' => $users,
+            'teachers' => $query->orderBy('status')->paginate(10),
+            'careers'  => $this->careers,
         ]);
     }
 }

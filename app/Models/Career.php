@@ -44,4 +44,22 @@ class Career extends Model
     {
         return $this->hasMany(Student::class);
     }
+
+    // AÑADIR en Career.php junto a las demás relaciones
+
+    /**
+     * Una carrera tiene un coordinador asignado.
+     */
+    public function coordinator()
+    {
+        return $this->hasOne(CareerCoordinator::class)->where('is_active', true);
+    }
+
+    /**
+     * Historial completo de coordinadores (activos e inactivos).
+     */
+    public function coordinators()
+    {
+        return $this->hasMany(CareerCoordinator::class);
+    }
 }

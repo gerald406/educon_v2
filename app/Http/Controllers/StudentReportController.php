@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\AcademicPeriod;
 use App\Models\Enrollment;
 use App\Models\Institution;
@@ -11,30 +12,28 @@ use Illuminate\Support\Facades\Storage;
 
 class StudentReportController extends Controller
 {
-    /**
-     * Genera la Ficha de Matrícula del periodo activo para un estudiante dado.
-     */
     public function downloadEnrollmentForm(Student $student)
     {
-        // 1. Obtener Periodo Activo
+        // 1. Obtener el Periodo Académico Activo
         $activePeriod = AcademicPeriod::where('status', 'active')->first();
 
         if (!$activePeriod) {
-            return back()->with('error', 'No hay un periodo académico activo.');
+            return response()->json(['error' => 'No hay un periodo académico activo.'], 404);
         }
 
-        // 2. Buscar la Matrícula del Estudiante
+        // 2. Buscar la matrícula del estudiante en este periodo
+        // Usamos 'latest' para asegurarnos de traer la más reciente si hubiera duplicados (que no debería)
         $enrollment = Enrollment::where('student_id', $student->id)
             ->where('academic_period_id', $activePeriod->id)
             ->where('status', 'active')
+            ->latest()
             ->first();
 
         if (!$enrollment) {
-            return back()->with('error', 'El estudiante no tiene matrícula activa en este periodo.');
+            return response()->json(['error' => 'El estudiante no tiene matrícula activa en el periodo actual.'], 404);
         }
 
-        // 3. Obtener los Cursos (TeacherAssignments)
-        // Reutilizamos la misma lógica que usamos en el portal del estudiante
+        // 3. Obtener los Cursos Inscritos (Registrations)
         $courses = $enrollment->registrations()
             ->where('status', 'enrolled')
             ->with([
@@ -45,29 +44,28 @@ class StudentReportController extends Controller
             ->get()
             ->pluck('teacherAssignment');
 
-        // 4. Datos Institucionales
+        // 4. Datos de la Institución (Logo y Nombre)
         $institution = Institution::first();
-
-        // Lógica del Logo Base64
         $logoData = null;
+
+        // Convertir logo a Base64 para que DOMPDF no falle
         if ($institution?->logo_url && Storage::disk('public')->exists($institution->logo_url)) {
             $path = Storage::disk('public')->path($institution->logo_url);
-            $mime = mime_content_type($path);
-            $logoData = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($path));
+            $type = pathinfo($path, PATHINFO_EXTENSION);
+            $data = file_get_contents($path);
+            $logoData = 'data:image/' . $type . ';base64,' . base64_encode($data);
         }
 
-        // 5. Generar PDF (Reutilizando la vista existente)
-        $data = [
+        // 5. Generar PDF
+        $pdf = Pdf::loadView('reports.enrollment-form-pdf', [
             'institution' => $institution,
             'logoData' => $logoData,
             'activePeriod' => $activePeriod,
             'student' => $student,
             'enrollment' => $enrollment,
             'courses' => $courses,
-        ];
+        ]);
 
-        $pdf = Pdf::loadView('reports.enrollment-form-pdf', $data);
-
-        return $pdf->stream('ficha-matricula-' . $student->code . '.pdf');
+        return $pdf->stream('Ficha_Matricula_' . $student->code . '.pdf');
     }
 }

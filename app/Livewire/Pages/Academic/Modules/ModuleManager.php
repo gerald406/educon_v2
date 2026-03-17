@@ -5,7 +5,7 @@ namespace App\Livewire\Pages\Academic\Modules;
 use App\Models\Career;
 use App\Models\Module;
 use App\Models\StudyPlan;
-use Illuminate\Database\QueryException;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -17,201 +17,163 @@ use Livewire\WithPagination;
 class ModuleManager extends Component
 {
     use WithPagination;
+    use AuthorizesRequests;
 
-    // --- PROPIEDADES DEL FORMULARIO ---
+    // --- Formulario ---
     public $study_plan_id = '';
     public $module_number = 1;
     public $name = '';
+    public $description = '';
     public $minimum_credits_approval = 20;
     public $total_hours = 0;
     public $sort_order = 1;
     public $status = 'active';
 
-    // --- PROPIEDADES DE ESTADO ---
+    // --- Filtros Auxiliares (Estado UI) ---
+    public $selectedCareerId = ''; // Para filtrar el select de planes
+
+    // --- Estado ---
     public ?Module $editingModule = null;
     public $isModalOpen = false;
     public $search = '';
 
-    // --- PROPIEDADES PARA DROPDOWNS DEPENDIENTES ---
-    public Collection $careers;         // Todas las carreras
-    public Collection $allStudyPlans;   // Todos los planes de estudio
-    public Collection $availableStudyPlans; // Planes filtrados por carrera
+    // --- Colecciones ---
+    public Collection $careers;
+    public Collection $availablePlans; // Se llena dinámicamente
 
-    // Propiedad para el filtro del modal
-    public $selectedCareerId = '';
-
-    /**
-     * Hook 'mount': Carga los datos para los dropdowns.
-     */
     public function mount()
     {
-        $this->careers = Career::where('status', 'active')->pluck('name', 'id');
-        $this->allStudyPlans = StudyPlan::where('status', 'active')->get(['id', 'name', 'career_id']);
-        $this->availableStudyPlans = collect(); // Inicia vacío
-
-        // Si hay carreras, selecciona la primera por defecto
-        if ($this->careers->count() > 0) {
-            $this->selectedCareerId = $this->careers->keys()->first();
-            $this->updateAvailableStudyPlans(); // Filtra los planes para esa carrera
-        }
+        $this->careers = Career::where('status', 'active')->orderBy('name')->pluck('name', 'id');
+        $this->availablePlans = collect();
     }
 
-    /**
-     * Hook: Se ejecuta cuando la propiedad 'selectedCareerId' cambia.
-     */
-    public function updatedSelectedCareerId($value)
-    {
-        $this->updateAvailableStudyPlans();
-        // Resetea el plan seleccionado si la carrera cambia
-        $this->study_plan_id = '';
-    }
-
-    /**
-     * Lógica para filtrar los planes de estudio.
-     */
-    public function updateAvailableStudyPlans()
-    {
-        $this->availableStudyPlans = $this->allStudyPlans
-            ->where('career_id', $this->selectedCareerId);
-        
-        // Si solo hay un plan disponible, seleccionarlo automáticamente
-        if ($this->availableStudyPlans->count() === 1) {
-            $this->study_plan_id = $this->availableStudyPlans->first()->id;
-        }
-    }
-
-    /**
-     * Define las reglas de validación.
-     */
-    protected function rules()
+    public function rules()
     {
         return [
             'study_plan_id' => 'required|exists:study_plans,id',
-            'name' => 'required|string|max:150',
-            'minimum_credits_approval' => 'required|integer|min:1',
-            'total_hours' => 'required|integer|min:1',
-            'sort_order' => 'required|integer|min:1',
-            'status' => 'required|in:active,inactive',
-            // Regla: El 'module_number' debe ser único para el 'study_plan_id'
             'module_number' => [
                 'required',
                 'integer',
                 'min:1',
-                Rule::unique('modules')
-                    ->where(fn ($query) => $query->where('study_plan_id', $this->study_plan_id))
-                    ->ignore($this->editingModule?->id)
+                // Único número dentro del plan
+                Rule::unique('modules')->where('study_plan_id', $this->study_plan_id)->ignore($this->editingModule?->id)
             ],
+            'name' => 'required|string|max:150',
+            'minimum_credits_approval' => 'required|integer|min:0',
+            'total_hours' => 'required|integer|min:0',
+            'status' => 'required|in:active,inactive',
         ];
     }
 
-    // --- ACCIONES DEL CRUD ---
-
-    public function openCreateModal()
+    // --- Reactividad ---
+    public function updatedSelectedCareerId($value)
     {
-        $this->resetForm();
+        // Al cambiar carrera, reseteamos plan y cargamos los nuevos
+        $this->study_plan_id = '';
+        $this->availablePlans = $value
+            ? StudyPlan::where('career_id', $value)->where('status', 'active')->get()
+            : collect();
+    }
+
+    // --- Acciones ---
+    public function create()
+    {
+        $this->authorize('gestionar-estructura-academica');
+        $this->resetInput();
         $this->isModalOpen = true;
     }
 
-    public function openEditModal(Module $module)
+    public function edit(Module $module)
     {
+        $this->authorize('gestionar-estructura-academica');
         $this->editingModule = $module;
-        $this->fill($module->only(
-            'study_plan_id', 'module_number', 'name', 'minimum_credits_approval',
-            'total_hours', 'sort_order', 'status'
-        ));
 
-        // Cargar y seleccionar la carrera correcta en el dropdown
-        $this->selectedCareerId = $module->studyPlan->career_id;
-        $this->updateAvailableStudyPlans(); // Cargar los planes de esa carrera
-        $this->study_plan_id = $module->study_plan_id; // Asegurarse de que esté seleccionado
+        // Reconstruir el estado de los selects
+        $plan = $module->studyPlan;
+        $this->selectedCareerId = $plan->career_id;
+        $this->updatedSelectedCareerId($plan->career_id); // Cargar planes manualmente
 
+        $this->study_plan_id = $module->study_plan_id;
+        $this->module_number = $module->module_number;
+        $this->name = $module->name;
+        $this->description = $module->description;
+        $this->minimum_credits_approval = $module->minimum_credits_approval;
+        $this->total_hours = $module->total_hours;
+        $this->sort_order = $module->sort_order;
+        $this->status = $module->status;
+
+        $this->resetValidation();
         $this->isModalOpen = true;
+    }
+
+    public function save()
+    {
+        $this->authorize('gestionar-estructura-academica');
+        $validated = $this->validate();
+
+        try {
+            if ($this->editingModule) {
+                $this->editingModule->update($validated);
+                $msg = 'Módulo actualizado.';
+            } else {
+                Module::create($validated);
+                $msg = 'Módulo creado.';
+            }
+            $this->isModalOpen = false;
+            $this->dispatch('swal', ['icon' => 'success', 'title' => 'Éxito', 'text' => $msg]);
+        } catch (\Exception $e) {
+            $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => $e->getMessage()]);
+        }
+    }
+
+    public function confirmDelete($id)
+    {
+        $this->authorize('gestionar-estructura-academica');
+        $this->dispatch('swal:confirm', [
+            'title' => '¿Eliminar Módulo?',
+            'text' => 'Se eliminarán todos los cursos asociados.',
+            'id' => $id,
+            'method' => 'deleteModule'
+        ]);
+    }
+
+    #[On('deleteModule')]
+    public function deleteModule($id)
+    {
+        try {
+            Module::findOrFail($id)->delete();
+            $this->dispatch('swal', ['icon' => 'success', 'title' => 'Eliminado', 'text' => 'Módulo eliminado.']);
+        } catch (\Exception $e) {
+            $this->dispatch('swal', ['icon' => 'error', 'title' => 'Error', 'text' => 'No se puede eliminar.']);
+        }
     }
 
     public function closeModal()
     {
         $this->isModalOpen = false;
-        $this->resetForm();
     }
 
-    public function resetForm()
+    private function resetInput()
     {
-        $this->resetExcept('careers', 'allStudyPlans', 'availableStudyPlans', 'selectedCareerId');
-        $this->resetValidation();
-        // Re-seleccionar la primera carrera y sus planes
-        if ($this->careers->count() > 0) {
-            $this->selectedCareerId = $this->careers->keys()->first();
-            $this->updateAvailableStudyPlans();
-        }
+        $this->editingModule = null;
+        $this->selectedCareerId = '';
+        $this->availablePlans = collect();
+        $this->study_plan_id = '';
+        $this->module_number = 1;
+        $this->name = '';
+        $this->status = 'active';
     }
 
-    public function save()
-    {
-        $data = $this->validate();
-        
-        $model = $this->editingModule ?? new Module();
-        $model->fill($data);
-        $model->save();
-        
-        $this->closeModal();
-        $this->dispatch('swal', [
-            'icon' => 'success',
-            'title' => '¡Hecho!',
-            'text' => 'Módulo guardado correctamente.',
-        ]);
-    }
-
-    public function confirmDelete(int $id)
-    {
-        $this->dispatch('swal:confirm', [
-            'id' => $id,
-            'title' => '¿Eliminar Módulo?',
-            'text' => 'Esto eliminará el módulo y todos sus cursos (unidades) asociados.',
-            'onConfirmed' => 'deleteModule'
-        ]);
-    }
-
-    #[On('deleteModule')]
-    public function deleteModule(int $id)
-    {
-        try {
-            Module::findOrFail($id)->delete(); // 'onDelete('cascade')' borrará las unidades
-            $this->dispatch('swal', [
-                'icon' => 'success',
-                'title' => '¡Eliminado!',
-                'text' => 'El módulo ha sido eliminado.',
-            ]);
-        } catch (QueryException $e) {
-            $this->dispatch('swal', [
-                'icon' => 'error',
-                'title' => 'Error al eliminar',
-                'text' => 'No se pudo eliminar el módulo. Verifique dependencias.',
-                'toast' => false, 'position' => 'center', 'timer' => null, 'showConfirmButton' => true,
-            ]);
-        }
-    }
-
-    // --- RENDER ---
     public function render()
     {
-        $query = Module::with(['studyPlan.career']); // Carga anidada: Módulo -> Plan -> Carrera
-
-        if ($this->search) {
-            $query->where(function($q) {
-                $q->where('name', 'like', '%' . $this->search . '%')
-                  ->orWhereHas('studyPlan', function ($subQuery) {
-                      $subQuery->where('name', 'like', '%' . $this->search . '%')
-                               ->orWhereHas('career', function ($subSubQuery) {
-                                   $subSubQuery->where('name', 'like', '%' . $this->search . '%');
-                               });
-                  });
+        $query = Module::with(['studyPlan.career'])
+            ->when($this->search, function ($q) {
+                $q->where('name', 'like', "%{$this->search}%")
+                    ->orWhereHas('studyPlan', fn($sq) => $sq->where('name', 'like', "%{$this->search}%"));
             });
-        }
-        
-        $modules = $query->orderBy('sort_order')->paginate(10);
 
         return view('livewire.pages.academic.modules.module-manager', [
-            'modules' => $modules,
+            'modules' => $query->orderBy('study_plan_id')->orderBy('sort_order')->paginate(10)
         ]);
     }
 }

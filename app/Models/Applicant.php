@@ -77,4 +77,9 @@ class Applicant extends Model
     {
         return $this->admissionOffering?->career?->name;
     }
+
+    public function examAssignment()
+    {
+        return $this->hasOne(ExamClassroomAssignment::class);
+    }
 }
