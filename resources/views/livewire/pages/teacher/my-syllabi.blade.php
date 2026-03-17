@@ -62,13 +62,56 @@
                                                     <span class="text-gray-400">--</span>
                                                 @endif
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                {{-- BOTÓN: Ir al Editor --}}
+                                            {{-- <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <a href="{{ route('teacher.my-syllabi.edit', $assignment->id) }}" 
                                                    class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring focus:ring-indigo-300 disabled:opacity-25 transition">
                                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                                     Gestionar
                                                 </a>
+                                            </td> --}}
+                                            {{-- REEMPLAZAR solo el bloque <td> de Acciones --}}
+                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+
+                                                {{-- Botón: Gestionar Sílabo --}}
+                                                <a href="{{ route('teacher.my-syllabi.edit', $assignment->id) }}"
+                                                class="inline-flex items-center px-3 py-2 bg-indigo-600 border border-transparent
+                                                        rounded-md font-semibold text-xs text-white uppercase tracking-widest
+                                                        hover:bg-indigo-700 transition">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                                    </svg>
+                                                    Sílabo
+                                                </a>
+
+                                                {{-- Botón: Sesiones de Aprendizaje (solo si el sílabo está aprobado) --}}
+                                                @if($syllabus && $status === 'approved')
+                                                    <a href="{{ route('teacher.sessions.list', $syllabus->id) }}"
+                                                    class="inline-flex items-center px-3 py-2 bg-teal-600 border border-transparent
+                                                            rounded-md font-semibold text-xs text-white uppercase tracking-widest
+                                                            hover:bg-teal-700 transition">
+                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2
+                                                                    M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                                        </svg>
+                                                        Sesiones
+                                                    </a>
+                                                @else
+                                                    {{-- Deshabilitado si el sílabo no está aprobado --}}
+                                                    <span title="El sílabo debe estar aprobado para gestionar sesiones"
+                                                        class="inline-flex items-center px-3 py-2 bg-gray-200 border border-transparent
+                                                                rounded-md font-semibold text-xs text-gray-400 uppercase tracking-widest
+                                                                cursor-not-allowed">
+                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2
+                                                                    M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                                        </svg>
+                                                        Sesiones
+                                                    </span>
+                                                @endif
+
                                             </td>
                                         </tr>
                                         

@@ -12,6 +12,7 @@ class LearningSession extends Model
     protected $fillable = [
         'syllabus_unit_id',
         'transversal_competence',
+        'activity_type',
         'sequence_activities', // JSON Clave
         'evaluation_criteria',
         'evaluation_technique',

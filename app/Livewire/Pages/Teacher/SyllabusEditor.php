@@ -9,6 +9,9 @@ use App\Models\TeacherAssignment;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
+// AÑADIR junto a los otros use al inicio del archivo
+use Illuminate\Support\Facades\DB;
+
 #[Layout('layouts.app')]
 class SyllabusEditor extends Component
 {
@@ -17,6 +20,12 @@ class SyllabusEditor extends Component
 
     public $activeTab = 'general';
     public $confirmingSubmission = false;
+
+    // AÑADIR después de: public $confirmingSubmission = false;
+    public function isEditable(): bool
+    {
+        return in_array($this->syllabus->status, ['draft', 'observed']);
+    }
 
     // --- DATOS GENERALES ---
     public $study_program;
@@ -64,12 +73,25 @@ class SyllabusEditor extends Component
     ];
 
     // REGLAS DE VALIDACIÓN
+    // DESPUÉS
     protected $rules = [
         'indicators.*.units.*.name' => 'nullable|string',
         'indicators.*.units.*.content' => 'nullable|string',
         'indicators.*.units.*.learning_outcome' => 'nullable|string',
         'indicators.*.units.*.evaluation_instrument' => 'nullable|string',
         'teacher_email' => 'required|email',
+        'teacher_name' => 'required|string|max:200',
+        'study_program' => 'required|string|max:150',
+        'study_plan' => 'required|string|max:100',
+        'module_name' => 'required|string|max:150',
+        'course_name' => 'required|string|max:200',
+        'credits_info' => 'nullable|string|max:50',
+        'total_hours' => 'nullable|integer|min:1',
+        'weekly_hours_info' => 'nullable|string|max:50',
+        'period_name' => 'nullable|string|max:100',
+        'academic_cycle' => 'nullable|integer|min:1|max:6',
+        'date_range' => 'nullable|string|max:100',
+        'shift_name' => 'nullable|string|max:100',
         'sumilla' => 'nullable',
         'unit_competence' => 'nullable',
         'course_capacity' => 'nullable',
@@ -173,8 +195,17 @@ class SyllabusEditor extends Component
         $this->resources = $this->syllabus->resources ?? '';
         $this->evaluation_system = $this->syllabus->evaluation_system ?? '';
 
+        // DESPUÉS
         if (empty($this->evaluation_system)) {
-            $this->evaluation_system = '<ul><li>El sistema de calificación es vigesimal...</li></ul>';
+            $this->evaluation_system = '
+            <ul>
+                <li>El sistema de calificación es vigesimal y la nota mínima aprobatoria para las unidades didácticas es 13.</li>
+                <li>Se considera aprobado el módulo, siempre que se haya aprobado todas las unidades didácticas respectivas y la experiencia formativa en situaciones reales de trabajo, de acuerdo al plan de estudios.</li>
+                <li>Los estudiantes podrán rendir evaluaciones de recuperación a fin de lograr la aprobación de la unidad didáctica dentro del mismo periodo de estudio, considerando criterios de calidad académica y de acuerdo a los lineamientos establecidos en el reglamento institucional.</li>
+                <li>Los estudiantes que tengan unidades didácticas desaprobadas al final del semestre académico podrán volver a matricularse en el siguiente semestre académico o cuando se programe.</li>
+                <li>El estudiante que acumulará inasistencias injustificadas en número mayor al 30% del total de horas programadas en la Unidad Didáctica, será desaprobado en forma automática con calificación cero, sin derecho a recuperación.</li>
+                <li>La evaluación será permanente durante el desarrollo de las actividades de aprendizaje evaluando las evidencias y/o productos de cada indicador de evaluación.</li>
+            </ul>';
         }
 
         $this->bibliography = $this->syllabus->bibliography ?? '';
@@ -257,9 +288,24 @@ class SyllabusEditor extends Component
         $this->loadIndicatorsWithUnits();
     }
 
+    // DESPUÉS
     public function removeSession($unitId)
     {
-        SyllabusUnit::find($unitId)?->delete();
+        // Verificar que la sesión pertenece al sílabo del docente autenticado
+        $unit = SyllabusUnit::whereHas('indicator', function ($q) {
+            $q->where('syllabus_id', $this->syllabus->id);
+        })->find($unitId);
+
+        if (!$unit) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Acceso denegado',
+                'text' => 'No tienes permiso para eliminar esta sesión.'
+            ]);
+            return;
+        }
+
+        $unit->delete();
         $this->reorderSessions();
         $this->loadIndicatorsWithUnits();
     }
@@ -279,9 +325,72 @@ class SyllabusEditor extends Component
     // MÉTODOS DE GUARDADO
     // ========================================
 
+    // DESPUÉS
     public function saveGeneral()
     {
-        $this->dispatch('swal', ['icon' => 'success', 'title' => 'Correcto', 'text' => 'Datos validados.']);
+        $this->validate([
+            'teacher_email' => 'required|email',
+            'teacher_name'  => 'required|string|max:200',
+        ]);
+
+        try {
+            // 1. Actualizar datos del usuario (email y nombre del docente)
+            $nameParts = explode(' ', trim($this->teacher_name), 2);
+            $this->assignment->teacher->user->update([
+                'name'     => $nameParts[0] ?? $this->teacher_name,
+                'lastname' => $nameParts[1] ?? '',
+                'email'    => $this->teacher_email,
+            ]);
+
+            // 2. Actualizar datos de la unidad didáctica
+            $this->assignment->didacticUnit->update([
+                'name'         => $this->course_name,
+                'total_hours'  => $this->total_hours,
+                'credits'      => (int) filter_var($this->credits_info, FILTER_SANITIZE_NUMBER_INT),
+                'semester'     => $this->academic_cycle,
+            ]);
+
+            // 3. Actualizar nombre del módulo
+            $this->assignment->didacticUnit->module->update([
+                'name' => $this->module_name,
+            ]);
+
+            // 4. Actualizar nombre del plan de estudios
+            $this->assignment->didacticUnit->module->studyPlan->update([
+                'name' => $this->study_plan,
+            ]);
+
+            // 5. Actualizar nombre de la carrera
+            $this->assignment->didacticUnit->module->studyPlan->career->update([
+                'name' => $this->study_program,
+            ]);
+
+            // 6. Actualizar turno
+            $this->assignment->shift->update([
+                'name' => $this->shift_name,
+            ]);
+
+            // 7. Recargar datos generales para reflejar cambios
+            $this->assignment->refresh()->load([
+                'didacticUnit.module.studyPlan.career',
+                'academicPeriod',
+                'teacher.user',
+                'shift'
+            ]);
+            $this->loadGeneralData();
+
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => 'Guardado',
+                'text' => 'Datos generales actualizados correctamente.'
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'No se pudo actualizar: ' . $e->getMessage()
+            ]);
+        }
     }
 
     /**
@@ -291,7 +400,7 @@ class SyllabusEditor extends Component
     {
         try {
             $this->syllabus->update(['sumilla' => $this->sumilla]);
-            $this->syllabus->refresh();
+            // $this->syllabus->refresh();
 
             $this->dispatch('swal', [
                 'icon' => 'success',
@@ -314,7 +423,7 @@ class SyllabusEditor extends Component
     {
         try {
             $this->syllabus->update(['unit_competence' => $this->unit_competence]);
-            $this->syllabus->refresh();
+            // $this->syllabus->refresh();
 
             $this->dispatch('swal', [
                 'icon' => 'success',
@@ -341,9 +450,23 @@ class SyllabusEditor extends Component
         $this->loadIndicatorsWithUnits();
     }
 
+    // DESPUÉS
     public function removeIndicator($id)
     {
-        SyllabusIndicator::find($id)?->delete();
+        // Verificar que el indicador pertenece al sílabo del docente autenticado
+        $indicator = SyllabusIndicator::where('syllabus_id', $this->syllabus->id)
+            ->find($id);
+
+        if (!$indicator) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Acceso denegado',
+                'text' => 'No tienes permiso para eliminar este indicador.'
+            ]);
+            return;
+        }
+
+        $indicator->delete();
         $this->loadIndicatorsWithUnits();
     }
 
@@ -388,7 +511,7 @@ class SyllabusEditor extends Component
             $this->syllabus->update([
                 'employability_competencies' => [$this->employability_content]
             ]);
-            $this->syllabus->refresh();
+            // $this->syllabus->refresh();
 
             $this->dispatch('swal', [
                 'icon' => 'success',
@@ -407,24 +530,35 @@ class SyllabusEditor extends Component
     /**
      * ✅ Guardar Programación (trabajando con Collection)
      */
+    // DESPUÉS
     public function saveProgramming()
     {
         try {
-            foreach ($this->indicators as $indicator) {
-                if ($indicator->units && $indicator->units->count() > 0) {
+            DB::transaction(function () {
+                foreach ($this->indicators as $indicator) {
+                    if (!$indicator->units || $indicator->units->isEmpty()) continue;
+
                     foreach ($indicator->units as $unit) {
-                        if ($unit->id) {
-                            SyllabusUnit::where('id', $unit->id)->update([
-                                'name' => $unit->name ?? '',
-                                'content' => $unit->content ?? '',
-                                'learning_outcome' => $unit->learning_outcome ?? '',
-                                'evaluation_instrument' => $unit->evaluation_instrument ?? '',
-                            ]);
-                        }
+                        if (!$unit->id) continue;
+
+                        // Verificar pertenencia antes de actualizar
+                        $exists = SyllabusUnit::whereHas('indicator', function ($q) {
+                            $q->where('syllabus_id', $this->syllabus->id);
+                        })->where('id', $unit->id)->exists();
+
+                        if (!$exists) continue;
+
+                        SyllabusUnit::where('id', $unit->id)->update([
+                            'name'                 => $unit->name ?? '',
+                            'content'              => $unit->content ?? '',
+                            'learning_outcome'     => $unit->learning_outcome ?? '',
+                            'evaluation_instrument' => $unit->evaluation_instrument ?? '',
+                        ]);
                     }
                 }
-            }
+            });
 
+            // Recargar solo después de que toda la transacción fue exitosa
             $this->loadIndicatorsWithUnits();
 
             $this->dispatch('swal', [
@@ -444,25 +578,31 @@ class SyllabusEditor extends Component
     /**
      * ✅ NUEVO MÉTODO: Actualizar campos individuales de las sesiones en tiempo real
      */
+    // DESPUÉS
     public function updateUnitField($unitId, $fieldName, $value)
     {
         try {
-            // Validar que el campo es permitido (seguridad)
+            // 1. Validar campo permitido
             $allowedFields = ['name', 'content', 'learning_outcome', 'evaluation_instrument'];
 
             if (!in_array($fieldName, $allowedFields)) {
                 throw new \Exception('Campo no permitido');
             }
 
-            // Actualizar directamente en la base de datos
-            $updated = SyllabusUnit::where('id', $unitId)->update([
-                $fieldName => $value
-            ]);
+            // 2. Verificar pertenencia al sílabo del docente autenticado
+            $unit = SyllabusUnit::whereHas('indicator', function ($q) {
+                $q->where('syllabus_id', $this->syllabus->id);
+            })->find($unitId);
 
-            if ($updated) {
-                // Recargar los indicadores para reflejar los cambios
-                $this->loadIndicatorsWithUnits();
+            if (!$unit) {
+                throw new \Exception('Acceso denegado');
             }
+
+            // 3. Actualizar solo el campo específico
+            $unit->update([$fieldName => $value]);
+
+            // 4. Solo recalcular semanas, NO recargar toda la colección
+            $this->calculateTotalWeeks();
         } catch (\Exception $e) {
             $this->dispatch('swal', [
                 'icon' => 'error',
@@ -475,17 +615,22 @@ class SyllabusEditor extends Component
     /**
      * ✅ NUEVO: Actualizar descripción de indicador individual
      */
+    // DESPUÉS
     public function updateIndicatorDescription($indicatorId, $description)
     {
         try {
-            $updated = SyllabusIndicator::where('id', $indicatorId)->update([
-                'description' => $description
-            ]);
+            // Verificar que el indicador pertenece al sílabo del docente autenticado
+            $indicator = SyllabusIndicator::where('syllabus_id', $this->syllabus->id)
+                ->find($indicatorId);
 
-            if ($updated) {
-                $this->loadIndicatorsWithUnits();
+            if (!$indicator) {
+                throw new \Exception('Acceso denegado');
             }
-            
+
+            $indicator->update(['description' => $description]);
+
+            // Solo recalcular, NO recargar toda la colección
+            $this->calculateTotalWeeks();
         } catch (\Exception $e) {
             $this->dispatch('swal', [
                 'icon' => 'error',
@@ -499,7 +644,7 @@ class SyllabusEditor extends Component
     {
         try {
             $this->syllabus->update(['methodology' => $this->methodology]);
-            $this->syllabus->refresh();
+            // $this->syllabus->refresh();
 
             $this->dispatch('swal', [
                 'icon' => 'success',
@@ -522,7 +667,7 @@ class SyllabusEditor extends Component
                 'environments' => $this->environments,
                 'resources' => $this->resources
             ]);
-            $this->syllabus->refresh();
+            // $this->syllabus->refresh();
 
             $this->dispatch('swal', [
                 'icon' => 'success',
@@ -542,7 +687,7 @@ class SyllabusEditor extends Component
     {
         try {
             $this->syllabus->update(['evaluation_system' => $this->evaluation_system]);
-            $this->syllabus->refresh();
+            // $this->syllabus->refresh();
 
             $this->dispatch('swal', [
                 'icon' => 'success',
@@ -565,7 +710,7 @@ class SyllabusEditor extends Component
                 'bibliography' => $this->bibliography,
                 'web_sources' => $this->web_sources
             ]);
-            $this->syllabus->refresh();
+            // $this->syllabus->refresh();
 
             $this->dispatch('swal', [
                 'icon' => 'success',
@@ -581,8 +726,21 @@ class SyllabusEditor extends Component
         }
     }
 
+    // DESPUÉS
     public function confirmSubmit()
     {
+        // Guarda de seguridad: verificar estado actual en BD (no solo en memoria)
+        $currentStatus = Syllabus::find($this->syllabus->id)?->status;
+
+        if (!in_array($currentStatus, ['draft', 'observed'])) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acción no permitida',
+                'text' => 'Este sílabo no puede ser enviado en su estado actual.'
+            ]);
+            return;
+        }
+
         if (
             empty(trim(strip_tags($this->sumilla))) ||
             empty(trim(strip_tags($this->methodology))) ||
@@ -594,7 +752,6 @@ class SyllabusEditor extends Component
                 'title' => 'Sílabo Incompleto',
                 'text' => 'Debe completar la Sumilla, Metodología, Evaluación y programar al menos una sesión antes de enviar a aprobación.'
             ]);
-
             return;
         }
 

@@ -70,6 +70,7 @@ use App\Http\Controllers\CashSessionController;
 use App\Http\Controllers\ExamReportController;
 use App\Http\Controllers\ScheduleReportController;
 use App\Http\Controllers\StudentReportController;
+use App\Http\Controllers\Teacher\LearningSessionPdfController;
 use App\Http\Controllers\Teacher\SyllabusPdfController;
 use App\Livewire\Pages\AcademicProcess\EnrollmentListManager;
 use App\Livewire\Pages\AcademicProcess\EnrollmentReservationManager;
@@ -80,6 +81,8 @@ use App\Livewire\Pages\Admission\Exam\InfrastructureManager;
 use App\Livewire\Pages\Admission\OriginSchoolManager;
 use App\Livewire\Pages\Security\RoleManager;
 use App\Livewire\Pages\Security\UserManager;
+use App\Livewire\Pages\Teacher\LearningSessionEditor;
+use App\Livewire\Pages\Teacher\LearningSessionList;
 use App\Livewire\Pages\Teacher\SyllabusEditor;
 
 /*
@@ -221,6 +224,16 @@ Route::prefix('teacher')->middleware(['auth', 'verified', 'role:Docente|Coordina
         ->name('my-syllabi.edit');
     Route::get('syllabus/{syllabus}/pdf', [SyllabusPdfController::class, 'download'])
         ->name('syllabus.pdf');
+    // Sesiones de Aprendizaje
+    // DESPUÉS (correcto)
+    Route::get('my-syllabi/{syllabus}/sessions', LearningSessionList::class)
+        ->name('sessions.list');
+
+    Route::get('my-syllabi/{syllabus}/sessions/{unit}/edit', LearningSessionEditor::class)
+        ->name('sessions.edit');
+
+    Route::get('my-syllabi/{syllabus}/sessions/{unit}/pdf', [LearningSessionPdfController::class, 'download'])
+        ->name('sessions.pdf');
 
     Route::get('activities', ActivityManager::class)->middleware('permission:gestionar-actividades')->name('activities');
     Route::get('submissions', SubmissionReview::class)->middleware('permission:revisar-entregas')->name('submissions');

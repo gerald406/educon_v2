@@ -43,8 +43,8 @@ class Syllabus extends Model
 
         // JSON - Conversión automática a Array
         'employability_competencies' => 'array',
-        'bibliography' => 'array',      // ⚠️ Ver nota de compatibilidad abajo
-        'web_sources' => 'array',
+        'bibliography' => 'string',      // ⚠️ Ver nota de compatibilidad abajo
+        'web_sources' => 'string',
 
         // Fechas de ejecución (si existen campos adicionales)
         'execution_date' => 'date',

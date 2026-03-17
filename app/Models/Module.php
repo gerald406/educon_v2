@@ -37,4 +37,10 @@ class Module extends Model
     {
         return $this->hasMany(DidacticUnit::class);
     }
+
+    // Ya debe existir en DidacticUnit.php — verificar
+    public function module()
+    {
+        return $this->belongsTo(Module::class);
+    }
 }

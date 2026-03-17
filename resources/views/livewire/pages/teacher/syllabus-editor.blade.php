@@ -22,10 +22,38 @@
                     <span>|</span>
                     <span>{{ $study_program }}</span>
                     
-                    {{-- Badge de Estado --}}
-                    <span class="px-2 py-0.5 rounded text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
-                        BORRADOR
-                    </span>
+                    {{-- DESPUÉS --}}
+                    @switch($syllabus->status)
+                        @case('draft')
+                            <span class="px-2 py-0.5 rounded text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
+                                BORRADOR
+                            </span>
+                            @break
+                        @case('submitted')
+                            <span class="px-2 py-0.5 rounded text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-300">
+                                EN REVISIÓN
+                            </span>
+                            @break
+                        @case('approved')
+                            <span class="px-2 py-0.5 rounded text-xs font-bold bg-green-100 text-green-700 border border-green-300">
+                                APROBADO
+                            </span>
+                            @break
+                        @case('observed')
+                            <span class="px-2 py-0.5 rounded text-xs font-bold bg-orange-100 text-orange-700 border border-orange-300">
+                                OBSERVADO
+                            </span>
+                            @break
+                        @case('rejected')
+                            <span class="px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-700 border border-red-300">
+                                RECHAZADO
+                            </span>
+                            @break
+                        @default
+                            <span class="px-2 py-0.5 rounded text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
+                                SIN ESTADO
+                            </span>
+                    @endswitch
                 </div>
             </div>
 
@@ -37,19 +65,72 @@
                     Cancelar
                 </a>
 
-                {{-- 2. BOTÓN DESCARGAR PDF (Abre en nueva pestaña) --}}
-                <a href="{{ route('teacher.syllabus.pdf', $syllabus->id) }}" target="_blank" 
-                   class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150">
-                    <svg class="w-4 h-4 mr-2 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a2 2 0 00-2 2v8.172l-2.586-2.586a1 1 0 00-1.414 1.414l4.243 4.242a1 1 0 001.414 0l4.243-4.242a1 1 0 00-1.414-1.414L11 12.172V4a2 2 0 00-2-2z" /></svg>
-                    Vista Previa PDF
-                </a>
+                {{-- DESPUÉS --}}
+                @php
+                    $pdfReady = !empty(strip_tags($syllabus->sumilla ?? '')) &&
+                                !empty(strip_tags($syllabus->methodology ?? '')) &&
+                                $total_weeks_programmed > 0;
+                @endphp
+
+                @if($pdfReady)
+                    {{-- PDF disponible: enlace activo --}}
+                    <a href="{{ route('teacher.syllabus.pdf', $syllabus->id) }}" 
+                    target="_blank" 
+                    class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                        <svg class="w-4 h-4 mr-2 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 2a2 2 0 00-2 2v8.172l-2.586-2.586a1 1 0 00-1.414 1.414l4.243 4.242a1 1 0 001.414 0l4.243-4.242a1 1 0 00-1.414-1.414L11 12.172V4a2 2 0 00-2-2z" />
+                        </svg>
+                        Vista Previa PDF
+                    </a>
+                @else
+                    {{-- PDF no disponible: botón deshabilitado con tooltip --}}
+                    <div class="relative group">
+                        <button 
+                            disabled
+                            class="inline-flex items-center px-4 py-2 bg-gray-100 border border-gray-200 rounded-md font-semibold text-xs text-gray-400 uppercase tracking-widest cursor-not-allowed transition ease-in-out duration-150">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 2a2 2 0 00-2 2v8.172l-2.586-2.586a1 1 0 00-1.414 1.414l4.243 4.242a1 1 0 001.414 0l4.243-4.242a1 1 0 00-1.414-1.414L11 12.172V4a2 2 0 00-2-2z" />
+                            </svg>
+                            Vista Previa PDF
+                        </button>
+                        {{-- Tooltip explicativo --}}
+                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 
+                                    bg-gray-800 text-white text-xs rounded-lg py-2 px-3 
+                                    opacity-0 group-hover:opacity-100 transition-opacity duration-200 
+                                    pointer-events-none z-10 text-center shadow-lg">
+                            Completa la Sumilla, Metodología y al menos una sesión para generar el PDF
+                            {{-- Flecha del tooltip --}}
+                            <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 
+                                        border-transparent border-t-gray-800"></div>
+                        </div>
+                    </div>
+                @endif
 
                 {{-- 3. BOTÓN ENVIAR AL COORDINADOR --}}
-                <button wire:click="confirmSubmit" 
-                        class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-900 focus:outline-none focus:border-green-900 focus:ring focus:ring-green-300 disabled:opacity-25 transition">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-                    Enviar a Aprobación
-                </button>
+                {{-- DESPUÉS --}}
+                @if($this->isEditable())
+                    <button wire:click="confirmSubmit" 
+                            class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-900 focus:outline-none focus:border-green-900 focus:ring focus:ring-green-300 disabled:opacity-25 transition">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                        </svg>
+                        Enviar a Aprobación
+                    </button>
+                @elseif($syllabus->status === 'submitted')
+                    <span class="inline-flex items-center px-4 py-2 bg-yellow-100 border border-yellow-300 rounded-md font-semibold text-xs text-yellow-700 uppercase tracking-widest cursor-not-allowed">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        En Revisión
+                    </span>
+                @elseif($syllabus->status === 'approved')
+                    <span class="inline-flex items-center px-4 py-2 bg-green-100 border border-green-300 rounded-md font-semibold text-xs text-green-700 uppercase tracking-widest cursor-not-allowed">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Aprobado
+                    </span>
+                @endif
             </div>
         </div>
 
@@ -106,133 +187,223 @@
 
             {{-- CONTENIDO --}}
             <div class="w-full lg:w-3/4 bg-white shadow rounded-lg p-6 min-h-[500px]">
-                
+                {{-- ALERTA DE SOLO LECTURA (visible cuando no es editable) --}}
+                @if(!$this->isEditable())
+                    <div class="mb-6 p-4 rounded-lg border-l-4 
+                        {{ $syllabus->status === 'submitted' ? 'bg-yellow-50 border-yellow-500' : 'bg-green-50 border-green-500' }}">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-6 h-6 flex-shrink-0 {{ $syllabus->status === 'submitted' ? 'text-yellow-500' : 'text-green-500' }}" 
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                            <div>
+                                @if($syllabus->status === 'submitted')
+                                    <p class="font-bold text-yellow-800">Sílabo en revisión</p>
+                                    <p class="text-sm text-yellow-700">Este sílabo fue enviado al coordinador y está pendiente de aprobación. No puedes modificarlo hasta recibir respuesta.</p>
+                                @elseif($syllabus->status === 'approved')
+                                    <p class="font-bold text-green-800">Sílabo aprobado</p>
+                                    <p class="text-sm text-green-700">Este sílabo fue aprobado por el coordinador. No requiere modificaciones.</p>
+                                @elseif($syllabus->status === 'rejected')
+                                    <p class="font-bold text-red-800">Sílabo rechazado</p>
+                                    <p class="text-sm text-red-700">Este sílabo fue rechazado. Contacte al coordinador para más información.</p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endif
                 {{-- TAB I: DATOS GENERALES --}}
+                {{-- DESPUÉS: Tab I completo con campos editables --}}
                 @if($activeTab === 'general')
                     <div class="animate-fade-in">
                         <div class="border-b pb-4 mb-6">
                             <h3 class="text-lg font-bold text-gray-800 uppercase tracking-wide">I. Datos Generales</h3>
                             <p class="text-sm text-gray-500">
-                                <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-bold mr-2">AUTOMÁTICO</span>
-                                La información del 1.1 al 1.12 se carga directamente del sistema académico.
+                                <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-bold mr-2">EDITABLE</span>
+                                Puedes ajustar los datos generales del sílabo si es necesario.
                             </p>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-2">
-                            
+
                             {{-- 1.1 Programa de estudios --}}
                             <div class="md:col-span-2">
                                 <x-label value="1.1. Programa de estudios" class="font-bold text-gray-700" />
-                                <div class="mt-1 p-2.5 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">
-                                    {{ $study_program }}
-                                </div>
+                                <x-input
+                                    wire:model="study_program"
+                                    type="text"
+                                    class="mt-1 block w-full"
+                                    placeholder="Nombre del programa de estudios" />
+                                @error('study_program')
+                                    <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                                @enderror
                             </div>
 
                             {{-- 1.2 Plan de estudios --}}
                             <div>
                                 <x-label value="1.2. Plan de estudios" class="font-bold text-gray-700" />
-                                <div class="mt-1 p-2.5 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">
-                                    {{ $study_plan }}
-                                </div>
+                                <x-input
+                                    wire:model="study_plan"
+                                    type="text"
+                                    class="mt-1 block w-full"
+                                    placeholder="Ej. Plan de Estudios 2021" />
+                                @error('study_plan')
+                                    <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                                @enderror
                             </div>
 
                             {{-- 1.3 Módulo --}}
                             <div>
                                 <x-label value="1.3. Módulo" class="font-bold text-gray-700" />
-                                <div class="mt-1 p-2.5 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">
-                                    {{ $module_name }}
-                                </div>
+                                <x-input
+                                    wire:model="module_name"
+                                    type="text"
+                                    class="mt-1 block w-full"
+                                    placeholder="Nombre del módulo" />
+                                @error('module_name')
+                                    <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                                @enderror
                             </div>
 
                             {{-- 1.4 Unidad Didáctica --}}
                             <div class="md:col-span-2">
                                 <x-label value="1.4. Unidad Didáctica" class="font-bold text-gray-700" />
-                                <div class="mt-1 p-2.5 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">
-                                    {{ $course_name }}
-                                </div>
+                                <x-input
+                                    wire:model="course_name"
+                                    type="text"
+                                    class="mt-1 block w-full"
+                                    placeholder="Nombre de la unidad didáctica" />
+                                @error('course_name')
+                                    <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                                @enderror
                             </div>
 
                             {{-- 1.5 Créditos --}}
                             <div>
                                 <x-label value="1.5. Créditos" class="font-bold text-gray-700" />
-                                <div class="mt-1 p-2.5 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">
-                                    {{ $credits_info }}
-                                </div>
+                                <x-input
+                                    wire:model="credits_info"
+                                    type="text"
+                                    class="mt-1 block w-full"
+                                    placeholder="Ej. 3 Créditos" />
                             </div>
 
                             {{-- 1.6 Horas totales --}}
                             <div>
                                 <x-label value="1.6. Horas totales" class="font-bold text-gray-700" />
-                                <div class="mt-1 p-2.5 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">
-                                    {{ $total_hours }} horas
-                                </div>
+                                <x-input
+                                    wire:model="total_hours"
+                                    type="number"
+                                    min="1"
+                                    class="mt-1 block w-full"
+                                    placeholder="Ej. 96" />
+                                @error('total_hours')
+                                    <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                                @enderror
                             </div>
 
                             {{-- 1.7 Horas semanales --}}
                             <div>
                                 <x-label value="1.7. Horas semanales" class="font-bold text-gray-700" />
-                                <div class="mt-1 p-2.5 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">
-                                    {{ $weekly_hours_info }}
-                                </div>
+                                <x-input
+                                    wire:model="weekly_hours_info"
+                                    type="text"
+                                    class="mt-1 block w-full"
+                                    placeholder="Ej. 6 horas semanales" />
                             </div>
 
                             {{-- 1.8 Periodo académico --}}
                             <div>
                                 <x-label value="1.8. Periodo académico" class="font-bold text-gray-700" />
-                                <div class="mt-1 p-2.5 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">
-                                    {{ $period_name }}
-                                </div>
+                                <x-input
+                                    wire:model="period_name"
+                                    type="text"
+                                    class="mt-1 block w-full"
+                                    placeholder="Ej. Periodo Académico 2025-I" />
                             </div>
 
                             {{-- 1.9 Ciclo académico --}}
                             <div>
                                 <x-label value="1.9. Ciclo académico" class="font-bold text-gray-700" />
-                                <div class="mt-1 p-2.5 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">
-                                    {{ $academic_cycle }}° Semestre
-                                </div>
+                                <select
+                                    wire:model="academic_cycle"
+                                    class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">
+                                    <option value="">Seleccionar semestre</option>
+                                    @for($i = 1; $i <= 6; $i++)
+                                        <option value="{{ $i }}">{{ $i }}° Semestre</option>
+                                    @endfor
+                                </select>
+                                @error('academic_cycle')
+                                    <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                                @enderror
                             </div>
 
                             {{-- 1.10 Fechas --}}
                             <div>
-                                <x-label value="1.10. Fechas" class="font-bold text-gray-700" />
-                                <div class="mt-1 p-2.5 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">
-                                    {{ $date_range }}
-                                </div>
+                                <x-label value="1.10. Fechas (inicio – fin)" class="font-bold text-gray-700" />
+                                <x-input
+                                    wire:model="date_range"
+                                    type="text"
+                                    class="mt-1 block w-full"
+                                    placeholder="Ej. 01/04/2025 – 31/07/2025 (18 semanas)" />
                             </div>
 
                             {{-- 1.11 Turno --}}
                             <div>
                                 <x-label value="1.11. Turno" class="font-bold text-gray-700" />
-                                <div class="mt-1 p-2.5 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">
-                                    {{ $shift_name }}
-                                </div>
+                                <x-input
+                                    wire:model="shift_name"
+                                    type="text"
+                                    class="mt-1 block w-full"
+                                    placeholder="Ej. Mañana" />
                             </div>
 
                             {{-- 1.12 Docente --}}
                             <div class="md:col-span-2">
                                 <x-label value="1.12. Docente responsable" class="font-bold text-gray-700" />
-                                <div class="mt-1 p-2.5 bg-gray-50 border border-gray-200 rounded-md text-gray-800 text-sm">
-                                    {{ $teacher_name }}
-                                </div>
+                                <x-input
+                                    wire:model="teacher_name"
+                                    type="text"
+                                    class="mt-1 block w-full"
+                                    placeholder="Apellidos y nombres del docente" />
+                                @error('teacher_name')
+                                    <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                                @enderror
                             </div>
 
-                            {{-- 1.13 Email (EDITABLE) --}}
+                            {{-- 1.13 Email --}}
                             <div class="md:col-span-2">
-                                <x-label value="1.13. Email del docente (editable)" class="font-bold text-gray-700" />
-                                <x-input 
-                                    wire:model="teacher_email" 
-                                    type="email" 
-                                    class="mt-1 block w-full" 
+                                <x-label value="1.13. Email del docente" class="font-bold text-gray-700" />
+                                <x-input
+                                    wire:model="teacher_email"
+                                    type="email"
+                                    class="mt-1 block w-full"
                                     placeholder="correo@institucion.edu.pe" />
+                                @error('teacher_email')
+                                    <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                                @enderror
                             </div>
+
                         </div>
 
-                        {{-- BOTÓN VALIDAR --}}
+                        {{-- AVISO INFORMATIVO --}}
+                        <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                            <p class="text-xs text-amber-700">
+                                <strong>⚠️ Nota:</strong> Los cambios en este apartado actualizarán los datos en el sistema académico.
+                                Modifica solo si hay un error en la información cargada automáticamente.
+                            </p>
+                        </div>
+
+                        {{-- BOTÓN GUARDAR --}}
                         <div class="flex justify-end pt-6 border-t mt-6">
-                            <x-button wire:click="saveGeneral" class="bg-indigo-600 hover:bg-indigo-700">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                Validar Datos
-                            </x-button>
+                            @if($this->isEditable())
+                                <x-button wire:click="saveGeneral" class="bg-indigo-600 hover:bg-indigo-700">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Guardar Datos Generales
+                                </x-button>
+                            @endif
                         </div>
                     </div>
                 @endif
@@ -296,10 +467,15 @@
 
                         {{-- BOTÓN GUARDAR --}}
                         <div class="flex justify-end pt-6 border-t mt-6">
-                            <x-button wire:click="saveSumilla" class="bg-indigo-600 hover:bg-indigo-700">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                Guardar Sumilla
-                            </x-button>
+                            {{-- DESPUÉS --}}
+                            @if($this->isEditable())
+                                <x-button wire:click="saveSumilla" class="bg-indigo-600 hover:bg-indigo-700">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Guardar Sumilla
+                                </x-button>
+                            @endif
                         </div>
                     </div>
                 @endif
@@ -363,10 +539,15 @@
 
                         {{-- BOTÓN GUARDAR --}}
                         <div class="flex justify-end pt-6 border-t mt-6">
-                            <x-button wire:click="saveCompetencies" class="bg-indigo-600 hover:bg-indigo-700">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                Guardar Competencia
-                            </x-button>
+                            {{-- DESPUÉS --}}
+                            @if($this->isEditable())
+                                <x-button wire:click="saveCompetencies" class="bg-indigo-600 hover:bg-indigo-700">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Guardar Competencia
+                                </x-button>
+                            @endif
                         </div>
                     </div>
                 @endif
@@ -424,11 +605,14 @@
                         <div>
                             <div class="flex justify-between items-center mb-3">
                                 <x-label value="4.2. Indicadores de Logro" class="font-bold"/>
-                                <button 
-                                    wire:click="addIndicator" 
-                                    class="px-3 py-1.5 bg-green-500 text-white text-sm rounded hover:bg-green-600">
-                                    + Agregar Indicador
-                                </button>
+                                {{-- DESPUÉS --}}
+                                @if($this->isEditable())
+                                    <button 
+                                        wire:click="addIndicator" 
+                                        class="px-3 py-1.5 bg-green-500 text-white text-sm rounded hover:bg-green-600">
+                                        + Agregar Indicador
+                                    </button>
+                                @endif
                             </div>
 
                             {{-- ✅ VERIFICAR Collection --}}
@@ -467,10 +651,15 @@
 
                         {{-- BOTÓN GUARDAR --}}
                         <div class="flex justify-end pt-6 border-t mt-6">
-                            <x-button wire:click="saveCapacityAndIndicators" class="bg-indigo-600 hover:bg-indigo-700">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                Guardar Capacidad e Indicadores
-                            </x-button>
+                            {{-- BOTÓN GUARDAR Tab IV - DESPUÉS --}}
+                            @if($this->isEditable())
+                                <x-button wire:click="saveCapacityAndIndicators" class="bg-indigo-600 hover:bg-indigo-700">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Guardar Capacidad e Indicadores
+                                </x-button>
+                            @endif
                         </div>
                     </div>
                 @endif
@@ -529,10 +718,15 @@
 
                         {{-- BOTÓN GUARDAR --}}
                         <div class="flex justify-end pt-6 border-t mt-6">
-                            <x-button wire:click="saveEmployability" class="bg-indigo-600 hover:bg-indigo-700">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                Guardar Empleabilidad
-                            </x-button>
+                            {{-- DESPUÉS --}}
+                            @if($this->isEditable())
+                                <x-button wire:click="saveEmployability" class="bg-indigo-600 hover:bg-indigo-700">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Guardar Empleabilidad
+                                </x-button>
+                            @endif
                         </div>
                     </div>
                 @endif
@@ -560,11 +754,14 @@
                                             <h4 class="font-bold text-indigo-800 text-sm">INDICADOR {{ $indicatorIndex + 1 }}</h4>
                                             <p class="text-xs text-gray-600 mt-1">{{ $indicator->description ?? 'Sin descripción' }}</p>
                                         </div>
-                                        <button 
-                                            wire:click="addSession({{ $indicator->id }})" 
-                                            class="px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600">
-                                            + Sesión
-                                        </button>
+                                        {{-- BOTÓN + Sesión - DESPUÉS --}}
+                                        @if($this->isEditable())
+                                            <button 
+                                                wire:click="addSession({{ $indicator->id }})" 
+                                                class="px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600">
+                                                + Sesión
+                                            </button>
+                                        @endif
                                     </div>
 
                                     {{-- Tabla de Sesiones --}}
@@ -614,6 +811,7 @@
                                                             </td>
                                                             <td class="px-2 py-2">
                                                                 {{-- ✅ CORREGIDO: Actualización directa al cambiar --}}
+                                                                {{-- DESPUÉS --}}
                                                                 <select 
                                                                     wire:change="updateUnitField({{ $unit->id }}, 'evaluation_instrument', $event.target.value)"
                                                                     class="w-full border-gray-300 rounded text-xs p-1">
@@ -621,14 +819,20 @@
                                                                     <option value="Rúbrica" {{ $unit->evaluation_instrument == 'Rúbrica' ? 'selected' : '' }}>Rúbrica</option>
                                                                     <option value="Prueba Escrita" {{ $unit->evaluation_instrument == 'Prueba Escrita' ? 'selected' : '' }}>Prueba Escrita</option>
                                                                     <option value="Guía de Observación" {{ $unit->evaluation_instrument == 'Guía de Observación' ? 'selected' : '' }}>Guía de Observación</option>
+                                                                    <option value="Portafolio" {{ $unit->evaluation_instrument == 'Portafolio' ? 'selected' : '' }}>Portafolio</option>
+                                                                    <option value="Informe" {{ $unit->evaluation_instrument == 'Informe' ? 'selected' : '' }}>Informe</option>
+                                                                    <option value="Otros" {{ $unit->evaluation_instrument == 'Otros' ? 'selected' : '' }}>Otros</option>
                                                                 </select>
                                                             </td>
                                                             <td class="px-2 py-2 text-center">
-                                                                <button 
-                                                                    wire:click="removeSession({{ $unit->id }})" 
-                                                                    class="text-red-500 hover:text-red-700">
-                                                                    🗑️
-                                                                </button>
+                                                                {{-- BOTÓN ELIMINAR sesión - DESPUÉS --}}
+                                                                @if($this->isEditable())
+                                                                    <button 
+                                                                        wire:click="removeSession({{ $unit->id }})" 
+                                                                        class="text-red-500 hover:text-red-700">
+                                                                        🗑️
+                                                                    </button>
+                                                                @endif
                                                             </td>
                                                         </tr>
                                                     @endforeach
@@ -648,10 +852,15 @@
 
                         {{-- BOTÓN GUARDAR --}}
                         <div class="flex justify-end pt-6 border-t mt-6">
-                            <x-button wire:click="saveProgramming" class="bg-indigo-600 hover:bg-indigo-700">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                Guardar Programación
-                            </x-button>
+                            {{-- BOTÓN GUARDAR Tab VI - DESPUÉS --}}
+                            @if($this->isEditable())
+                                <x-button wire:click="saveProgramming" class="bg-indigo-600 hover:bg-indigo-700">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Guardar Programación
+                                </x-button>
+                            @endif
                         </div>
                     </div>
                 @endif
@@ -693,10 +902,14 @@
 
                         {{-- BOTÓN GUARDAR --}}
                         <div class="flex justify-end pt-6 border-t mt-6">
-                            <x-button wire:click="saveMethodology" class="bg-indigo-600 hover:bg-indigo-700">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                Guardar Metodología
-                            </x-button>
+                            @if($this->isEditable())
+                                <x-button wire:click="saveMethodology" class="bg-indigo-600 hover:bg-indigo-700">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Guardar Metodología
+                                </x-button>
+                            @endif
                         </div>
                     </div>
                 @endif
@@ -765,10 +978,14 @@
 
                         {{-- BOTÓN GUARDAR --}}
                         <div class="flex justify-end pt-6 border-t mt-6">
-                            <x-button wire:click="saveResources" class="bg-indigo-600 hover:bg-indigo-700">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                Guardar Recursos
-                            </x-button>
+                            @if($this->isEditable())
+                                <x-button wire:click="saveResources" class="bg-indigo-600 hover:bg-indigo-700">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Guardar Recursos
+                                </x-button>
+                            @endif
                         </div>
                     </div>
                 @endif
@@ -787,7 +1004,7 @@
                             <div 
                                 x-data="{ 
                                     editor: null,
-                                    content: @js($evaluation_system ?? ''),
+                                    content: @js($this->evaluation_system ?? ''),
                                     init() {
                                         ClassicEditor.create(this.$refs.editor, {
                                             language: 'es',
@@ -810,10 +1027,14 @@
 
                         {{-- BOTÓN GUARDAR --}}
                         <div class="flex justify-end pt-6 border-t mt-6">
-                            <x-button wire:click="saveEvaluation" class="bg-indigo-600 hover:bg-indigo-700">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                Guardar Evaluación
-                            </x-button>
+                            @if($this->isEditable())
+                                <x-button wire:click="saveEvaluation" class="bg-indigo-600 hover:bg-indigo-700">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Guardar Evaluación
+                                </x-button>
+                            @endif
                         </div>
                     </div>
                 @endif
@@ -882,10 +1103,14 @@
 
                         {{-- BOTÓN GUARDAR --}}
                         <div class="flex justify-end pt-6 border-t mt-6">
-                            <x-button wire:click="saveSources" class="bg-indigo-600 hover:bg-indigo-700">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                Guardar Fuentes
-                            </x-button>
+                            @if($this->isEditable())
+                                <x-button wire:click="saveSources" class="bg-indigo-600 hover:bg-indigo-700">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Guardar Fuentes
+                                </x-button>
+                            @endif
                         </div>
                     </div>
                 @endif

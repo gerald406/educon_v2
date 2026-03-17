@@ -30,11 +30,16 @@
         }
         
         /* ENCABEZADO INSTITUCIONAL */
+        /* DESPUÉS */
         .header-box { 
-            text-align: center; 
             margin-bottom: 20px; 
             border-bottom: 2px solid #222; 
             padding-bottom: 10px; 
+        }
+        .header-img {
+            width: 100%;
+            height: auto;
+            display: block;
         }
         h1 { font-size: 15px; margin: 0; text-transform: uppercase; }
         h2 { font-size: 13px; margin: 5px 0; font-weight: bold; }
@@ -45,7 +50,7 @@
             margin-top: 15px; 
             margin-bottom: 8px;
             text-transform: uppercase; 
-            background-color: #f2f2f2; 
+            background-color: #1e2120; color: white;
             padding: 5px 8px; 
             page-break-after: avoid; 
         }
@@ -102,9 +107,13 @@
     {{-- CONTENIDO PRINCIPAL --}}
     <main>
         <div class="header-box">
-            <h1>Instituto de Educación Superior Tecnológico Público</h1>
-            <h2>"NOMBRE DEL INSTITUTO"</h2>
-            <p style="font-weight: bold; font-size: 12px; margin-top: 8px;">
+            {{-- Imagen institucional: ruta absoluta requerida por DomPDF --}}
+            <img
+                src="{{ public_path('images/encabezado-institucional.jpg') }}"
+                class="header-img"
+                alt="Encabezado Institucional"
+            />
+            <p style="font-weight: bold; font-size: 12px; margin-top: 8px; text-align: center;">
                 SÍLABO DE {{ Str::upper($syllabus->teacherAssignment?->didacticUnit?->name ?? '---') }}
             </p>
         </div>
@@ -304,7 +313,7 @@
             <h3>VIII. AMBIENTES Y RECURSOS</h3>
             <div class="section-content">
                 <p class="text-bold mt-2" style="margin-bottom: 2px;">Ambientes</p>
-                <p style="margin-top: 0; margin-bottom: 10px;">{{ $syllabus->environments }}</p>
+                <div class="html-content">{!! $syllabus->environments !!}</div>
                 
                 <p class="text-bold mt-2" style="margin-bottom: 2px;">Recursos</p>
                 <div class="html-content">{!! $syllabus->resources !!}</div>
@@ -332,7 +341,7 @@
         </div>
 
         {{-- FECHA DE EMISIÓN / IMPRESIÓN --}}
-        <div style="text-align: right; margin-top: 40px; margin-bottom: 60px; font-size: 11px;">
+        <div style="text-align: right; margin-top: 2px; margin-bottom: 75px; font-size: 11px;">
             Salcedo, {{ \Carbon\Carbon::now()->locale('es')->translatedFormat('d \d\e F \d\e Y') }}
         </div>
 
