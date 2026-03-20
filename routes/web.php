@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AdmissionDocumentController;
+
+use App\Http\Controllers\ExamAttendanceController;
 use Illuminate\Support\Facades\Route;
 
 // Importaciones de todos los componentes
@@ -286,6 +288,9 @@ Route::prefix('admission')->middleware(['auth', 'verified', 'permission:gestiona
         // AÑADIR dentro del grupo exam
         Route::get('classroom/{classroom}/answer-sheets', [ExamReportController::class, 'answerSheets'])
             ->name('answer-sheets');
+
+        Route::get('attendance/report', [ExamAttendanceController::class, 'report'])
+            ->name('attendance.report');
     });
 });
 
@@ -309,4 +314,15 @@ Route::get('voucher/{voucher}/download', [VoucherController::class, 'download'])
 Route::prefix('security')->middleware(['auth', 'verified', 'permission:gestionar-roles'])->name('security.')->group(function () {
     Route::get('roles', RoleManager::class)->name('roles');
     Route::get('users', UserManager::class)->middleware('permission:gestionar-usuarios')->name('users');
+});
+
+
+// RUTAS PÚBLICAS — Control de ingreso (sin auth)
+Route::prefix('admission/exam')->name('admission.exam.')->group(function () {
+    Route::get('attendance', [ExamAttendanceController::class, 'index'])
+        ->name('attendance');
+    Route::post('attendance/search', [ExamAttendanceController::class, 'search'])
+        ->name('attendance.search');
+    Route::post('attendance/register/{assignment}', [ExamAttendanceController::class, 'register'])
+        ->name('attendance.register');
 });

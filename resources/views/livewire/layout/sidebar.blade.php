@@ -100,6 +100,17 @@
                     class="block px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('admission.exam.distribution') ? 'text-white' : 'text-gray-400 hover:text-white' }}">
                     Distribución de Aulas
                     </a>
+                    <a href="{{ route('admission.exam.attendance') }}" target="_blank"
+                    class="block px-3 py-2 rounded-md text-sm font-medium
+                            {{ request()->routeIs('admission.exam.attendance') ? 'text-white' : 'text-gray-400 hover:text-white' }}">
+                        Control de Ingreso
+                    </a>
+
+                    <a href="{{ route('admission.exam.attendance.report') }}"
+                    class="block px-3 py-2 rounded-md text-sm font-medium
+                            {{ request()->routeIs('admission.exam.attendance.report') ? 'text-white' : 'text-gray-400 hover:text-white' }}">
+                        Reporte de Asistencia
+                    </a>
 
                 </div>
             </div>
