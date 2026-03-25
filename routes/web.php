@@ -243,8 +243,8 @@ Route::prefix('communication')->middleware(['auth', 'verified', 'permission:gest
     Route::get('announcements', AnnouncementManager::class)->name('announcements');
 });
 
-
-Route::get('voucher/{voucher}/download', [VoucherController::class, 'download'])->name('voucher.download');
+// NOTA: La descarga de vouchers está protegida dentro del grupo 'treasury' (línea ~176).
+// La ruta pública duplicada fue eliminada (BUG-001).
 
 Route::prefix('security')->middleware(['auth', 'verified', 'permission:gestionar-roles'])->name('security.')->group(function () {
     Route::get('roles', RoleManager::class)->name('roles');
