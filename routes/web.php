@@ -309,12 +309,12 @@ Route::prefix('communication')->middleware(['auth', 'verified', 'permission:gest
 });
 
 
-Route::get('voucher/{voucher}/download', [VoucherController::class, 'download'])->name('voucher.download');
-
 Route::prefix('security')->middleware(['auth', 'verified', 'permission:gestionar-roles'])->name('security.')->group(function () {
     Route::get('roles', RoleManager::class)->name('roles');
     Route::get('users', UserManager::class)->middleware('permission:gestionar-usuarios')->name('users');
 });
+
+// [BUG-001 FIX] Ruta pública duplicada eliminada — la ruta correcta ya está dentro del grupo treasury con middleware auth
 
 
 // RUTAS PÚBLICAS — Control de ingreso (sin auth)
