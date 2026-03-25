@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -32,12 +33,16 @@ return new class extends Migration
             $table->string('digital_file_url')->nullable();
             
             $table->enum('status', ['available', 'borrowed', 'reserved', 'maintenance', 'lost'])->default('available');
-            
+
             $table->timestamps();
-            
-            // Índice FullText para búsquedas
-            $table->fullText(['title', 'author', 'description']);
         });
+
+        // Índice FullText solo en drivers que lo soportan (MySQL/MariaDB), no SQLite
+        if (DB::getDriverName() !== 'sqlite') {
+            Schema::table('library_resources', function (Blueprint $table) {
+                $table->fullText(['title', 'author', 'description']);
+            });
+        }
     }
 
     /**

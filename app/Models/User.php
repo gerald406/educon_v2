@@ -145,6 +145,23 @@ class User extends Authenticatable
     }
 
     /**
+     * Determina si el usuario es un Coordinador de carrera
+     * (tiene permisos de coordinación pero no permisos de gestión administrativa general).
+     */
+    public function isCoordinator(): bool
+    {
+        if ($this->hasAdminAccess()) {
+            return false;
+        }
+
+        return $this->hasAnyPermission([
+            'gestionar-horarios',
+            'aprobar-silabos',
+            'gestionar-prerrequisitos',
+        ]);
+    }
+
+    /**
      * Obtiene el perfil de docente asociado al usuario.
      */
     public function teacher(): HasOne
