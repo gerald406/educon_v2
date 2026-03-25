@@ -35,8 +35,10 @@ return new class extends Migration
             
             $table->timestamps();
             
-            // Índice FullText para búsquedas
-            $table->fullText(['title', 'author', 'description']);
+            // Índice FullText para búsquedas (no compatible con SQLite)
+            if (\Illuminate\Support\Facades\DB::getDriverName() !== 'sqlite') {
+                $table->fullText(['title', 'author', 'description']);
+            }
         });
     }
 

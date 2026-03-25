@@ -23,14 +23,18 @@ return new class extends Migration
         });
 
         // 3. Actualizar el ENUM 'status' para incluir 'submitted' y 'rejected'
-        // Usamos SQL directo porque modificar ENUMs con Eloquent es complejo
-        DB::statement("ALTER TABLE syllabi MODIFY COLUMN status ENUM('draft', 'submitted', 'approved', 'observed', 'rejected') DEFAULT 'draft'");
+        // MySQL soporta MODIFY COLUMN; SQLite no lo necesita (no tiene ENUM nativo)
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE syllabi MODIFY COLUMN status ENUM('draft', 'submitted', 'approved', 'observed', 'rejected') DEFAULT 'draft'");
+        }
     }
 
     public function down(): void
     {
         // Revertir cambios (Opcional, pero recomendado por seguridad)
-        DB::statement("ALTER TABLE syllabi MODIFY COLUMN status ENUM('draft', 'pending_approval', 'approved', 'observed') DEFAULT 'draft'");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE syllabi MODIFY COLUMN status ENUM('draft', 'pending_approval', 'approved', 'observed') DEFAULT 'draft'");
+        }
 
         Schema::table('syllabi', function (Blueprint $table) {
             if (Schema::hasColumn('syllabi', 'environments')) {
