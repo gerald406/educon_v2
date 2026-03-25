@@ -99,7 +99,7 @@ class CareerManager extends Component
         $this->name = $career->name;
         $this->duration_semesters = $career->duration_semesters;
         $this->degree_awarded = $career->degree_awarded;
-        $this->authorization_resolution = $career->authorization_resolution;
+        $this->authorization_resolution = $career->authorization_resolution ?? '';
         $this->status = $career->status;
 
         $this->resetValidation();
