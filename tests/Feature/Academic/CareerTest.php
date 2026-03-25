@@ -60,7 +60,7 @@ class CareerTest extends TestCase
     {
         $user = User::factory()->create();
         $user->givePermissionTo('gestionar-estructura-academica');
-        
+
         $institution = Institution::factory()->create(['status' => 'active']);
         $career = Career::factory()->create([
             'institution_id' => $institution->id,
@@ -69,7 +69,7 @@ class CareerTest extends TestCase
 
         Livewire::actingAs($user)
             ->test(CareerManager::class)
-            ->call('openEditModal', $career->id)
+            ->call('edit', $career)
             ->set('name', 'Updated Career Name')
             ->call('save')
             ->assertHasNoErrors();
@@ -84,27 +84,26 @@ class CareerTest extends TestCase
     {
         $user = User::factory()->create();
         $user->givePermissionTo('gestionar-estructura-academica');
-        
+
         $career = Career::factory()->create();
 
         Livewire::actingAs($user)
             ->test(CareerManager::class)
-            // Simular confirmación y borrado
             ->call('deleteCareer', $career->id)
-            ->assertDispatched('swal'); // Success message
+            ->assertDispatched('swal');
 
-        $this->assertDatabaseMissing('careers', ['id' => $career->id]);
+        $this->assertSoftDeleted('careers', ['id' => $career->id]);
     }
 
     public function test_validation_works()
     {
         $user = User::factory()->create();
         $user->givePermissionTo('gestionar-estructura-academica');
-        
+
         Livewire::actingAs($user)
             ->test(CareerManager::class)
-            ->call('openCreateModal')
-            ->set('name', '') // Empty name
+            ->call('create')
+            ->set('name', '')
             ->call('save')
             ->assertHasErrors(['name' => 'required']);
     }

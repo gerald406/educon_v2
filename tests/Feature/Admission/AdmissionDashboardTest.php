@@ -22,6 +22,7 @@ class AdmissionDashboardTest extends TestCase
     {
         parent::setUp();
         Permission::firstOrCreate(['name' => 'gestionar-admision']);
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Estudiante']);
     }
 
     public function test_admission_dashboard_can_render()
@@ -40,20 +41,19 @@ class AdmissionDashboardTest extends TestCase
         $user->givePermissionTo('gestionar-admision');
 
         // Setup data
-        $modality = AdmissionModality::firstOrCreate(['name' => 'Ordinario'], ['is_active' => true]);
-        
-        // Use factories if available, or create manually if complex dependencies
-        // Assuming minimal requirements for Applicant
-        Applicant::create([
+        $modality = AdmissionModality::firstOrCreate(
+            ['name' => 'Ordinario'],
+            ['is_active' => true, 'type' => 'ordinario']
+        );
+
+        Applicant::factory()->create([
             'admission_modality_id' => $modality->id,
-            // Add other required fields based on migration schema if factory not fully covered
-            // For now relying on factory if exist, else manual
             'created_at' => now(),
         ]);
 
-        Applicant::create([
+        Applicant::factory()->create([
             'admission_modality_id' => $modality->id,
-            'created_at' => now()->subDays(10), // Not recent
+            'created_at' => now()->subDays(10),
         ]);
 
         Livewire::actingAs($user)
