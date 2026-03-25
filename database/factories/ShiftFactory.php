@@ -17,7 +17,11 @@ class ShiftFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'name' => $this->faker->unique()->randomElement(['Mañana', 'Tarde', 'Noche']) . '-' . $this->faker->unique()->numerify('##'),
+            'description' => $this->faker->sentence(),
+            'start_time' => $this->faker->time('H:i:s', '12:00:00'),
+            'end_time' => $this->faker->time('H:i:s', '22:00:00'),
+            'status' => 'active',
         ];
     }
 }

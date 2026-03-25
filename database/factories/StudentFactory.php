@@ -19,12 +19,12 @@ class StudentFactory extends Factory
 
     public function definition(): array
     {
-        $career = Career::where('code', 'APSTI')->first();
-        $studyPlan = StudyPlan::where('code', 'APSTI-2021')->first();
+        $career = Career::factory()->create();
+        $studyPlan = StudyPlan::factory()->create(['career_id' => $career->id]);
 
         return [
             'user_id' => User::factory(), // <-- [MODIFICADO]
-            
+
             'applicant_id' => null,
             'career_id' => $career->id,
             'study_plan_id' => $studyPlan->id,

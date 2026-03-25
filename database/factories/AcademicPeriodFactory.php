@@ -19,11 +19,13 @@ class AcademicPeriodFactory extends Factory
     {
         $year = AcademicYear::first() ?? AcademicYear::factory()->create();
         
+        $suffix = $this->faker->unique()->numerify('###');
+
         return [
             'institution_id' => $year->institution_id,
             'academic_year_id' => $year->id,
-            'code' => $year->year . '-I',
-            'name' => 'Periodo Académico ' . $year->year . '-I',
+            'code' => $year->year . '-' . $suffix,
+            'name' => 'Periodo Académico ' . $year->year . '-' . $suffix,
             'start_date' => $year->year . '-03-01',
             'end_date' => $year->year . '-07-31',
             'enrollment_start_date' => $year->year . '-02-15',

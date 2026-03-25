@@ -17,7 +17,12 @@ class EvaluationTypeFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'name' => $this->faker->unique()->word(),
+            'description' => $this->faker->sentence(),
+            'weight_percentage' => $this->faker->randomFloat(2, 5, 30),
+            'is_droppable' => $this->faker->boolean(),
+            'sort_order' => $this->faker->numberBetween(1, 10),
+            'status' => 'active',
         ];
     }
 }

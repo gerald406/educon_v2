@@ -22,7 +22,7 @@ class TeacherFactory extends Factory
             // [MODIFICADO] Ya no creamos el user aquí, lo hacemos en el hook de abajo
             'user_id' => User::factory(), 
             
-            'institution_id' => Institution::first()->id,
+            'institution_id' => Institution::factory(),
             
             'code' => $this->faker->unique()->bothify('T-#####'),
             'academic_degree' => $this->faker->randomElement(['Lic.', 'Mag.', 'Dr.']),

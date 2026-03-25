@@ -3,8 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\Applicant;
-use App\Models\Career;
-use App\Models\StudyPlan;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -20,18 +18,12 @@ class ApplicantFactory extends Factory
      */
     public function definition(): array
     {
-       // Busca nuestra carrera "APSTI"
-        $career = Career::where('code', 'APSTI')->first();
-        $studyPlan = StudyPlan::where('code', 'APSTI-2021')->first();
-        
         return [
-            'user_id' => User::factory()->create(), // Crea un usuario base
-            'career_id' => $career->id,
-            'study_plan_id' => $studyPlan->id,
+            'user_id' => User::factory(),
+            'gender' => $this->faker->randomElement(['masculino', 'femenino']),
+            'birthday' => $this->faker->date('Y-m-d', '-18 years'),
             'code' => $this->faker->unique()->numerify('P' . date('Y') . '-#####'),
-            'admission_type' => 'regular',
-            'exam_score' => $this->faker->optional(0.7)->randomFloat(2, 5, 20), // 70% chance de tener nota
-            'application_status' => 'registered',
+            'application_status' => 'registrado',
         ];
     }
     
