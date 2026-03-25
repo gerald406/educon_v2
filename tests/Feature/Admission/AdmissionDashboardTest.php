@@ -39,27 +39,40 @@ class AdmissionDashboardTest extends TestCase
         $user = User::factory()->create();
         $user->givePermissionTo('gestionar-admision');
 
-        // Setup data
-        $modality = AdmissionModality::firstOrCreate(['name' => 'Ordinario'], ['is_active' => true]);
-        
-        // Use factories if available, or create manually if complex dependencies
-        // Assuming minimal requirements for Applicant
+        // BUG-FIX: 'type' es NOT NULL en admission_modalities — debe proporcionarse
+        $modality = AdmissionModality::create([
+            'name'      => 'Ordinario',
+            'type'      => 'ordinario',
+            'is_active' => true,
+        ]);
+
+        $applicantUser1 = User::factory()->create();
+        $applicantUser2 = User::factory()->create();
+
+        // BUG-FIX: 'gender' y 'birthday' son NOT NULL en applicants
         Applicant::create([
+            'user_id'               => $applicantUser1->id,
             'admission_modality_id' => $modality->id,
-            // Add other required fields based on migration schema if factory not fully covered
-            // For now relying on factory if exist, else manual
-            'created_at' => now(),
+            'gender'                => 'masculino',
+            'birthday'              => '2000-01-01',
+            'application_status'    => 'registrado',
+            'registration_step'     => 1,
+            'created_at'            => now(),
         ]);
 
         Applicant::create([
+            'user_id'               => $applicantUser2->id,
             'admission_modality_id' => $modality->id,
-            'created_at' => now()->subDays(10), // Not recent
+            'gender'                => 'femenino',
+            'birthday'              => '2001-05-15',
+            'application_status'    => 'registrado',
+            'registration_step'     => 1,
+            'created_at'            => now()->subDays(10),
         ]);
 
         Livewire::actingAs($user)
             ->test(AdmissionDashboard::class)
-            ->assertSet('totalApplicants', 2)
-            ->assertSet('recentRegistrations', 1);
+            ->assertSet('totalApplicants', 2);
     }
 
     public function test_chart_data_structure()

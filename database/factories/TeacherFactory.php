@@ -4,41 +4,35 @@ namespace Database\Factories;
 
 use App\Models\Institution;
 use App\Models\User;
-use App\Models\Teacher; // <-- [NUEVO] Importar Teacher
+use App\Models\Teacher;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Spatie\Permission\Models\Role;
 
 class TeacherFactory extends Factory
 {
-    /**
-     * The name of the factory's corresponding model.
-     *
-     * @var string
-     */
-    protected $model = Teacher::class; // <-- [NUEVO] Especificar el modelo
+    protected $model = Teacher::class;
 
     public function definition(): array
     {
+        // BUG-010 fix: usar Institution::factory() en vez de Institution::first()->id
+        // que fallaba con "Attempt to read property 'id' on null" en BD vacía (tests).
         return [
-            // [MODIFICADO] Ya no creamos el user aquí, lo hacemos en el hook de abajo
-            'user_id' => User::factory(), 
-            
-            'institution_id' => Institution::first()->id,
-            
-            'code' => $this->faker->unique()->bothify('T-#####'),
+            'user_id'        => User::factory(),
+            'institution_id' => Institution::factory(),
+            'code'           => $this->faker->unique()->bothify('T-#####'),
             'academic_degree' => $this->faker->randomElement(['Lic.', 'Mag.', 'Dr.']),
-            'specialty' => $this->faker->jobTitle(),
-            'contract_type' => $this->faker->randomElement(['permanent', 'contracted']),
-            'hire_date' => $this->faker->date(),
-            'status' => 'active',
+            'specialty'      => $this->faker->jobTitle(),
+            'contract_type'  => $this->faker->randomElement(['permanent', 'contracted']),
+            'hire_date'      => $this->faker->date(),
+            'status'         => 'active',
         ];
     }
 
-    /**
-     * [NUEVO] Hook para asignar el rol después de crear el docente.
-     */
     public function configure(): static
     {
         return $this->afterCreating(function (Teacher $teacher) {
+            // Crear el rol si no existe para evitar RoleDoesNotExist en tests
+            Role::firstOrCreate(['name' => 'Docente', 'guard_name' => 'web']);
             $teacher->user->assignRole('Docente');
         });
     }

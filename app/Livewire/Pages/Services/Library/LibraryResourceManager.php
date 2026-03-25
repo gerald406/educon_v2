@@ -44,8 +44,9 @@ class LibraryResourceManager extends Component
      */
     public function mount()
     {
-        // Asumimos que trabajamos con la primera institución
-        $this->institution_id = Institution::first()->id;
+        // BUG-009 fix: verificar que exista institución antes de acceder a ->id
+        $institution = Institution::first();
+        $this->institution_id = $institution?->id;
         $this->careers = Career::where('status', 'active')->pluck('name', 'id');
     }
 

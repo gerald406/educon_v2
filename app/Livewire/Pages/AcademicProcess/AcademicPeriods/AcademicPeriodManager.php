@@ -47,8 +47,8 @@ class AcademicPeriodManager extends Component
      */
     public function mount()
     {
-        // Asumimos que trabajamos con la primera institución
-        $this->institution_id = \App\Models\Institution::first()->id;
+        // BUG-009 fix: verificar que exista institución antes de acceder a ->id
+        $this->institution_id = \App\Models\Institution::first()?->id;
         
         $this->academicYears = AcademicYear::where('institution_id', $this->institution_id)
                                 ->whereIn('status', ['active', 'planned'])

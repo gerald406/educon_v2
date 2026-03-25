@@ -29,7 +29,8 @@ class VoucherSeriesManager extends Component
 
     public function mount()
     {
-        $this->institution_id = Institution::first()->id;
+        // BUG-009 fix: verificar que exista institución antes de acceder a ->id
+        $this->institution_id = Institution::first()?->id;
     }
 
     protected function rules()
