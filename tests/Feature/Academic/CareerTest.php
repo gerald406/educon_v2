@@ -93,7 +93,8 @@ class CareerTest extends TestCase
             ->call('deleteCareer', $career->id)
             ->assertDispatched('swal'); // Success message
 
-        $this->assertDatabaseMissing('careers', ['id' => $career->id]);
+        // Career usa SoftDeletes: el registro permanece en BD con deleted_at
+        $this->assertSoftDeleted('careers', ['id' => $career->id]);
     }
 
     public function test_validation_works()
