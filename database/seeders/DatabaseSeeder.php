@@ -50,10 +50,21 @@ class DatabaseSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
-        // [NUEVO] Asignar el rol
         $adminUser->assignRole('Administrador');
 
-        // 5. Llamar al resto de Seeders
+        // 5. Crear usuario de Admisión (solo acceso al módulo de admisión)
+        $admisionUser = User::firstOrCreate(
+            ['email' => 'admision@educon.edu.pe'],
+            [
+                'name' => 'Personal Admisión',
+                'lastname' => 'Demo',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ]
+        );
+        $admisionUser->syncRoles(['Admision']);
+
+        // 6. Llamar al resto de Seeders
         $this->call([
             CatalogSeeder::class,
             AdmissionModalitySeeder::class,

@@ -148,6 +148,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'gestionar-matricula-regular',
         ]);
 
+        // Rol Admisión
+        $roleAdmision = Role::firstOrCreate(['name' => 'Admision']);
+        $roleAdmision->syncPermissions([
+            'gestionar-admision',
+        ]);
+
         // Rol Tesorería (Caja)
         $roleTreasury = Role::firstOrCreate(['name' => 'Tesoreria']);
         $roleTreasury->syncPermissions([
