@@ -43,7 +43,7 @@
             </div>
         @endcanany
 
-        @role('Administrador')
+        @can('ver-reportes')
             <div class="mb-1" x-data="{ open: {{ request()->routeIs('reports.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open"
                         class="w-full flex justify-between items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
@@ -62,7 +62,7 @@
                     </a>
                 </div>
             </div>
-        @endrole
+        @endcan
 
         @can('gestionar-admision')
             <div class="mb-1" x-data="{ open: {{ request()->routeIs('admission.*') ? 'true' : 'false' }} }">

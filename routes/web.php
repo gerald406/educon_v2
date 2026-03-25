@@ -183,7 +183,7 @@ Route::prefix('academic-process')->middleware(['auth', 'verified'])->name('acade
 
 // Grupo de Rutas para Evaluación (Docentes y roles superiores)
 // [MODIFICADO] Añadido middleware de rol
-Route::prefix('evaluation')->middleware(['auth', 'verified', 'role:Docente|Coordinador|Administrador'])->name('evaluation.')->group(function () {
+Route::prefix('evaluation')->middleware(['auth', 'verified', 'permission:registrar-notas|registrar-asistencia'])->name('evaluation.')->group(function () {
     Route::get('grades', GradeManager::class)->name('grades');
     Route::get('attendances', AttendanceManager::class)->name('attendances');
 });
@@ -205,7 +205,7 @@ Route::prefix('treasury')->middleware(['auth', 'verified', 'permission:registrar
 
 // Grupo de Rutas para Matrícula (Estudiantes y Admin)
 // [MODIFICADO] Añadido middleware de rol
-Route::prefix('enrollment')->middleware(['auth', 'verified', 'role:Estudiante|Administrador'])->name('enrollment.')->group(function () {
+Route::prefix('enrollment')->middleware(['auth', 'verified', 'permission:matricularse'])->name('enrollment.')->group(function () {
     Route::get('process', EnrollmentProcess::class)->name('process');
 });
 
@@ -220,7 +220,7 @@ Route::prefix('certification')->middleware(['auth', 'verified', 'permission:gest
 
 // Grupo de Rutas para Docentes (Sílabos)
 // [MODIFICADO] Añadido middleware de rol
-Route::prefix('teacher')->middleware(['auth', 'verified', 'role:Docente|Coordinador|Administrador'])->name('teacher.')->group(function () {
+Route::prefix('teacher')->middleware(['auth', 'verified', 'permission:subir-silabo|registrar-notas|registrar-asistencia'])->name('teacher.')->group(function () {
     Route::get('my-syllabi', MySyllabi::class)->name('my-syllabi');
     Route::get('my-syllabi/{assignment}/edit', SyllabusEditor::class)
         ->name('my-syllabi.edit');
@@ -252,7 +252,7 @@ Route::prefix('services')->middleware(['auth', 'verified', 'permission:gestionar
 });
 
 // [NUEVO GRUPO] Grupo de Rutas para Reportes (Solo Admin)
-Route::prefix('reports')->middleware(['auth', 'verified', 'role:Administrador'])->name('reports.')->group(function () {
+Route::prefix('reports')->middleware(['auth', 'verified', 'permission:ver-reportes'])->name('reports.')->group(function () {
     Route::get('/', ReportManager::class)->name('index');
 });
 
@@ -298,7 +298,7 @@ Route::prefix('admission')->middleware(['auth', 'verified', 'permission:gestiona
 
 
 // [NUEVO GRUPO] Grupo de Rutas para Estudiantes
-Route::prefix('student')->middleware(['auth', 'verified', 'role:Estudiante|Administrador'])->name('student.')->group(function () {
+Route::prefix('student')->middleware(['auth', 'verified', 'permission:matricularse|ver-mis-asistencias|entregar-actividades'])->name('student.')->group(function () {
     Route::get('my-activities', MyActivities::class)->middleware('permission:entregar-actividades')->name('my-activities');
     Route::get('my-attendances', MyAttendances::class)->middleware('permission:ver-mis-asistencias')->name('my-attendances');
 });

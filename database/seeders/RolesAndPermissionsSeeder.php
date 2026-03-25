@@ -65,6 +65,9 @@ class RolesAndPermissionsSeeder extends Seeder
         // Módulo Comunicación
         Permission::firstOrCreate(['name' => 'gestionar-anuncios']); // Añadido Fase 85
 
+        // Módulo Reportes
+        Permission::firstOrCreate(['name' => 'ver-reportes']);
+
         // [NUEVO PERMISO]
         Permission::firstOrCreate(['name' => 'gestionar-cuadro-meritos']);
 
