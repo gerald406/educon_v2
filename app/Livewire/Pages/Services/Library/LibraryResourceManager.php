@@ -45,7 +45,7 @@ class LibraryResourceManager extends Component
     public function mount()
     {
         // Asumimos que trabajamos con la primera institución
-        $this->institution_id = Institution::first()->id;
+        $this->institution_id = Institution::first()?->id;
         $this->careers = Career::where('status', 'active')->pluck('name', 'id');
     }
 

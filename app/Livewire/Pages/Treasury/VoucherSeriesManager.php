@@ -29,7 +29,7 @@ class VoucherSeriesManager extends Component
 
     public function mount()
     {
-        $this->institution_id = Institution::first()->id;
+        $this->institution_id = Institution::first()?->id;
     }
 
     protected function rules()
